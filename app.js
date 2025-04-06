@@ -111,6 +111,7 @@ function getRandomSafeSpot() {
 }
 
 (function () {
+  // Add modal elements to the existing variables
   let playerId;
   let playerRef;
   let players = {};
@@ -121,6 +122,26 @@ function getRandomSafeSpot() {
   const gameContainer = document.querySelector(".game-container");
   const playerNameInput = document.querySelector("#player-name");
   const playerColorButton = document.querySelector("#player-color");
+  const gameOverModal = document.querySelector("#game-over-modal");
+  const restartButton = document.querySelector("#restart-button");
+
+  // Add restart game handler
+  function handleRestart() {
+    gameOverModal.classList.add("hidden");
+    const { x, y } = getRandomSafeSpot();
+
+    playerRef.set({
+      id: playerId,
+      name: playerNameInput.value,
+      direction: "right",
+      color: randomFromArray(playerColors),
+      x,
+      y,
+      coins: 0,
+    });
+  }
+
+  restartButton.addEventListener("click", handleRestart);
 
   function placeCoin() {
     const { x, y } = getRandomSafeSpot();
@@ -162,7 +183,75 @@ function getRandomSafeSpot() {
       }
       playerRef.set(players[playerId]);
       attemptGrabCoin(newX, newY);
+      checkPlayerCollisions(newX, newY); // Add this line
     }
+  }
+
+  function checkPlayerCollisions(x, y) {
+    const myCoins = players[playerId].coins;
+
+    Object.keys(players).forEach((key) => {
+      if (key === playerId) return;
+
+      const otherPlayer = players[key];
+      if (otherPlayer.x === x && otherPlayer.y === y) {
+        if (myCoins > otherPlayer.coins) {
+          // Я атакую игрока с меньшим количеством монет
+          // Отправляем сообщение о поражении атакованному игроку
+          firebase
+            .database()
+            .ref(`players/${key}`)
+            .update({
+              isDefeated: true,
+              defeatedBy: {
+                name: players[playerId].name,
+                coins: myCoins,
+              },
+            });
+
+          // Даем время на отображение модального окна
+          setTimeout(() => {
+            firebase.database().ref(`players/${key}`).remove();
+          }, 1000);
+        } else if (myCoins < otherPlayer.coins) {
+          // Меня атаковал игрок с большим количеством монет
+          gameOverModal.classList.remove("hidden");
+          document.querySelector(
+            "#eliminated-by"
+          ).textContent = `Eliminated by ${otherPlayer.name} who had ${otherPlayer.coins} coins!`;
+
+          const myElement = playerElements[playerId];
+          myElement.classList.add("eliminated");
+
+          setTimeout(() => {
+            playerRef.remove();
+          }, 1000);
+        }
+      }
+    });
+  }
+
+  function updateScoreboard() {
+    const playersList = document.querySelector("#players-list");
+    playersList.innerHTML = "";
+
+    // Sort players by coins
+    const sortedPlayers = Object.values(players).sort(
+      (a, b) => b.coins - a.coins
+    );
+
+    sortedPlayers.forEach((player) => {
+      const div = document.createElement("div");
+      div.classList.add("player-score");
+      if (player.id === playerId) {
+        div.classList.add("you");
+      }
+      div.innerHTML = `
+        <span>${player.name}</span>
+        <span>${player.coins}</span>
+      `;
+      playersList.appendChild(div);
+    });
   }
 
   function initGame() {
@@ -177,10 +266,21 @@ function getRandomSafeSpot() {
     allPlayersRef.on("value", (snapshot) => {
       //Fires whenever a change occurs
       players = snapshot.val() || {};
+      updateScoreboard(); // Add this line
       Object.keys(players).forEach((key) => {
         const characterState = players[key];
         let el = playerElements[key];
-        // Now update the DOM
+
+        // Проверяем, был ли игрок побежден
+        if (key === playerId && characterState.isDefeated) {
+          gameOverModal.classList.remove("hidden");
+          document.querySelector(
+            "#eliminated-by"
+          ).textContent = `Eliminated by ${characterState.defeatedBy.name} who had ${characterState.defeatedBy.coins} coins!`;
+          el.classList.add("eliminated");
+        }
+
+        // Обновляем DOM
         el.querySelector(".Character_name").innerText = characterState.name;
         el.querySelector(".Character_coins").innerText = characterState.coins;
         el.setAttribute("data-color", characterState.color);
@@ -308,6 +408,8 @@ function getRandomSafeSpot() {
         x,
         y,
         coins: 0,
+        eliminated: false,
+        isDefeated: false,
       });
 
       //Remove me from Firebase when I diconnect
