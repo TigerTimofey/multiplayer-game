@@ -24,9 +24,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-
+    <script>
       const firebaseConfig = {
         apiKey: "AIzaSyAJed42M4OrW0M9g3OKREXNlP_iLDH8j6M",
         authDomain: "multiplayer-demo-19715.firebaseapp.com",
@@ -38,7 +36,8 @@
         appId: "1:491126226536:web:2f414db0b0cf6e886385dd",
       };
 
-      const app = initializeApp(firebaseConfig);
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
     </script>
 
     <script src="/KeyPressListener.js"></script>

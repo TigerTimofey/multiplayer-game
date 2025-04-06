@@ -70,8 +70,7 @@ function createName() {
   return `${prefix} ${animal}`;
 }
 
-function isSolid(x,y) {
-
+function isSolid(x, y) {
   const blockedNextSpace = mapData.blockedSpaces[getKeyString(x, y)];
   return (
     blockedNextSpace ||
@@ -79,7 +78,7 @@ function isSolid(x,y) {
     x < mapData.minX ||
     y >= mapData.maxY ||
     y < mapData.minY
-  )
+  );
 }
 
 function getRandomSafeSpot() {
@@ -111,9 +110,7 @@ function getRandomSafeSpot() {
   ]);
 }
 
-
 (function () {
-
   let playerId;
   let playerRef;
   let players = {};
@@ -125,14 +122,13 @@ function getRandomSafeSpot() {
   const playerNameInput = document.querySelector("#player-name");
   const playerColorButton = document.querySelector("#player-color");
 
-
   function placeCoin() {
     const { x, y } = getRandomSafeSpot();
     const coinRef = firebase.database().ref(`coins/${getKeyString(x, y)}`);
     coinRef.set({
       x,
       y,
-    })
+    });
 
     const coinTimeouts = [2000, 3000, 4000, 5000];
     setTimeout(() => {
@@ -147,12 +143,11 @@ function getRandomSafeSpot() {
       firebase.database().ref(`coins/${key}`).remove();
       playerRef.update({
         coins: players[playerId].coins + 1,
-      })
+      });
     }
   }
 
-
-  function handleArrowPress(xChange=0, yChange=0) {
+  function handleArrowPress(xChange = 0, yChange = 0) {
     const newX = players[playerId].x + xChange;
     const newY = players[playerId].y + yChange;
     if (!isSolid(newX, newY)) {
@@ -171,11 +166,10 @@ function getRandomSafeSpot() {
   }
 
   function initGame() {
-
-    new KeyPressListener("ArrowUp", () => handleArrowPress(0, -1))
-    new KeyPressListener("ArrowDown", () => handleArrowPress(0, 1))
-    new KeyPressListener("ArrowLeft", () => handleArrowPress(-1, 0))
-    new KeyPressListener("ArrowRight", () => handleArrowPress(1, 0))
+    new KeyPressListener("ArrowUp", () => handleArrowPress(0, -1));
+    new KeyPressListener("ArrowDown", () => handleArrowPress(0, 1));
+    new KeyPressListener("ArrowLeft", () => handleArrowPress(-1, 0));
+    new KeyPressListener("ArrowRight", () => handleArrowPress(1, 0));
 
     const allPlayersRef = firebase.database().ref(`players`);
     const allCoinsRef = firebase.database().ref(`coins`);
@@ -194,17 +188,17 @@ function getRandomSafeSpot() {
         const left = 16 * characterState.x + "px";
         const top = 16 * characterState.y - 4 + "px";
         el.style.transform = `translate3d(${left}, ${top}, 0)`;
-      })
-    })
+      });
+    });
     allPlayersRef.on("child_added", (snapshot) => {
-      //Fires whenever a new node is added the tree
+      //Fires whenever a new nod e is added the tree
       const addedPlayer = snapshot.val();
       const characterElement = document.createElement("div");
       characterElement.classList.add("Character", "grid-cell");
       if (addedPlayer.id === playerId) {
         characterElement.classList.add("you");
       }
-      characterElement.innerHTML = (`
+      characterElement.innerHTML = `
         <div class="Character_shadow grid-cell"></div>
         <div class="Character_sprite grid-cell"></div>
         <div class="Character_name-container">
@@ -212,28 +206,28 @@ function getRandomSafeSpot() {
           <span class="Character_coins">0</span>
         </div>
         <div class="Character_you-arrow"></div>
-      `);
+      `;
       playerElements[addedPlayer.id] = characterElement;
 
       //Fill in some initial state
-      characterElement.querySelector(".Character_name").innerText = addedPlayer.name;
-      characterElement.querySelector(".Character_coins").innerText = addedPlayer.coins;
+      characterElement.querySelector(".Character_name").innerText =
+        addedPlayer.name;
+      characterElement.querySelector(".Character_coins").innerText =
+        addedPlayer.coins;
       characterElement.setAttribute("data-color", addedPlayer.color);
       characterElement.setAttribute("data-direction", addedPlayer.direction);
       const left = 16 * addedPlayer.x + "px";
       const top = 16 * addedPlayer.y - 4 + "px";
       characterElement.style.transform = `translate3d(${left}, ${top}, 0)`;
       gameContainer.appendChild(characterElement);
-    })
-
+    });
 
     //Remove character DOM element after they leave
     allPlayersRef.on("child_removed", (snapshot) => {
       const removedKey = snapshot.val().id;
       gameContainer.removeChild(playerElements[removedKey]);
       delete playerElements[removedKey];
-    })
-
+    });
 
     //New - not in the video!
     //This block will remove coins from local state when Firebase `coins` value updates
@@ -263,40 +257,39 @@ function getRandomSafeSpot() {
       // Keep a reference for removal later and add to DOM
       coinElements[key] = coinElement;
       gameContainer.appendChild(coinElement);
-    })
+    });
     allCoinsRef.on("child_removed", (snapshot) => {
-      const {x,y} = snapshot.val();
-      const keyToRemove = getKeyString(x,y);
-      gameContainer.removeChild( coinElements[keyToRemove] );
+      const { x, y } = snapshot.val();
+      const keyToRemove = getKeyString(x, y);
+      gameContainer.removeChild(coinElements[keyToRemove]);
       delete coinElements[keyToRemove];
-    })
-
+    });
 
     //Updates player name with text input
     playerNameInput.addEventListener("change", (e) => {
       const newName = e.target.value || createName();
       playerNameInput.value = newName;
       playerRef.update({
-        name: newName
-      })
-    })
+        name: newName,
+      });
+    });
 
     //Update player color on button click
     playerColorButton.addEventListener("click", () => {
       const mySkinIndex = playerColors.indexOf(players[playerId].color);
       const nextColor = playerColors[mySkinIndex + 1] || playerColors[0];
       playerRef.update({
-        color: nextColor
-      })
-    })
+        color: nextColor,
+      });
+    });
 
     //Place my first coin
     placeCoin();
-
   }
 
   firebase.auth().onAuthStateChanged((user) => {
-    console.log(user)
+    console.log(user);
+    console.log(user);
     if (user) {
       //You're logged in!
       playerId = user.uid;
@@ -305,8 +298,7 @@ function getRandomSafeSpot() {
       const name = createName();
       playerNameInput.value = name;
 
-      const {x, y} = getRandomSafeSpot();
-
+      const { x, y } = getRandomSafeSpot();
 
       playerRef.set({
         id: playerId,
@@ -316,7 +308,7 @@ function getRandomSafeSpot() {
         x,
         y,
         coins: 0,
-      })
+      });
 
       //Remove me from Firebase when I diconnect
       playerRef.onDisconnect().remove();
@@ -326,14 +318,15 @@ function getRandomSafeSpot() {
     } else {
       //You're logged out.
     }
-  })
-
-  firebase.auth().signInAnonymously().catch((error) => {
-    var errorCode = error.code;
-    var errorMessage = error.message;
-    // ...
-    console.log(errorCode, errorMessage);
   });
 
-
+  firebase
+    .auth()
+    .signInAnonymously()
+    .catch((error) => {
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      // ...
+      console.log(errorCode, errorMessage);
+    });
 })();
