@@ -169,8 +169,9 @@ function getRandomSafeSpot() {
   }
 
   function handleArrowPress(xChange = 0, yChange = 0) {
-    const newX = players[playerId].x + xChange;
-    const newY = players[playerId].y + yChange;
+    const speed = players[playerId].speed || 1;
+    const newX = players[playerId].x + xChange * speed;
+    const newY = players[playerId].y + yChange * speed;
     if (!isSolid(newX, newY)) {
       //move to the next space
       players[playerId].x = newX;
@@ -188,6 +189,9 @@ function getRandomSafeSpot() {
   }
 
   function checkPlayerCollisions(x, y) {
+    if (players[playerId].shield) {
+      return; // Skip collision check if shield is active
+    }
     const myCoins = players[playerId].coins;
 
     Object.keys(players).forEach((key) => {
@@ -195,6 +199,10 @@ function getRandomSafeSpot() {
 
       const otherPlayer = players[key];
       if (otherPlayer.x === x && otherPlayer.y === y) {
+        // Check if shield is active
+        if (players[playerId].powers?.shield) {
+          return; // Shield blocks all collisions
+        }
         if (myCoins > otherPlayer.coins) {
           // Я атакую игрока с меньшим количеством монет
           // Отправляем сообщение о поражении атакованному игроку
@@ -252,6 +260,112 @@ function getRandomSafeSpot() {
       `;
       playersList.appendChild(div);
     });
+  }
+
+  function initPowers() {
+    document.querySelectorAll(".power-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        const power = button.dataset.power;
+        const cost = parseInt(button.dataset.cost);
+
+        console.log(
+          "Power clicked:",
+          power,
+          "Cost:",
+          cost,
+          "Current coins:",
+          players[playerId].coins
+        );
+
+        if (players[playerId].coins >= cost && !activePowers[power]) {
+          // Deduct coins
+          const newCoinAmount = players[playerId].coins - cost;
+
+          // Update Firebase with new coin amount
+          playerRef.update({
+            coins: newCoinAmount,
+          });
+
+          // Activate power effect
+          if (power === "speed") {
+            playerRef.update({
+              speed: 2,
+            });
+          } else if (power === "shield") {
+            playerRef.update({
+              shield: true,
+            });
+          }
+
+          // Visual feedback
+          button.classList.add("active");
+          const cooldown = button.querySelector(".cooldown");
+          cooldown.style.width = "100%";
+
+          // Set timeout to remove power
+          setTimeout(() => {
+            if (power === "speed") {
+              playerRef.update({
+                speed: 1,
+              });
+            } else if (power === "shield") {
+              playerRef.update({
+                shield: null,
+              });
+            }
+
+            button.classList.remove("active");
+            button.classList.add("disabled");
+
+            // Cooldown period
+            setTimeout(() => {
+              button.classList.remove("disabled");
+              cooldown.style.width = "0%";
+              activePowers[power] = false;
+            }, POWERS[power].cooldown);
+          }, POWERS[power].duration);
+
+          activePowers[power] = true;
+        }
+      });
+    });
+  }
+
+  function activatePower(power, button) {
+    const powerConfig = POWERS[power];
+    activePowers[power] = true;
+    button.classList.add("active");
+
+    // Add power effect
+    playerElements[playerId].classList.add(power);
+
+    // Handle power specific effects
+    if (power === "speed") {
+      // Double movement speed
+      players[playerId].speed = 2;
+    }
+
+    // Start cooldown animation
+    const cooldown = button.querySelector(".cooldown");
+    cooldown.style.width = "100%";
+
+    // Remove power after duration
+    setTimeout(() => {
+      playerRef.update({
+        [`powers.${power}`]: null,
+        speed: power === "speed" ? 1 : players[playerId].speed,
+      });
+      playerElements[playerId].classList.remove(power);
+      button.classList.remove("active");
+
+      // Start cooldown
+      button.classList.add("disabled");
+      setTimeout(() => {
+        button.classList.remove("disabled");
+        activePowers[power] = false;
+        cooldown.style.width = "0%";
+      }, powerConfig.cooldown);
+    }, powerConfig.duration);
   }
 
   function initGame() {
@@ -385,7 +499,24 @@ function getRandomSafeSpot() {
 
     //Place my first coin
     placeCoin();
+    initPowers();
   }
+
+  // Add new variables
+  const POWERS = {
+    speed: {
+      cost: 3,
+      duration: 5000,
+      cooldown: 8000,
+    },
+    shield: {
+      cost: 5,
+      duration: 7000,
+      cooldown: 15000,
+    },
+  };
+
+  let activePowers = {};
 
   firebase.auth().onAuthStateChanged((user) => {
     console.log(user);

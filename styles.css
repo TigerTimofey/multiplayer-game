@@ -243,3 +243,91 @@ button:active {
   color: #ffd700;
   font-weight: bold;
 }
+
+/* Powers Menu */
+.powers-menu {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  min-width: 150px;
+}
+
+.powers-menu h3 {
+  margin: 0 0 10px 0;
+  text-align: center;
+  font-size: 16px;
+}
+
+.power-button {
+  padding: 8px;
+  margin: 5px 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.power-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.power-button.active {
+  background: rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+}
+
+.power-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.power-button.shake {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.power-button span::after {
+  content: attr(data-coins);
+  margin-left: 5px;
+  color: gold;
+}
+
+.cooldown {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: #ffd700;
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+/* Add glow effect for active powers */
+.Character.speed-boost .Character_sprite {
+  filter: drop-shadow(0 0 5px #00ff00);
+}
+
+.Character.shield .Character_sprite {
+  filter: drop-shadow(0 0 5px #0088ff);
+}
