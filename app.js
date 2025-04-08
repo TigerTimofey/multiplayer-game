@@ -169,6 +169,9 @@ function getRandomSafeSpot() {
   }
 
   function handleArrowPress(xChange = 0, yChange = 0) {
+    // Add frozen check
+    if (players[playerId].frozen) return;
+
     const speed = players[playerId].speed || 1;
     const newX = players[playerId].x + xChange * speed;
     const newY = players[playerId].y + yChange * speed;
@@ -189,10 +192,11 @@ function getRandomSafeSpot() {
   }
 
   function checkPlayerCollisions(x, y) {
-    if (players[playerId].shield) {
-      return; // Skip collision check if shield is active
-    }
-    const myCoins = players[playerId].coins;
+    if (players[playerId].shield) return;
+
+    const myCoins = players[playerId].isGiant
+      ? players[playerId].coins * 2 // Double power when giant
+      : players[playerId].coins;
 
     Object.keys(players).forEach((key) => {
       if (key === playerId) return;
@@ -263,72 +267,86 @@ function getRandomSafeSpot() {
   }
 
   function initPowers() {
+    // Update keyboard listeners
+    new KeyPressListener("KeyW", () => activatePowerByKey("speed"));
+    new KeyPressListener("KeyE", () => activatePowerByKey("shield"));
+    new KeyPressListener("KeyR", () => activatePowerByKey("teleport"));
+    new KeyPressListener("KeyA", () => activatePowerByKey("grow"));
+
     document.querySelectorAll(".power-button").forEach((button) => {
       button.addEventListener("click", () => {
         const power = button.dataset.power;
-        const cost = parseInt(button.dataset.cost);
-
-        console.log(
-          "Power clicked:",
-          power,
-          "Cost:",
-          cost,
-          "Current coins:",
-          players[playerId].coins
-        );
-
-        if (players[playerId].coins >= cost && !activePowers[power]) {
-          // Deduct coins
-          const newCoinAmount = players[playerId].coins - cost;
-
-          // Update Firebase with new coin amount
-          playerRef.update({
-            coins: newCoinAmount,
-          });
-
-          // Activate power effect
-          if (power === "speed") {
-            playerRef.update({
-              speed: 2,
-            });
-          } else if (power === "shield") {
-            playerRef.update({
-              shield: true,
-            });
-          }
-
-          // Visual feedback
-          button.classList.add("active");
-          const cooldown = button.querySelector(".cooldown");
-          cooldown.style.width = "100%";
-
-          // Set timeout to remove power
-          setTimeout(() => {
-            if (power === "speed") {
-              playerRef.update({
-                speed: 1,
-              });
-            } else if (power === "shield") {
-              playerRef.update({
-                shield: null,
-              });
-            }
-
-            button.classList.remove("active");
-            button.classList.add("disabled");
-
-            // Cooldown period
-            setTimeout(() => {
-              button.classList.remove("disabled");
-              cooldown.style.width = "0%";
-              activePowers[power] = false;
-            }, POWERS[power].cooldown);
-          }, POWERS[power].duration);
-
-          activePowers[power] = true;
-        }
+        activatePowerByKey(power);
       });
     });
+  }
+
+  function activatePowerByKey(power) {
+    const button = document.querySelector(`[data-power="${power}"]`);
+    const cost = parseInt(button.dataset.cost);
+
+    if (players[playerId].coins >= cost && !activePowers[power]) {
+      const newCoinAmount = players[playerId].coins - cost;
+
+      switch (power) {
+        case "speed":
+          playerRef.update({
+            coins: newCoinAmount,
+            speed: 2,
+          });
+          break;
+        case "shield":
+          playerRef.update({
+            coins: newCoinAmount,
+            shield: true,
+          });
+          break;
+        case "teleport":
+          const randomSpot = getRandomSafeSpot();
+          playerRef.update({
+            coins: newCoinAmount,
+            x: randomSpot.x,
+            y: randomSpot.y,
+          });
+          break;
+        case "grow":
+          playerRef.update({
+            coins: newCoinAmount,
+            isGiant: true,
+            scale: 2, // Add scale property
+          });
+          const characterElement = playerElements[playerId];
+          characterElement.classList.add("giant");
+          characterElement.style.transform = `translate3d(${
+            16 * players[playerId].x
+          }px, ${16 * players[playerId].y - 4}px, 0) scale(2)`;
+          break;
+      }
+
+      // Visual feedback and cooldown
+      button.classList.add("active");
+      const cooldown = button.querySelector(".cooldown");
+      cooldown.style.width = "100%";
+
+      if (POWERS[power].duration > 0) {
+        setTimeout(() => {
+          if (power === "grow") {
+            playerRef.update({
+              isGiant: false,
+              scale: 1,
+            });
+            const characterElement = playerElements[playerId];
+            characterElement.classList.remove("giant");
+            characterElement.style.transform = `translate3d(${
+              16 * players[playerId].x
+            }px, ${16 * players[playerId].y - 4}px, 0) scale(1)`;
+          }
+          button.classList.remove("active");
+          cooldown.style.width = "0%";
+          activePowers[power] = false;
+        }, POWERS[power].duration);
+      }
+    }
   }
 
   function activatePower(power, button) {
@@ -368,11 +386,22 @@ function getRandomSafeSpot() {
     }, powerConfig.duration);
   }
 
+  function updatePlayerPosition(characterElement, x, y, scale = 1) {
+    const left = 16 * x + "px";
+    const top = 16 * y - 4 + "px";
+    characterElement.style.transform = `translate3d(${left}, ${top}, 0) scale(${scale})`;
+  }
+
   function initGame() {
+    // Change back to arrow keys for movement
     new KeyPressListener("ArrowUp", () => handleArrowPress(0, -1));
     new KeyPressListener("ArrowDown", () => handleArrowPress(0, 1));
     new KeyPressListener("ArrowLeft", () => handleArrowPress(-1, 0));
     new KeyPressListener("ArrowRight", () => handleArrowPress(1, 0));
+
+    // Powers with W and E keys
+    new KeyPressListener("KeyW", () => activatePowerByKey("speed"));
+    new KeyPressListener("KeyE", () => activatePowerByKey("shield"));
 
     const allPlayersRef = firebase.database().ref(`players`);
     const allCoinsRef = firebase.database().ref(`coins`);
@@ -399,9 +428,20 @@ function getRandomSafeSpot() {
         el.querySelector(".Character_coins").innerText = characterState.coins;
         el.setAttribute("data-color", characterState.color);
         el.setAttribute("data-direction", characterState.direction);
-        const left = 16 * characterState.x + "px";
-        const top = 16 * characterState.y - 4 + "px";
-        el.style.transform = `translate3d(${left}, ${top}, 0)`;
+
+        // Update position with scale
+        updatePlayerPosition(
+          el,
+          characterState.x,
+          characterState.y,
+          characterState.scale || 1
+        );
+
+        if (characterState.isGiant) {
+          el.classList.add("giant");
+        } else {
+          el.classList.remove("giant");
+        }
       });
     });
     allPlayersRef.on("child_added", (snapshot) => {
@@ -512,6 +552,16 @@ function getRandomSafeSpot() {
     shield: {
       cost: 5,
       duration: 7000,
+      cooldown: 15000,
+    },
+    teleport: {
+      cost: 4,
+      duration: 0, // Instant effect
+      cooldown: 10000,
+    },
+    grow: {
+      cost: 6,
+      duration: 6000,
       cooldown: 15000,
     },
   };

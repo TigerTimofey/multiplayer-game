@@ -85,6 +85,7 @@ button:active {
 }
 .Character {
   transition: transform 0.4s;
+  transform-origin: bottom center;
 }
 .Character.you {
   z-index: 1;
@@ -216,7 +217,7 @@ button:active {
 /* Scoreboard Styles */
 .scoreboard {
   position: fixed;
-  top: 20px;
+  top: 80px;
   right: 20px;
   background: rgba(0, 0, 0, 0.4);
   color: white;
@@ -247,79 +248,80 @@ button:active {
 /* Powers Menu */
 .powers-menu {
   position: fixed;
-  top: 50%;
-  right: 20px;
-  transform: translateY(-50%);
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  padding: 10px;
   background: rgba(0, 0, 0, 0.4);
-  color: white;
-  padding: 15px;
-  border-radius: 8px;
-  min-width: 150px;
-}
-
-.powers-menu h3 {
-  margin: 0 0 10px 0;
-  text-align: center;
-  font-size: 16px;
+  border-radius: 16px;
 }
 
 .power-button {
-  padding: 8px;
-  margin: 5px 0;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  cursor: pointer;
+  width: 70px;
+  height: 70px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .power-button:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.power-button .key-hint {
+  position: absolute;
+  top: -10px;
+  background: #333;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.power-button span {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+.power-button .cost {
+  font-size: 12px;
+  color: gold;
 }
 
 .power-button.active {
   background: rgba(255, 215, 0, 0.3);
-  color: #ffd700;
-}
-
-.power-button.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.power-button.shake {
-  animation: shake 0.5s;
-}
-
-@keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-5px);
-  }
-  75% {
-    transform: translateX(5px);
-  }
-}
-
-.power-button span::after {
-  content: attr(data-coins);
-  margin-left: 5px;
-  color: gold;
+  border-color: gold;
 }
 
 .cooldown {
   position: absolute;
   bottom: 0;
   left: 0;
-  height: 2px;
-  background: #ffd700;
-  width: 0%;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.cooldown::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: gold;
+  width: var(--progress, 0%);
   transition: width 0.1s linear;
 }
 
@@ -330,4 +332,74 @@ button:active {
 
 .Character.shield .Character_sprite {
   filter: drop-shadow(0 0 5px #0088ff);
+}
+
+.Character.frozen .Character_sprite {
+  filter: brightness(0.7) sepia(1) hue-rotate(180deg);
+  animation: freeze 1s infinite alternate;
+}
+
+.Character.attack .Character_sprite {
+  filter: drop-shadow(0 0 5px #ff0000);
+  animation: attack 0.5s infinite alternate;
+}
+
+.Character.giant {
+  z-index: 2;
+  filter: drop-shadow(0 0 8px #ff9900);
+}
+
+.Character.giant .Character_sprite {
+  animation: pulse 1s infinite alternate;
+}
+
+.Character.giant .Character_name-container {
+  transform: scale(0.5);
+  transform-origin: bottom left;
+}
+
+@keyframes pulse {
+  from {
+    filter: brightness(1) saturate(1.2);
+  }
+  to {
+    filter: brightness(1.3) saturate(1.5);
+  }
+}
+
+.Character.giant {
+  transform: scale(1.5);
+  z-index: 2;
+  filter: drop-shadow(0 0 8px #ff9900);
+}
+
+.Character.giant .Character_sprite {
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes freeze {
+  from {
+    filter: brightness(0.7) sepia(1) hue-rotate(180deg);
+  }
+  to {
+    filter: brightness(0.9) sepia(1) hue-rotate(180deg);
+  }
+}
+
+@keyframes attack {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.2);
+  }
 }

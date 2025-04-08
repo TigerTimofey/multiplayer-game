@@ -12,16 +12,47 @@
   <body>
     <div class="game-container"></div>
     <div class="powers-menu">
-      <h3>Powers</h3>
-      <div class="power-button" data-power="speed" data-cost="3">
-        <span>Speed Boost (3 coins)</span>
+      <div
+        class="power-button"
+        data-power="speed"
+        data-cost="3"
+        data-key="KeyW"
+      >
+        <div class="key-hint">W</div>
+        <span>Speed</span>
+        <div class="cost">3 coins</div>
         <div class="cooldown"></div>
       </div>
-      <div class="power-button" data-power="shield" data-cost="5">
-        <span>Shield (5 coins)</span>
+      <div
+        class="power-button"
+        data-power="shield"
+        data-cost="5"
+        data-key="KeyE"
+      >
+        <div class="key-hint">E</div>
+        <span>Shield</span>
+        <div class="cost">5 coins</div>
+        <div class="cooldown"></div>
+      </div>
+      <div
+        class="power-button"
+        data-power="teleport"
+        data-cost="4"
+        data-key="KeyR"
+      >
+        <div class="key-hint">R</div>
+        <span>Teleport</span>
+        <div class="cost">4 coins</div>
+        <div class="cooldown"></div>
+      </div>
+      <div class="power-button" data-power="grow" data-cost="6" data-key="KeyA">
+        <div class="key-hint">A</div>
+        <span>Grow</span>
+        <div class="cost">6 coins</div>
         <div class="cooldown"></div>
       </div>
     </div>
+    <div class="controls-hint">Use ←↑↓→ to move</div>
     <div class="scoreboard">
       <h3>Players</h3>
       <div id="players-list"></div>
