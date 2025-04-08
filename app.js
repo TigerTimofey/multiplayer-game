@@ -169,25 +169,48 @@ function getRandomSafeSpot() {
   }
 
   function handleArrowPress(xChange = 0, yChange = 0) {
-    // Add frozen check
     if (players[playerId].frozen) return;
 
     const speed = players[playerId].speed || 1;
     const newX = players[playerId].x + xChange * speed;
     const newY = players[playerId].y + yChange * speed;
+
     if (!isSolid(newX, newY)) {
-      //move to the next space
-      players[playerId].x = newX;
-      players[playerId].y = newY;
-      if (xChange === 1) {
-        players[playerId].direction = "right";
+      const newDirection =
+        xChange === 1
+          ? "right"
+          : xChange === -1
+          ? "left"
+          : players[playerId].direction;
+
+      // Update main player
+      playerRef.update({
+        x: newX,
+        y: newY,
+        direction: newDirection,
+      });
+
+      // Update clones if they exist
+      if (players[playerId].clones) {
+        const updatedClones = players[playerId].clones.map((clone, index) => {
+          // Calculate offset based on clone index to maintain formation
+          const angleOffset =
+            (index / players[playerId].clones.length) * Math.PI * 2;
+          const radius = 2; // Distance from player
+
+          return {
+            ...clone,
+            x: newX + Math.round(Math.cos(angleOffset) * radius),
+            y: newY + Math.round(Math.sin(angleOffset) * radius),
+            direction: newDirection,
+          };
+        });
+
+        playerRef.update({ clones: updatedClones });
       }
-      if (xChange === -1) {
-        players[playerId].direction = "left";
-      }
-      playerRef.set(players[playerId]);
+
       attemptGrabCoin(newX, newY);
-      checkPlayerCollisions(newX, newY); // Add this line
+      checkPlayerCollisions(newX, newY);
     }
   }
 
@@ -272,6 +295,7 @@ function getRandomSafeSpot() {
     new KeyPressListener("KeyE", () => activatePowerByKey("shield"));
     new KeyPressListener("KeyR", () => activatePowerByKey("teleport"));
     new KeyPressListener("KeyA", () => activatePowerByKey("grow"));
+    new KeyPressListener("KeyQ", () => activatePowerByKey("ultimate"));
 
     document.querySelectorAll(".power-button").forEach((button) => {
       button.addEventListener("click", () => {
@@ -321,6 +345,45 @@ function getRandomSafeSpot() {
             16 * players[playerId].x
           }px, ${16 * players[playerId].y - 4}px, 0) scale(2)`;
           break;
+        case "ultimate":
+          // Dragon form transformation with coin magnet effect
+          playerRef.update({
+            coins: newCoinAmount,
+            isUltimate: true,
+            isDragon: true,
+            speed: 2,
+            shield: true,
+            scale: 2,
+            damage: players[playerId].coins * 3,
+            isMagnet: true, // Add magnet state
+          });
+
+          // Get all coins and animate them towards the player
+          Object.keys(coins).forEach((key) => {
+            const [coinX, coinY] = key.split("x").map(Number);
+            const coinElement = coinElements[key];
+
+            if (coinElement) {
+              coinElement.classList.add("magnetized");
+              const targetX = 16 * players[playerId].x;
+              const targetY = 16 * players[playerId].y - 4;
+
+              setTimeout(() => {
+                coinElement.style.transform = `translate3d(${targetX}px, ${targetY}px, 0)`;
+                // Collect coin after animation
+                setTimeout(() => {
+                  firebase.database().ref(`coins/${key}`).remove();
+                  playerRef.update({
+                    coins: players[playerId].coins + 1,
+                  });
+                }, 500);
+              }, 100);
+            }
+          });
+
+          const element = playerElements[playerId];
+          element.classList.add("dragon");
+          break;
       }
 
       // Visual feedback and cooldown
@@ -340,6 +403,18 @@ function getRandomSafeSpot() {
             characterElement.style.transform = `translate3d(${
               16 * players[playerId].x
             }px, ${16 * players[playerId].y - 4}px, 0) scale(1)`;
+          }
+          if (power === "ultimate") {
+            playerRef.update({
+              isUltimate: false,
+              isDragon: false,
+              speed: 1,
+              shield: false,
+              scale: 1,
+              damage: null,
+            });
+            const element = playerElements[playerId];
+            element.classList.remove("dragon");
           }
           button.classList.remove("active");
           cooldown.style.width = "0%";
@@ -442,6 +517,42 @@ function getRandomSafeSpot() {
         } else {
           el.classList.remove("giant");
         }
+
+        // Handle clones
+        if (characterState.clones) {
+          characterState.clones.forEach((clone, index) => {
+            const cloneId = `clone-${key}-${index}`;
+            let cloneElement = playerElements[cloneId];
+
+            if (!cloneElement) {
+              cloneElement = document.createElement("div");
+              cloneElement.classList.add("Character", "clone");
+              cloneElement.innerHTML = `
+                <div class="Character_shadow grid-cell"></div>
+                <div class="Character_sprite grid-cell"></div>
+                <div class="Character_name-container">
+                  <span class="Character_name">${clone.ownerName}'s clone</span>
+                </div>
+              `;
+              playerElements[cloneId] = cloneElement;
+              gameContainer.appendChild(cloneElement);
+            }
+
+            cloneElement.setAttribute("data-color", clone.color);
+            updatePlayerPosition(cloneElement, clone.x, clone.y);
+          });
+        }
+
+        // Clean up removed clones
+        Object.keys(playerElements).forEach((elementId) => {
+          if (elementId.startsWith("clone-") && elementId.includes(key)) {
+            const [, playerId] = elementId.split("-");
+            if (!characterState.clones) {
+              gameContainer.removeChild(playerElements[elementId]);
+              delete playerElements[elementId];
+            }
+          }
+        });
       });
     });
     allPlayersRef.on("child_added", (snapshot) => {
@@ -545,7 +656,7 @@ function getRandomSafeSpot() {
   // Add new variables
   const POWERS = {
     speed: {
-      cost: 3,
+      cost: 4,
       duration: 5000,
       cooldown: 8000,
     },
@@ -555,14 +666,19 @@ function getRandomSafeSpot() {
       cooldown: 15000,
     },
     teleport: {
-      cost: 4,
+      cost: 6,
       duration: 0, // Instant effect
       cooldown: 10000,
     },
     grow: {
-      cost: 6,
+      cost: 7,
       duration: 6000,
       cooldown: 15000,
+    },
+    ultimate: {
+      cost: 12,
+      duration: 8000,
+      cooldown: 20000,
     },
   };
 

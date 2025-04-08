@@ -180,6 +180,28 @@ button:active {
   background: url(/images/coin-shadow.png) no-repeat no-repeat;
 }
 
+.Coin {
+  transition: transform 0.5s ease-in;
+}
+
+.Coin.magnetized {
+  z-index: 4;
+  pointer-events: none;
+}
+
+.Coin.magnetized .Coin_sprite {
+  animation: magnetizedCoin 0.5s infinite linear;
+}
+
+@keyframes magnetizedCoin {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    transform: scale(0.7) rotate(360deg);
+  }
+}
+
 /* Modal Styles */
 .modal {
   position: fixed;
@@ -217,7 +239,7 @@ button:active {
 /* Scoreboard Styles */
 .scoreboard {
   position: fixed;
-  top: 80px;
+  top: 0px;
   right: 20px;
   background: rgba(0, 0, 0, 0.4);
   color: white;
@@ -296,7 +318,7 @@ button:active {
 }
 
 .power-button .cost {
-  font-size: 12px;
+  font-size: 14px;
   color: gold;
 }
 
@@ -401,5 +423,61 @@ button:active {
   }
   to {
     transform: scale(1.2);
+  }
+}
+
+.Character.ultimate {
+  z-index: 3;
+  filter: drop-shadow(0 0 15px #ff00ff);
+}
+
+.Character.ultimate .Character_sprite {
+  animation: ultimate 1s infinite alternate;
+}
+
+@keyframes ultimate {
+  from {
+    filter: brightness(1.2) saturate(1.5) hue-rotate(0deg);
+  }
+  to {
+    filter: brightness(1.5) saturate(2) hue-rotate(360deg);
+  }
+}
+
+/* Remove clone styles and add dragon styles */
+.Character.dragon {
+  z-index: 3;
+  filter: drop-shadow(0 0 20px #ff3300);
+  transform-origin: bottom center;
+}
+
+.Character.dragon .Character_sprite {
+  animation: dragonForm 2s infinite alternate;
+  filter: brightness(1.5) saturate(2);
+}
+
+.Character.dragon .Character_shadow {
+  transform: scale(1.5);
+  opacity: 0.8;
+}
+
+.Character.dragon .Character_name-container {
+  background: #ff3300;
+  transform: scale(0.7);
+  transform-origin: bottom left;
+}
+
+@keyframes dragonForm {
+  0% {
+    filter: brightness(1.5) saturate(2) hue-rotate(0deg);
+    transform: scale(2) translateY(0);
+  }
+  50% {
+    filter: brightness(2) saturate(3) hue-rotate(180deg);
+    transform: scale(2.2) translateY(-2px);
+  }
+  100% {
+    filter: brightness(1.5) saturate(2) hue-rotate(360deg);
+    transform: scale(2) translateY(0);
   }
 }
