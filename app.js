@@ -138,6 +138,7 @@ function getRandomSafeSpot() {
       x,
       y,
       coins: 0,
+      joinTime: Date.now(), // Add join time on restart
     });
   }
 
@@ -250,10 +251,14 @@ function getRandomSafeSpot() {
           }, 1000);
         } else if (myCoins < otherPlayer.coins) {
           // Меня атаковал игрок с большим количеством монет
-          gameOverModal.classList.remove("hidden");
-          document.querySelector(
-            "#eliminated-by"
-          ).textContent = `Eliminated by ${otherPlayer.name} who had ${otherPlayer.coins} coins!`;
+          const playerStats = {
+            coins: players[playerId].coins,
+            joinTime: players[playerId].joinTime,
+          };
+          showGameOver(
+            { name: otherPlayer.name, coins: otherPlayer.coins },
+            playerStats
+          );
 
           const myElement = playerElements[playerId];
           myElement.classList.add("eliminated");
@@ -264,6 +269,34 @@ function getRandomSafeSpot() {
         }
       }
     });
+  }
+
+  function showGameOver(eliminatedBy, playerStats) {
+    gameOverModal.classList.remove("hidden");
+
+    const eliminatedByEl = document.querySelector("#eliminated-by");
+    eliminatedByEl.textContent = `Eliminated by ${eliminatedBy.name} who had ${eliminatedBy.coins} coins!`;
+
+    document.querySelector("#final-coins").textContent = playerStats.coins;
+
+    // Check if joinTime exists before calculating
+    if (playerStats.joinTime) {
+      const timeAlive = Math.floor((Date.now() - playerStats.joinTime) / 1000);
+      const minutes = Math.floor(timeAlive / 60);
+      const seconds = timeAlive % 60;
+      document.querySelector(
+        "#time-survived"
+      ).textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    } else {
+      document.querySelector("#time-survived").textContent = "0:00";
+    }
+
+    const allPlayers = Object.values(players);
+    const rank =
+      allPlayers
+        .sort((a, b) => b.coins - a.coins)
+        .findIndex((p) => p.id === playerId) + 1;
+    document.querySelector("#final-rank").textContent = `#${rank}`;
   }
 
   function updateScoreboard() {
@@ -707,6 +740,7 @@ function getRandomSafeSpot() {
         coins: 0,
         eliminated: false,
         isDefeated: false,
+        joinTime: Date.now(), // Add join time
       });
 
       //Remove me from Firebase when I diconnect
