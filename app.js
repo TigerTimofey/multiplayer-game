@@ -118,6 +118,7 @@ function getRandomSafeSpot() {
   let playerElements = {};
   let coins = {};
   let coinElements = {};
+  let savedPlayerName = ""; // Add this at the top with other variables
 
   const gameContainer = document.querySelector(".game-container");
   const playerNameInput = document.querySelector("#player-name");
@@ -132,7 +133,7 @@ function getRandomSafeSpot() {
 
     playerRef.set({
       id: playerId,
-      name: playerNameInput.value,
+      name: savedPlayerName, // Use saved name instead of input value
       direction: "right",
       color: randomFromArray(playerColors),
       x,
@@ -514,15 +515,52 @@ function getRandomSafeSpot() {
     const allPlayersRef = firebase.database().ref(`players`);
     const allCoinsRef = firebase.database().ref(`coins`);
 
+    allPlayersRef.on("child_added", (snapshot) => {
+      const addedPlayer = snapshot.val();
+      const characterElement = document.createElement("div");
+      characterElement.classList.add("Character", "grid-cell");
+      if (addedPlayer.id === playerId) {
+        characterElement.classList.add("you");
+      }
+      characterElement.innerHTML = `
+        <div class="Character_shadow grid-cell"></div>
+        <div class="Character_sprite grid-cell"></div>
+        <div class="Character_name-container">
+          <span class="Character_name"></span>
+          <span class="Character_coins">0</span>
+        </div>
+        <div class="Character_you-arrow"></div>
+      `;
+
+      // Store element reference first
+      playerElements[addedPlayer.id] = characterElement;
+      gameContainer.appendChild(characterElement);
+
+      // Then set initial state
+      characterElement.querySelector(".Character_name").innerText =
+        addedPlayer.name;
+      characterElement.querySelector(".Character_coins").innerText =
+        addedPlayer.coins;
+      characterElement.setAttribute("data-color", addedPlayer.color);
+      characterElement.setAttribute("data-direction", addedPlayer.direction);
+
+      const left = 16 * addedPlayer.x + "px";
+      const top = 16 * addedPlayer.y - 4 + "px";
+      characterElement.style.transform = `translate3d(${left}, ${top}, 0)`;
+    });
+
     allPlayersRef.on("value", (snapshot) => {
-      //Fires whenever a change occurs
       players = snapshot.val() || {};
-      updateScoreboard(); // Add this line
+      updateScoreboard();
+
       Object.keys(players).forEach((key) => {
         const characterState = players[key];
         let el = playerElements[key];
 
-        // Проверяем, был ли игрок побежден
+        // Skip if element doesn't exist yet
+        if (!el) return;
+
+        // Check if player was defeated
         if (key === playerId && characterState.isDefeated) {
           gameOverModal.classList.remove("hidden");
           document.querySelector(
@@ -531,9 +569,13 @@ function getRandomSafeSpot() {
           el.classList.add("eliminated");
         }
 
-        // Обновляем DOM
-        el.querySelector(".Character_name").innerText = characterState.name;
-        el.querySelector(".Character_coins").innerText = characterState.coins;
+        // Update DOM elements safely
+        const nameEl = el.querySelector(".Character_name");
+        const coinsEl = el.querySelector(".Character_coins");
+
+        if (nameEl) nameEl.innerText = characterState.name;
+        if (coinsEl) coinsEl.innerText = characterState.coins;
+
         el.setAttribute("data-color", characterState.color);
         el.setAttribute("data-direction", characterState.direction);
 
@@ -588,37 +630,6 @@ function getRandomSafeSpot() {
         });
       });
     });
-    allPlayersRef.on("child_added", (snapshot) => {
-      //Fires whenever a new nod e is added the tree
-      const addedPlayer = snapshot.val();
-      const characterElement = document.createElement("div");
-      characterElement.classList.add("Character", "grid-cell");
-      if (addedPlayer.id === playerId) {
-        characterElement.classList.add("you");
-      }
-      characterElement.innerHTML = `
-        <div class="Character_shadow grid-cell"></div>
-        <div class="Character_sprite grid-cell"></div>
-        <div class="Character_name-container">
-          <span class="Character_name"></span>
-          <span class="Character_coins">0</span>
-        </div>
-        <div class="Character_you-arrow"></div>
-      `;
-      playerElements[addedPlayer.id] = characterElement;
-
-      //Fill in some initial state
-      characterElement.querySelector(".Character_name").innerText =
-        addedPlayer.name;
-      characterElement.querySelector(".Character_coins").innerText =
-        addedPlayer.coins;
-      characterElement.setAttribute("data-color", addedPlayer.color);
-      characterElement.setAttribute("data-direction", addedPlayer.direction);
-      const left = 16 * addedPlayer.x + "px";
-      const top = 16 * addedPlayer.y - 4 + "px";
-      characterElement.style.transform = `translate3d(${left}, ${top}, 0)`;
-      gameContainer.appendChild(characterElement);
-    });
 
     //Remove character DOM element after they leave
     allPlayersRef.on("child_removed", (snapshot) => {
@@ -663,21 +674,18 @@ function getRandomSafeSpot() {
       delete coinElements[keyToRemove];
     });
 
-    //Updates player name with text input
-    playerNameInput.addEventListener("change", (e) => {
-      const newName = e.target.value || createName();
-      playerNameInput.value = newName;
-      playerRef.update({
-        name: newName,
-      });
-    });
-
     //Update player color on button click
     playerColorButton.addEventListener("click", () => {
       const mySkinIndex = playerColors.indexOf(players[playerId].color);
       const nextColor = playerColors[mySkinIndex + 1] || playerColors[0];
+      const currentName = players[playerId].name.split(" ").slice(1).join(" "); // Remove old color prefix
+      const displayName = `${
+        nextColor.charAt(0).toUpperCase() + nextColor.slice(1)
+      } ${currentName}`;
+
       playerRef.update({
         color: nextColor,
+        name: displayName,
       });
     });
 
@@ -717,39 +725,88 @@ function getRandomSafeSpot() {
 
   let activePowers = {};
 
+  function initializeLobby() {
+    const lobby = document.querySelector("#lobby");
+    const lobbyName = document.querySelector("#lobby-name");
+    const startGame = document.querySelector("#start-game");
+    const colorOptions = document.querySelector(".color-options");
+    const playersOnline = document.querySelector("#players-online");
+    const gameContent = document.querySelector("#game-content");
+
+    // Add initial color option selection
+    playerColors.forEach((color, index) => {
+      const option = document.createElement("div");
+      option.className = "color-option" + (index === 0 ? " selected" : "");
+      option.style.backgroundColor = color;
+      option.dataset.color = color;
+      colorOptions.appendChild(option);
+    });
+
+    let selectedColor = playerColors[0];
+    colorOptions.addEventListener("click", (e) => {
+      if (e.target.classList.contains("color-option")) {
+        document
+          .querySelectorAll(".color-option")
+          .forEach((opt) => opt.classList.remove("selected"));
+        e.target.classList.add("selected");
+        selectedColor = e.target.dataset.color;
+      }
+    });
+
+    firebase
+      .database()
+      .ref("players")
+      .on("value", (snapshot) => {
+        const playerCount = snapshot.numChildren();
+        playersOnline.textContent = playerCount;
+      });
+
+    startGame.addEventListener("click", () => {
+      const name = lobbyName.value.trim() || createName();
+      savedPlayerName = name; // Save the name when starting game
+      const { x, y } = getRandomSafeSpot();
+
+      // Format display name with color
+      const displayName = `${
+        selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1)
+      } ${name}`;
+
+      playerRef
+        .set({
+          id: playerId,
+          name: displayName, // Use combined color + name
+          direction: "right",
+          color: selectedColor,
+          x: x,
+          y: y,
+          coins: 0,
+          eliminated: false,
+          isDefeated: false,
+          joinTime: Date.now(),
+        })
+        .then(() => {
+          // Only after successful player creation, show game and init
+          lobby.classList.add("hidden");
+          gameContent.classList.remove("hidden");
+          initGame();
+        })
+        .catch((error) => {
+          console.error("Failed to create player:", error);
+        });
+    });
+  }
+
   firebase.auth().onAuthStateChanged((user) => {
-    console.log(user);
-    console.log(user);
     if (user) {
       //You're logged in!
       playerId = user.uid;
       playerRef = firebase.database().ref(`players/${playerId}`);
 
-      const name = createName();
-      playerNameInput.value = name;
+      // Make sure game is hidden initially
+      document.querySelector("#game-content").classList.add("hidden");
 
-      const { x, y } = getRandomSafeSpot();
-
-      playerRef.set({
-        id: playerId,
-        name,
-        direction: "right",
-        color: randomFromArray(playerColors),
-        x,
-        y,
-        coins: 0,
-        eliminated: false,
-        isDefeated: false,
-        joinTime: Date.now(), // Add join time
-      });
-
-      //Remove me from Firebase when I diconnect
       playerRef.onDisconnect().remove();
-
-      //Begin the game now that we are signed in
-      initGame();
-    } else {
-      //You're logged out.
+      initializeLobby();
     }
   });
 

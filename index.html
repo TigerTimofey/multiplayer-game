@@ -8,95 +8,130 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/styles.css" type="text/css" />
+    <style>
+      .hidden {
+        display: none !important;
+      }
+    </style>
   </head>
   <body>
-    <div class="game-container"></div>
-    <div class="powers-menu">
-      <div
-        class="power-button"
-        data-power="speed"
-        data-cost="3"
-        data-key="KeyW"
-      >
-        <div class="key-hint">W</div>
-        <span>Speed</span>
-        <div class="cost">3 coins</div>
-        <div class="cooldown"></div>
-      </div>
-      <div
-        class="power-button"
-        data-power="shield"
-        data-cost="5"
-        data-key="KeyE"
-      >
-        <div class="key-hint">E</div>
-        <span>Shield</span>
-        <div class="cost">5 coins</div>
-        <div class="cooldown"></div>
-      </div>
-      <div
-        class="power-button"
-        data-power="teleport"
-        data-cost="4"
-        data-key="KeyR"
-      >
-        <div class="key-hint">R</div>
-        <span>Teleport</span>
-        <div class="cost">4 coins</div>
-        <div class="cooldown"></div>
-      </div>
-      <div class="power-button" data-power="grow" data-cost="6" data-key="KeyA">
-        <div class="key-hint">A</div>
-        <span>Grow</span>
-        <div class="cost">6 coins</div>
-        <div class="cooldown"></div>
-      </div>
-      <div
-        class="power-button"
-        data-power="ultimate"
-        data-cost="12"
-        data-key="KeyQ"
-      >
-        <div class="key-hint">Q</div>
-        <span>Ultimate</span>
-        <div class="cost">12 coins</div>
-        <div class="cooldown"></div>
-      </div>
-    </div>
-    <div class="controls-hint">Use ←↑↓→ to move</div>
-    <div class="scoreboard">
-      <h3>Players</h3>
-      <div id="players-list"></div>
-    </div>
-    <div class="player-info">
-      <div>
-        <label for="player-name">Your Name</label>
-        <input id="player-name" maxlength="10" type="text" />
-      </div>
-      <div>
-        <button id="player-color">Change Color</button>
+    <div id="lobby" class="lobby">
+      <div class="lobby-content">
+        <h1>Welcome to Multiplayer Game</h1>
+        <div class="lobby-stats">
+          <div class="stat">
+            <span class="stat-value" id="players-online">0</span>
+            <span class="stat-label">Players Online</span>
+          </div>
+        </div>
+        <div class="lobby-form">
+          <input
+            type="text"
+            id="lobby-name"
+            placeholder="Enter your name"
+            maxlength="10"
+          />
+          <div class="color-picker">
+            <span class="color-label">Choose Color:</span>
+            <div class="color-options">
+              <!-- Colors will be added by JS -->
+            </div>
+          </div>
+          <button id="start-game" class="lobby-button">Start Game</button>
+        </div>
       </div>
     </div>
 
-    <div id="game-over-modal" class="modal hidden">
-      <div class="modal-content">
-        <h2>Game Over!</h2>
-        <p id="eliminated-by"></p>
-        <div class="stats-container">
-          <div class="stat-item">
-            <div class="stat-label">Coins Collected</div>
-            <div class="stat-value" id="final-coins">0</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Time Survived</div>
-            <div class="stat-value" id="time-survived">0:00</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-label">Final Rank</div>
-            <div class="stat-value" id="final-rank">#1</div>
-          </div>
+    <div id="game-content" class="hidden">
+      <div class="game-container"></div>
+      <div class="powers-menu">
+        <div
+          class="power-button"
+          data-power="speed"
+          data-cost="3"
+          data-key="KeyW"
+        >
+          <div class="key-hint">W</div>
+          <span>Speed</span>
+          <div class="cost">3 coins</div>
+          <div class="cooldown"></div>
         </div>
-        <button id="restart-button">Play Again</button>
+        <div
+          class="power-button"
+          data-power="shield"
+          data-cost="5"
+          data-key="KeyE"
+        >
+          <div class="key-hint">E</div>
+          <span>Shield</span>
+          <div class="cost">5 coins</div>
+          <div class="cooldown"></div>
+        </div>
+        <div
+          class="power-button"
+          data-power="teleport"
+          data-cost="4"
+          data-key="KeyR"
+        >
+          <div class="key-hint">R</div>
+          <span>Teleport</span>
+          <div class="cost">4 coins</div>
+          <div class="cooldown"></div>
+        </div>
+        <div
+          class="power-button"
+          data-power="grow"
+          data-cost="6"
+          data-key="KeyA"
+        >
+          <div class="key-hint">A</div>
+          <span>Grow</span>
+          <div class="cost">6 coins</div>
+          <div class="cooldown"></div>
+        </div>
+        <div
+          class="power-button"
+          data-power="ultimate"
+          data-cost="12"
+          data-key="KeyQ"
+        >
+          <div class="key-hint">Q</div>
+          <span>Ultimate</span>
+          <div class="cost">12 coins</div>
+          <div class="cooldown"></div>
+        </div>
+      </div>
+      <div class="controls-hint">Use ←↑↓→ to move</div>
+      <div class="scoreboard">
+        <h3>Players</h3>
+        <div id="players-list"></div>
+      </div>
+      <div class="player-info">
+        <div>
+          <button id="player-color">Change Color</button>
+        </div>
+      </div>
+
+      <div id="game-over-modal" class="modal hidden">
+        <div class="modal-content">
+          <h2>Game Over!</h2>
+          <p id="eliminated-by"></p>
+          <div class="stats-container">
+            <div class="stat-item">
+              <div class="stat-label">Coins Collected</div>
+              <div class="stat-value" id="final-coins">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Time Survived</div>
+              <div class="stat-value" id="time-survived">0:00</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Final Rank</div>
+              <div class="stat-value" id="final-rank">#1</div>
+            </div>
+          </div>
+          <button id="restart-button">Play Again</button>
+        </div>
       </div>
     </div>
 
