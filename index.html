@@ -17,27 +17,62 @@
   <body>
     <div id="lobby" class="lobby">
       <div class="lobby-content">
-        <h1>Welcome to Multiplayer Game</h1>
-        <div class="lobby-stats">
-          <div class="stat">
-            <span class="stat-value" id="players-online">0</span>
-            <span class="stat-label">Players Online</span>
-          </div>
-        </div>
-        <div class="lobby-form">
-          <input
-            type="text"
-            id="lobby-name"
-            placeholder="Enter your name"
-            maxlength="10"
-          />
-          <div class="color-picker">
-            <span class="color-label">Choose Color:</span>
-            <div class="color-options">
-              <!-- Colors will be added by JS -->
+        <h1 id="lobby-title">Welcome to Multiplayer Game</h1>
+        <button id="toggle-joke" class="toggle-button">Settings</button>
+        <div id="regular-content">
+          <div class="lobby-stats">
+            <div class="stat">
+              <span class="stat-value" id="players-online">0</span>
+              <span class="stat-label">Players Online</span>
             </div>
           </div>
-          <button id="start-game" class="lobby-button">Start Game</button>
+          <div class="lobby-form">
+            <input
+              type="text"
+              id="lobby-name"
+              placeholder="Enter your name"
+              maxlength="10"
+            />
+            <div class="color-picker">
+              <span class="color-label">Choose Color:</span>
+              <div class="color-options">
+                <!-- Colors will be added by JS -->
+              </div>
+            </div>
+            <button id="start-game" class="lobby-button">Start Game</button>
+          </div>
+        </div>
+        <div id="joke-content" class="hidden">
+          <div class="controls-guide">
+            <div class="controls-section">
+              <h3>Movement</h3>
+              <div class="controls-grid">
+                <div class="control-key empty"></div>
+                <div class="control-key">↑</div>
+                <div class="control-key empty"></div>
+                <div class="control-key">←</div>
+                <div class="control-key">↓</div>
+                <div class="control-key">→</div>
+              </div>
+            </div>
+            <div class="controls-section">
+              <h3>Powers</h3>
+              <div
+                style="
+                  display: flex;
+                  gap: 10px;
+                  flex-wrap: wrap;
+                  justify-content: center;
+                "
+              >
+                <div class="control-key">W</div>
+                <div class="control-key">E</div>
+                <div class="control-key">R</div>
+                <div class="control-key">A</div>
+                <div class="control-key">Q</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

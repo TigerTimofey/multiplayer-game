@@ -794,6 +794,25 @@ function getRandomSafeSpot() {
           console.error("Failed to create player:", error);
         });
     });
+
+    // Update toggle button handler
+    const toggleButton = document.querySelector("#toggle-joke");
+    const lobbyTitle = document.querySelector("#lobby-title");
+
+    toggleButton.addEventListener("click", () => {
+      document.querySelector("#regular-content").classList.toggle("hidden");
+      document.querySelector("#joke-content").classList.toggle("hidden");
+
+      if (
+        document.querySelector("#regular-content").classList.contains("hidden")
+      ) {
+        toggleButton.textContent = "Back to lobby";
+        lobbyTitle.textContent = "Game Controls";
+      } else {
+        toggleButton.textContent = "Settings";
+        lobbyTitle.textContent = "Welcome to Multiplayer Game";
+      }
+    });
   }
 
   firebase.auth().onAuthStateChanged((user) => {

@@ -44,13 +44,11 @@ body {
   border: 2px solid rgba(255, 255, 255, 0.2);
   padding: 8px 15px;
   border-radius: 8px;
-  transition: all 0.3s;
 }
 
 #player-color:hover {
   background: rgba(0, 0, 0, 0.8);
   border-color: rgba(255, 215, 0, 0.5);
-  transform: translateY(-2px);
 }
 
 label {
@@ -86,10 +84,6 @@ button {
   border: 0;
   border-bottom: 2px solid #1e830b;
   cursor: pointer;
-}
-button:active {
-  position: relative;
-  top: 1px;
 }
 
 /* Characters */
@@ -274,21 +268,10 @@ button:active {
   font-size: 1.2em;
   border-radius: 25px;
   cursor: pointer;
-  transition: all 0.3s ease;
   margin-top: 20px;
   text-transform: uppercase;
   letter-spacing: 1px;
   box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-}
-
-#restart-button:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-  background: #ff8383;
-}
-
-#restart-button:active {
-  transform: translateY(1px);
 }
 
 .stats-container {
@@ -424,12 +407,6 @@ button:active {
   justify-content: center;
   position: relative;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.power-button:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 215, 0, 0.5);
 }
 
 .power-button .key-hint {
@@ -475,7 +452,6 @@ button:active {
   height: 100%;
   background: gold;
   width: var(--progress, 0%);
-  transition: width 0.1s linear;
 }
 
 /* Add glow effect for active powers */
@@ -643,6 +619,7 @@ button:active {
   margin-bottom: 2rem;
   font-size: 2em;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  padding: 30px;
 }
 
 .lobby-stats {
@@ -716,17 +693,58 @@ button:active {
   height: 40px;
   border-radius: 50%;
   cursor: pointer;
-  transition: transform 0.2s;
   border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.color-option:hover {
-  transform: scale(1.1);
 }
 
 .color-option.selected {
   border: 2px solid #fff;
-  transform: scale(1.1);
+}
+
+.toggle-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.controls-guide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  color: white;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  gap: 5px;
+}
+
+.control-key {
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.control-key.empty {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .lobby-button {
@@ -737,7 +755,6 @@ button:active {
   border-radius: 8px;
   font-size: 1.2em;
   cursor: pointer;
-  transition: all 0.3s;
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: bold;
@@ -745,6 +762,4 @@ button:active {
 
 .lobby-button:hover {
   background: #ffed4a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
 }
