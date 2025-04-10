@@ -20,26 +20,48 @@
         <h1 id="lobby-title">Welcome to Multiplayer Game</h1>
         <button id="toggle-joke" class="toggle-button">Settings</button>
         <div id="regular-content">
-          <div class="lobby-stats">
-            <div class="stat">
-              <span class="stat-value" id="players-online">0</span>
-              <span class="stat-label">Players Online</span>
+          <div class="lobby-buttons">
+            <button id="create-room" class="lobby-button">Create Room</button>
+            <button id="join-room" class="lobby-button">Join Room</button>
+          </div>
+          <div id="room-creation" class="hidden">
+            <div class="player-select">
+              <button data-players="2">2 Players</button>
+              <button data-players="3">3 Players</button>
+              <button data-players="4">4 Players</button>
             </div>
           </div>
-          <div class="lobby-form">
+          <div id="room-join" class="hidden">
             <input
               type="text"
-              id="lobby-name"
-              placeholder="Enter your name"
-              maxlength="10"
+              id="room-code"
+              placeholder="Enter Room Code"
+              maxlength="5"
             />
-            <div class="color-picker">
-              <span class="color-label">Choose Color:</span>
-              <div class="color-options">
-                <!-- Colors will be added by JS -->
+            <button id="join-game" class="lobby-button">Join</button>
+          </div>
+          <div id="game-setup" class="hidden">
+            <div class="lobby-stats">
+              <div class="stat">
+                <span class="stat-value" id="players-online">0</span>
+                <span class="stat-label">Players Online</span>
               </div>
             </div>
-            <button id="start-game" class="lobby-button">Start Game</button>
+            <div class="lobby-form">
+              <input
+                type="text"
+                id="lobby-name"
+                placeholder="Enter your name"
+                maxlength="10"
+              />
+              <div class="color-picker">
+                <span class="color-label">Choose Color:</span>
+                <div class="color-options">
+                  <!-- Colors will be added by JS -->
+                </div>
+              </div>
+              <button id="start-game" class="lobby-button">Start Game</button>
+            </div>
           </div>
         </div>
         <div id="joke-content" class="hidden">

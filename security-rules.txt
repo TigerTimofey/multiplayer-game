@@ -9,14 +9,29 @@ For example, any logged in player could currently delete all the coins in the ga
 {
   "rules": {
     ".read": "auth != null",
-    ".write": false,
     "players": {
       "$uid": {
         ".write": "auth != null && auth.uid == $uid"
       }
     },
     "coins": {
-        ".write": "auth != null"
+      ".write": "auth != null"
+    },
+    "rooms": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$roomId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['maxPlayers', 'currentPlayers', 'isOpen', 'created'])",
+        "players": {
+          ".write": "auth != null",
+          "$playerId": {
+            ".write": "auth != null",
+            ".validate": "newData.hasChild('joined')"
+          }
+        }
+      }
     }
   }
 }

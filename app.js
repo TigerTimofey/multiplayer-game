@@ -813,6 +813,170 @@ function getRandomSafeSpot() {
         lobbyTitle.textContent = "Welcome to Multiplayer Game";
       }
     });
+
+    // Add new elements
+    const createRoomBtn = document.querySelector("#create-room");
+    const joinRoomBtn = document.querySelector("#join-room");
+    const roomCreation = document.querySelector("#room-creation");
+    const roomJoin = document.querySelector("#room-join");
+    const gameSetup = document.querySelector("#game-setup");
+    const roomCodeInput = document.querySelector("#room-code");
+    const joinGameBtn = document.querySelector("#join-game");
+
+    let currentRoom = null;
+
+    // Generate random room code
+    function generateRoomCode() {
+      return Math.random().toString(36).substring(2, 7).toUpperCase();
+    }
+
+    // Create room handler
+    createRoomBtn.addEventListener("click", () => {
+      roomCreation.classList.remove("hidden");
+      roomJoin.classList.add("hidden");
+    });
+
+    // Join room handler
+    joinRoomBtn.addEventListener("click", () => {
+      roomJoin.classList.remove("hidden");
+      roomCreation.classList.add("hidden");
+    });
+
+    // Player count selection
+    document.querySelectorAll(".player-select button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const maxPlayers = parseInt(btn.dataset.players);
+        const roomCode = generateRoomCode();
+
+        // First create the room reference
+        const roomRef = firebase.database().ref(`rooms/${roomCode}`);
+
+        // Create room with complete data structure
+        roomRef
+          .set({
+            maxPlayers,
+            currentPlayers: 1,
+            isOpen: true,
+            created: Date.now(),
+            hostId: playerId,
+            players: {
+              [playerId]: {
+                isHost: true,
+                joined: Date.now(),
+              },
+            },
+          })
+          .then(() => {
+            console.log("Room created successfully:", roomCode);
+            currentRoom = roomCode;
+            localStorage.setItem("currentRoom", roomCode);
+
+            // Show room code to host
+            alert(`Room Created! Code: ${roomCode}`);
+            roomCreation.classList.add("hidden");
+            gameSetup.classList.remove("hidden");
+          })
+          .catch((error) => {
+            console.error("Error creating room:", error);
+            alert(`Error creating room: ${error.message}`);
+          });
+      });
+    });
+
+    // Join game handler
+    joinGameBtn.addEventListener("click", () => {
+      const code = roomCodeInput.value.trim().toUpperCase();
+      const roomRef = firebase.database().ref(`rooms/${code}`);
+
+      roomRef
+        .once("value")
+        .then((snapshot) => {
+          const room = snapshot.val();
+          if (!room) {
+            throw new Error("Room not found!");
+          }
+          if (!room.isOpen) {
+            throw new Error("Room is closed!");
+          }
+          if (room.currentPlayers >= room.maxPlayers) {
+            throw new Error("Room is full!");
+          }
+
+          // Add player to room
+          return roomRef
+            .child("players")
+            .child(playerId)
+            .set({
+              joined: Date.now(),
+            })
+            .then(() => {
+              // Update player count
+              return roomRef.update({
+                currentPlayers: (room.currentPlayers || 0) + 1,
+              });
+            });
+        })
+        .then(() => {
+          currentRoom = code;
+          localStorage.setItem("currentRoom", code);
+          roomJoin.classList.add("hidden");
+          gameSetup.classList.remove("hidden");
+        })
+        .catch((error) => {
+          console.error("Error joining room:", error);
+          alert(error.message);
+        });
+    });
+
+    // Add room cleanup on disconnect
+    window.addEventListener("beforeunload", () => {
+      const roomCode = localStorage.getItem("currentRoom");
+      if (roomCode) {
+        firebase
+          .database()
+          .ref(`rooms/${roomCode}/players/${playerId}`)
+          .remove();
+        firebase
+          .database()
+          .ref(`rooms/${roomCode}`)
+          .transaction((room) => {
+            if (room) {
+              room.currentPlayers = (room.currentPlayers || 1) - 1;
+              if (room.currentPlayers <= 0) {
+                return null; // Remove room if empty
+              }
+            }
+            return room;
+          });
+      }
+    });
+
+    // Add cleanup on disconnect
+    if (playerId) {
+      firebase
+        .database()
+        .ref(".info/connected")
+        .on("value", (snapshot) => {
+          if (snapshot.val() === true) {
+            const roomCode = localStorage.getItem("currentRoom");
+            if (roomCode) {
+              const roomRef = firebase.database().ref(`rooms/${roomCode}`);
+              const playerRef = roomRef.child("players").child(playerId);
+
+              playerRef.onDisconnect().remove();
+              roomRef
+                .child("currentPlayers")
+                .onDisconnect()
+                .transaction((currentPlayers) => {
+                  if (currentPlayers <= 1) {
+                    return null; // Remove room if last player
+                  }
+                  return currentPlayers - 1;
+                });
+            }
+          }
+        });
+    }
   }
 
   firebase.auth().onAuthStateChanged((user) => {

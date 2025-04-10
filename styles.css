@@ -845,3 +845,50 @@ button {
     transform: rotate(360deg);
   }
 }
+
+.lobby-buttons {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.player-select {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.player-select button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.player-select button:hover {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: #ffd700;
+}
+
+#room-code {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 5px;
+  margin-bottom: 20px;
+  width: 200px;
+}
+
+#room-join {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
