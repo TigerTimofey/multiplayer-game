@@ -596,29 +596,63 @@ button {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: gradientBG 15s ease infinite;
 }
 
 .lobby-content {
   background: rgba(255, 255, 255, 0.1);
   padding: 2rem;
-  border-radius: 20px;
+  border-radius: 30px;
   text-align: center;
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  max-width: 500px;
-  width: 90%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  height: 600px;
+  width: 400px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.lobby-content::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 60%
+  );
+  animation: shineBg 8s linear infinite;
+}
+
+#regular-content,
+#joke-content {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  margin-top: -20px; /* Compensate for title spacing */
 }
 
 .lobby h1 {
   color: #fff;
-  margin-bottom: 2rem;
-  font-size: 2em;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  font-size: 1.8em;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  /* margin-top: 20px; */
   padding: 30px;
 }
 
@@ -651,24 +685,29 @@ button {
   flex-direction: column;
   gap: 1rem;
   align-items: center;
-  width: 100%;
 }
 
 #lobby-name {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 215, 0, 0.3);
   color: #fff;
-  padding: 1rem;
+  padding: 1.2rem;
   border-radius: 8px;
-  font-size: 1.1em;
+  font-size: 1.2em;
   text-align: center;
   width: 80%;
   max-width: 300px;
+  transition: all 0.3s;
 }
 
 #lobby-name::placeholder {
   color: rgba(255, 255, 255, 0.5);
   text-align: center;
+}
+
+#lobby-name:focus {
+  border-color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
 }
 
 .color-picker {
@@ -689,15 +728,22 @@ button {
 }
 
 .color-option {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.color-option:hover {
+  transform: scale(1.1);
 }
 
 .color-option.selected {
-  border: 2px solid #fff;
+  border: 3px solid #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
 .toggle-button {
@@ -715,11 +761,13 @@ button {
 }
 
 .controls-guide {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 20px;
-  color: white;
 }
 
 .controls-grid {
@@ -742,24 +790,58 @@ button {
   font-weight: bold;
 }
 
+.controls-section {
+  margin: 10px 0;
+}
+
+.controls-section h3 {
+  color: #fff;
+  margin: 10px 0;
+  font-size: 1.2em;
+}
+
 .control-key.empty {
   opacity: 0;
   pointer-events: none;
 }
 
 .lobby-button {
-  background: #ffd700;
+  background: linear-gradient(45deg, #ffd700, #ffa500);
   color: #000;
-  padding: 1rem 2rem;
   border: none;
-  border-radius: 8px;
-  font-size: 1.2em;
+  border-radius: 15px;
+  font-size: 2.2em;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: bold;
+  /* padding: 1rem 3rem; */
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+  transition: transform 0.2s;
 }
 
 .lobby-button:hover {
-  background: #ffed4a;
+  background: linear-gradient(45deg, #ffa500, #ffd700);
+  transform: translateY(-1.2px);
+}
+
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shineBg {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
