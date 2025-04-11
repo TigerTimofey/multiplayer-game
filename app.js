@@ -725,6 +725,43 @@ function getRandomSafeSpot() {
 
   let activePowers = {};
 
+  function updateRoomPlayerCount(roomCode) {
+    if (!roomCode) return;
+
+    const roomRef = firebase.database().ref(`rooms/${roomCode}`);
+    return roomRef.transaction((room) => {
+      if (!room) return null;
+
+      const playerCount = room.players ? Object.keys(room.players).length : 0;
+      return {
+        ...room,
+        currentPlayers: playerCount,
+        isOpen: playerCount < room.maxPlayers,
+      };
+    });
+  }
+
+  function handlePlayerLeave(roomCode) {
+    if (!roomCode) return;
+
+    // Remove player from room's players list
+    firebase.database().ref(`rooms/${roomCode}/players/${playerId}`).remove();
+
+    // Update current player count and room status
+    firebase
+      .database()
+      .ref(`rooms/${roomCode}`)
+      .transaction((room) => {
+        if (!room) return null;
+        const newPlayerCount = Math.max(0, (room.currentPlayers || 1) - 1);
+        return {
+          ...room,
+          currentPlayers: newPlayerCount,
+          isOpen: newPlayerCount < room.maxPlayers, // Set isOpen true if there's still space
+        };
+      });
+  }
+
   function initializeLobby() {
     const lobby = document.querySelector("#lobby");
     const lobbyName = document.querySelector("#lobby-name");
@@ -910,10 +947,7 @@ function getRandomSafeSpot() {
               joined: Date.now(),
             })
             .then(() => {
-              // Update player count
-              return roomRef.update({
-                currentPlayers: (room.currentPlayers || 0) + 1,
-              });
+              return updateRoomPlayerCount(code);
             });
         })
         .then(() => {
@@ -977,6 +1011,29 @@ function getRandomSafeSpot() {
           }
         });
     }
+
+    // Update disconnect handling
+    if (playerId) {
+      firebase
+        .database()
+        .ref(".info/connected")
+        .on("value", (snapshot) => {
+          if (snapshot.val()) {
+            const roomCode = localStorage.getItem("currentRoom");
+            if (roomCode) {
+              handlePlayerLeave(roomCode);
+            }
+          }
+        });
+    }
+
+    // Clean up on window close/refresh
+    window.addEventListener("beforeunload", () => {
+      const roomCode = localStorage.getItem("currentRoom");
+      if (roomCode) {
+        handlePlayerLeave(roomCode);
+      }
+    });
   }
 
   firebase.auth().onAuthStateChanged((user) => {
