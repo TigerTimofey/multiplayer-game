@@ -21,8 +21,17 @@
         <button id="toggle-joke" class="toggle-button">Settings</button>
         <div id="regular-content">
           <div class="lobby-buttons">
-            <button id="create-room" class="lobby-button">Create Room</button>
-            <button id="join-room" class="lobby-button">Join Room</button>
+            <button id="create-room" class="lobby-button">Create</button>
+            <button id="join-room" class="lobby-button">Join</button>
+          </div>
+          <!-- Add this new container -->
+          <div id="room-info" class="hidden">
+            <div class="room-status">
+              <h3>Room Created</h3>
+              <div class="room-code">
+                Code: <span id="current-room-code"></span>
+              </div>
+            </div>
           </div>
           <div id="room-creation" class="hidden">
             <div class="player-select">
@@ -35,7 +44,7 @@
             <input
               type="text"
               id="room-code"
-              placeholder="Enter Room Code"
+              placeholder="Enter Code"
               maxlength="5"
             />
             <button id="join-game" class="lobby-button">Join</button>

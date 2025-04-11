@@ -884,11 +884,8 @@ function getRandomSafeSpot() {
       btn.addEventListener("click", () => {
         const maxPlayers = parseInt(btn.dataset.players);
         const roomCode = generateRoomCode();
-
-        // First create the room reference
         const roomRef = firebase.database().ref(`rooms/${roomCode}`);
 
-        // Create room with complete data structure
         roomRef
           .set({
             maxPlayers,
@@ -908,10 +905,21 @@ function getRandomSafeSpot() {
             currentRoom = roomCode;
             localStorage.setItem("currentRoom", roomCode);
 
-            // Show room code to host
-            alert(`Room Created! Code: ${roomCode}`);
-            roomCreation.classList.add("hidden");
-            gameSetup.classList.remove("hidden");
+            // Hide the title
+            document.querySelector("#lobby-title").classList.add("hidden");
+
+            // Hide buttons and show room info
+            document.querySelector(".lobby-buttons").classList.add("hidden");
+            document.querySelector("#room-creation").classList.add("hidden");
+            document.querySelector("#room-join").classList.add("hidden");
+
+            // Update room info
+            const roomInfo = document.querySelector("#room-info");
+            document.querySelector("#current-room-code").textContent = roomCode;
+            roomInfo.classList.remove("hidden");
+
+            // Show game setup
+            document.querySelector("#game-setup").classList.remove("hidden");
           })
           .catch((error) => {
             console.error("Error creating room:", error);
