@@ -111,9 +111,9 @@ function getRandomSafeSpot() {
 }
 
 (function () {
-  // Add modal elements to the existing variables
   let playerId;
   let playerRef;
+  let currentRoomCode = null; // Add this to track current room
   let players = {};
   let playerElements = {};
   let coins = {};
@@ -772,10 +772,12 @@ function getRandomSafeSpot() {
   }
 
   function showGameLobby(roomCode) {
+    currentRoomCode = roomCode; // Store room code
     document.querySelector("#room-creation").classList.add("hidden");
     document.querySelector("#room-join").classList.add("hidden");
     document.querySelector("#game-lobby").classList.remove("hidden");
     document.querySelector("#room-code-display").textContent = roomCode;
+    setupPlayerCleanup(roomCode);
   }
 
   function initializeLobby() {
@@ -788,17 +790,23 @@ function getRandomSafeSpot() {
     const joinRoomBtn = document.querySelector("#join-room");
     const lobbyButtons = document.querySelector(".lobby-buttons");
 
-    let selectedColor = playerColors[0];
+    let selectedColor = null; // Remove default color
     let playerName = "";
     let setupAction = null; // Will store 'create' or 'join'
 
-    // Initialize color options
-    playerColors.forEach((color, index) => {
+    // Initialize color options without default selection
+    playerColors.forEach((color) => {
       const option = document.createElement("div");
-      option.className = "color-option" + (index === 0 ? " selected" : "");
+      option.className = "color-option";
       option.style.backgroundColor = color;
       option.dataset.color = color;
       colorOptions.appendChild(option);
+    });
+
+    // Handle name input separately
+    const nameInput = document.querySelector("#lobby-name");
+    nameInput.addEventListener("input", (e) => {
+      playerName = e.target.value.trim();
     });
 
     // Color selection handler
@@ -809,6 +817,20 @@ function getRandomSafeSpot() {
           .forEach((opt) => opt.classList.remove("selected"));
         e.target.classList.add("selected");
         selectedColor = e.target.dataset.color;
+
+        // Only update name if it exists
+        if (playerName) {
+          const nameParts = playerName.split(" ");
+          const nameWithoutColor = playerColors.includes(
+            nameParts[0].toLowerCase()
+          )
+            ? nameParts.slice(1).join(" ")
+            : playerName;
+
+          const colorName =
+            selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1);
+          nameInput.value = `${colorName} ${nameWithoutColor}`;
+        }
       }
     });
 
@@ -827,14 +849,22 @@ function getRandomSafeSpot() {
 
     // Handle continue after name/color selection
     continueSetup.addEventListener("click", () => {
-      playerName = lobbyName.value.trim();
+      const nameInput = document.querySelector("#lobby-name");
+
       if (!playerName) {
-        alert("Please enter your name!");
+        showTooltip(nameInput, "Please enter your name");
+        nameInput.focus();
+        return;
+      }
+
+      const colorOptions = document.querySelector(".color-options");
+      if (!selectedColor) {
+        showTooltip(colorOptions, "Please select a color");
         return;
       }
 
       // Save player details
-      savedPlayerName = playerName;
+      savedPlayerName = nameInput.value.trim();
       savedPlayerColor = selectedColor;
 
       // Hide setup and show appropriate next step
@@ -914,10 +944,8 @@ function getRandomSafeSpot() {
 
     // Update join game handler
     document.querySelector("#join-game").addEventListener("click", () => {
-      const code = document
-        .querySelector("#room-code")
-        .value.trim()
-        .toUpperCase();
+      const codeInput = document.querySelector("#room-code");
+      const code = codeInput.value.trim().toUpperCase();
       const roomRef = firebase.database().ref(`rooms/${code}`);
 
       roomRef
@@ -955,7 +983,9 @@ function getRandomSafeSpot() {
             updateLobbyPlayers(players, roomRef);
           });
         })
-        .catch((error) => alert(error.message));
+        .catch((error) => {
+          showTooltip(codeInput, error.message);
+        });
     });
 
     function updateLobbyPlayers(players, roomRef) {
@@ -1024,6 +1054,61 @@ function getRandomSafeSpot() {
     // ...rest of existing initializeLobby code...
   }
 
+  function setupPlayerCleanup(roomCode) {
+    if (!roomCode) return;
+
+    const roomRef = firebase.database().ref(`rooms/${roomCode}`);
+    const playerInRoomRef = roomRef.child("players").child(playerId);
+
+    // Remove player from room on disconnect
+    playerInRoomRef.onDisconnect().remove();
+
+    // Setup room cleanup
+    roomRef.child("players").on("value", (snapshot) => {
+      const players = snapshot.val() || {};
+      const playerCount = Object.keys(players).length;
+
+      roomRef.once("value").then((roomSnapshot) => {
+        const roomData = roomSnapshot.val();
+        if (!roomData) return;
+
+        if (playerCount === 0) {
+          roomRef.remove();
+        } else {
+          roomRef.update({
+            currentPlayers: playerCount,
+            isOpen: playerCount < roomData.maxPlayers,
+          });
+        }
+      });
+    });
+
+    // Cancel cleanup listeners when disconnecting
+    playerInRoomRef
+      .onDisconnect()
+      .setWithPriority({}, null)
+      .then(() => {
+        roomRef.child("players").off();
+      });
+  }
+
+  function cleanupPlayer() {
+    if (currentRoomCode) {
+      const roomRef = firebase
+        .database()
+        .ref(`rooms/${currentRoomCode}/players/${playerId}`);
+      roomRef.remove();
+    }
+    if (playerRef) {
+      playerRef.remove();
+    }
+  }
+
+  // Add window unload handler
+  window.addEventListener("beforeunload", () => {
+    cleanupPlayer();
+  });
+
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
       //You're logged in!
@@ -1047,4 +1132,65 @@ function getRandomSafeSpot() {
       // ...
       console.log(errorCode, errorMessage);
     });
+
+  function showTooltip(element, message) {
+    const tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    tooltip.textContent = message;
+
+    const rect = element.getBoundingClientRect();
+    tooltip.style.top = `${rect.top - 40}px`;
+    tooltip.style.left = `${rect.left + rect.width / 2}px`;
+
+    document.body.appendChild(tooltip);
+
+    setTimeout(() => {
+      tooltip.classList.add("fade-out");
+      setTimeout(() => tooltip.remove(), 300);
+    }, 2000);
+  }
+
+  function showErrorModal(message, onClose) {
+    const modal = document.createElement("div");
+    modal.className = "error-modal modal";
+    modal.innerHTML = `
+      <div class="modal-content error">
+        <div class="error-icon">!</div>
+        <h2>Error</h2>
+        <p>${message}</p>
+        <button class="error-button">OK</button>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeBtn = modal.querySelector(".error-button");
+    closeBtn.addEventListener("click", () => {
+      modal.classList.add("fade-out");
+      setTimeout(() => {
+        modal.remove();
+        if (onClose) onClose();
+      }, 300);
+    });
+  }
+
+  function showErrorModal(message) {
+    const modal = document.createElement("div");
+    modal.className = "error-modal modal";
+    modal.innerHTML = `
+      <div class="modal-content error">
+        <div class="error-icon">!</div>
+        <h2>Error</h2>
+        <p>${message}</p>
+        <button class="error-button">OK</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const closeBtn = modal.querySelector(".error-button");
+    closeBtn.addEventListener("click", () => {
+      modal.classList.add("fade-out");
+      setTimeout(() => modal.remove(), 300);
+    });
+  }
 })();
