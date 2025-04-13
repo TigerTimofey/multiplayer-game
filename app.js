@@ -954,6 +954,7 @@ function getRandomSafeSpot() {
         document.querySelector("#room-creation").classList.remove("hidden");
       } else {
         document.querySelector("#room-join").classList.remove("hidden");
+        document.querySelector("#lobby-title").textContent = "Joining Room"; // Add this line
       }
     });
 
@@ -1227,6 +1228,16 @@ function getRandomSafeSpot() {
       savedPlayerColor = selectedColor;
 
       showStep(setupAction);
+    });
+
+    // Add toggle functionality for settings
+    const toggleJoke = document.querySelector("#toggle-joke");
+    const regularContent = document.querySelector("#regular-content");
+    const jokeContent = document.querySelector("#joke-content");
+
+    toggleJoke.addEventListener("click", () => {
+      regularContent.classList.toggle("hidden");
+      jokeContent.classList.toggle("hidden");
     });
   }
 
