@@ -778,6 +778,44 @@ function getRandomSafeSpot() {
     document.querySelector("#game-lobby").classList.remove("hidden");
     document.querySelector("#room-code-display").textContent = roomCode;
     setupPlayerCleanup(roomCode);
+
+    // Set up real-time room listener
+    const roomRef = firebase.database().ref(`rooms/${roomCode}`);
+    setupRoomListeners(roomRef);
+  }
+
+  function setupRoomListeners(roomRef) {
+    // Listen for real-time room updates
+    roomRef.on("value", (snapshot) => {
+      const roomData = snapshot.val();
+      if (!roomData) return;
+
+      const playersList = document.querySelector("#lobby-players-list");
+      playersList.innerHTML = "";
+
+      // Update room capacity display
+      const capacityDiv = document.createElement("div");
+      capacityDiv.className = "room-capacity";
+      capacityDiv.textContent = `Players: ${roomData.currentPlayers}/${roomData.maxPlayers}`;
+      playersList.appendChild(capacityDiv);
+
+      // Show each player with join animation
+      if (roomData.players) {
+        Object.entries(roomData.players).forEach(([id, player]) => {
+          const playerEl = document.createElement("div");
+          playerEl.className = "lobby-player";
+          if (roomData.lastJoined === id) {
+            playerEl.classList.add("player-joined");
+          }
+          playerEl.style.color = player.color;
+          playerEl.innerHTML = `
+            ${player.name} ${player.isHost ? "(Host)" : ""}
+            <div class="player-status">Ready</div>
+          `;
+          playersList.appendChild(playerEl);
+        });
+      }
+    });
   }
 
   function initializeLobby() {
@@ -911,35 +949,34 @@ function getRandomSafeSpot() {
 
     function updateLobbyPlayers(players, roomRef) {
       const playersList = document.querySelector("#lobby-players-list");
-      playersList.innerHTML = "";
 
-      // Show player list first while room data is loading
-      const currentPlayers = Object.keys(players).length;
+      // Create a real-time listener for room updates
+      roomRef.on("value", (snapshot) => {
+        const roomData = snapshot.val();
+        if (!roomData) return;
 
-      Object.entries(players).forEach(([id, player]) => {
-        const playerEl = document.createElement("div");
-        playerEl.className = "lobby-player";
-        playerEl.style.color = player.color;
-        playerEl.innerHTML = `
-          ${player.name} ${player.isHost ? "(Host)" : ""}
-          <div class="player-status">Ready</div>
-        `;
-        playersList.appendChild(playerEl);
+        playersList.innerHTML = "";
+
+        // Update room capacity display
+        const capacityDiv = document.createElement("div");
+        capacityDiv.className = "room-capacity";
+        capacityDiv.textContent = `Players: ${roomData.currentPlayers}/${roomData.maxPlayers}`;
+        playersList.appendChild(capacityDiv);
+
+        // Update player list
+        if (roomData.players) {
+          Object.entries(roomData.players).forEach(([id, player]) => {
+            const playerEl = document.createElement("div");
+            playerEl.className = "lobby-player";
+            playerEl.style.color = player.color;
+            playerEl.innerHTML = `
+              ${player.name} ${player.isHost ? "(Host)" : ""}
+              <div class="player-status">Ready</div>
+            `;
+            playersList.appendChild(playerEl);
+          });
+        }
       });
-
-      // If roomRef is provided, get max players
-      if (roomRef) {
-        roomRef.once("value").then((snapshot) => {
-          const room = snapshot.val();
-          if (room) {
-            // Add room capacity display at the top
-            const capacityDiv = document.createElement("div");
-            capacityDiv.className = "room-capacity";
-            capacityDiv.textContent = `Players: ${currentPlayers}/${room.maxPlayers}`;
-            playersList.insertBefore(capacityDiv, playersList.firstChild);
-          }
-        });
-      }
     }
 
     // Update join game handler
@@ -963,18 +1000,24 @@ function getRandomSafeSpot() {
             );
           }
 
-          // Add player to room
-          return roomRef
-            .child("players")
-            .child(playerId)
-            .set({
-              joined: Date.now(),
-              name: savedPlayerName,
-              color: savedPlayerColor,
-            })
-            .then(() => {
-              return updateRoomPlayerCount(code);
-            });
+          // Update room data atomically
+          return roomRef.transaction((currentRoom) => {
+            if (!currentRoom) return null;
+            return {
+              ...currentRoom,
+              currentPlayers: playerCount + 1,
+              isOpen: playerCount + 1 < room.maxPlayers,
+              lastJoined: playerId, // Add this to mark newest player
+              players: {
+                ...currentRoom.players,
+                [playerId]: {
+                  joined: Date.now(),
+                  name: savedPlayerName,
+                  color: savedPlayerColor,
+                },
+              },
+            };
+          });
         })
         .then(() => {
           showGameLobby(code);
@@ -988,34 +1031,34 @@ function getRandomSafeSpot() {
         });
     });
 
-    function updateLobbyPlayers(players, roomRef) {
-      const playersList = document.querySelector("#lobby-players-list");
-      playersList.innerHTML = "";
+    // function updateLobbyPlayers(players, roomRef) {
+    //   const playersList = document.querySelector("#lobby-players-list");
+    //   playersList.innerHTML = "";
 
-      roomRef.once("value").then((snapshot) => {
-        const room = snapshot.val();
-        const maxPlayers = room.maxPlayers;
-        const currentPlayers = Object.keys(players).length;
+    //   roomRef.once("value").then((snapshot) => {
+    //     const room = snapshot.val();
+    //     const maxPlayers = room.maxPlayers;
+    //     const currentPlayers = Object.keys(players).length;
 
-        // Add room capacity display
-        const capacityDiv = document.createElement("div");
-        capacityDiv.className = "room-capacity";
-        capacityDiv.textContent = `Players: ${currentPlayers}/${maxPlayers}`;
-        playersList.appendChild(capacityDiv);
+    //     // Add room capacity display
+    //     const capacityDiv = document.createElement("div");
+    //     capacityDiv.className = "room-capacity";
+    //     capacityDiv.textContent = `Players: ${currentPlayers}/${maxPlayers}`;
+    //     playersList.appendChild(capacityDiv);
 
-        // Add player list
-        Object.entries(players).forEach(([id, player]) => {
-          const playerEl = document.createElement("div");
-          playerEl.className = "lobby-player";
-          playerEl.style.color = player.color;
-          playerEl.innerHTML = `
-            ${player.name} ${player.isHost ? "(Host)" : ""}
-            <div class="player-status">Ready</div>
-          `;
-          playersList.appendChild(playerEl);
-        });
-      });
-    }
+    //     // Add player list
+    //     Object.entries(players).forEach(([id, player]) => {
+    //       const playerEl = document.createElement("div");
+    //       playerEl.className = "lobby-player";
+    //       playerEl.style.color = player.color;
+    //       playerEl.innerHTML = `
+    //         ${player.name} ${player.isHost ? "(Host)" : ""}
+    //         <div class="player-status">Ready</div>
+    //       `;
+    //       playersList.appendChild(playerEl);
+    //     });
+    //   });
+    // }
 
     // Add start game handler
     document.querySelector("#start-game-btn").addEventListener("click", () => {

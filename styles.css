@@ -1044,6 +1044,25 @@ button {
   border-radius: 5px;
   margin-bottom: 5px;
   color: white;
+  transition: all 0.3s ease-out;
+  opacity: 1;
+}
+
+.lobby-player.player-joined {
+  animation: playerJoinEffect 0.5s ease-out;
+}
+
+@keyframes playerJoinEffect {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+    background: rgba(255, 215, 0, 0.3);
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+  }
 }
 
 .player-status {
