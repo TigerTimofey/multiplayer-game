@@ -828,7 +828,6 @@ function getRandomSafeSpot() {
   }
 
   function setupRoomListeners(roomRef) {
-    // Listen for real-time room updates
     roomRef.on("value", (snapshot) => {
       const roomData = snapshot.val();
       if (!roomData) return;
@@ -836,13 +835,11 @@ function getRandomSafeSpot() {
       const playersList = document.querySelector("#lobby-players-list");
       playersList.innerHTML = "";
 
-      // Update room capacity display
       const capacityDiv = document.createElement("div");
       capacityDiv.className = "room-capacity";
       capacityDiv.textContent = `Players: ${roomData.currentPlayers}/${roomData.maxPlayers}`;
       playersList.appendChild(capacityDiv);
 
-      // Show each player with join animation
       if (roomData.players) {
         Object.entries(roomData.players).forEach(([id, player]) => {
           const playerEl = document.createElement("div");
@@ -851,12 +848,57 @@ function getRandomSafeSpot() {
             playerEl.classList.add("player-joined");
           }
           playerEl.style.color = player.color;
+
+          // Render status differently for current user vs others
+          const readyStatus = player.isReady ? "Ready" : "Not Ready";
+          const statusClass = player.isReady
+            ? "status-ready"
+            : "status-not-ready";
+
+          // For current user: clickable button
+          // For others: just text display
+          const statusHtml =
+            id === playerId
+              ? `<button class="player-status ${statusClass}">${readyStatus}</button>`
+              : `<div class="player-status-display ${statusClass}">${readyStatus}</div>`;
+
           playerEl.innerHTML = `
-            ${player.name} ${player.isHost ? "(Host)" : ""}
-            <div class="player-status">Ready</div>
+            <div class="player-name">${player.name} ${
+            player.isHost ? "(Host)" : ""
+          }</div>
+            ${statusHtml}
           `;
+
+          // Add click handler only for current user
+          if (id === playerId) {
+            const statusBtn = playerEl.querySelector(".player-status");
+            statusBtn.title = "Click to toggle ready status";
+            statusBtn.addEventListener("click", () => {
+              const playerRef = roomRef.child(`players/${playerId}`);
+              playerRef.update({
+                isReady: !player.isReady,
+              });
+            });
+          }
+
           playersList.appendChild(playerEl);
         });
+
+        // Enable start button for everyone when all players are ready
+        const startButton = document.querySelector("#start-game-btn");
+        const allPlayersReady = Object.values(roomData.players).every(
+          (p) => p.isReady
+        );
+
+        startButton.disabled = !allPlayersReady;
+        if (allPlayersReady) {
+          startButton.title = "All players ready - Click to start!";
+        } else {
+          startButton.title = "Waiting for all players to be ready";
+        }
+
+        // Remove opacity changes that were tied to host status
+        startButton.style.opacity = "1";
       }
     });
   }
@@ -978,6 +1020,7 @@ function getRandomSafeSpot() {
                 joined: Date.now(),
                 name: savedPlayerName,
                 color: savedPlayerColor,
+                isReady: false, // Initialize as not ready
               },
             },
           })
@@ -994,7 +1037,6 @@ function getRandomSafeSpot() {
     function updateLobbyPlayers(players, roomRef) {
       const playersList = document.querySelector("#lobby-players-list");
 
-      // Create a real-time listener for room updates
       roomRef.on("value", (snapshot) => {
         const roomData = snapshot.val();
         if (!roomData) return;
@@ -1013,12 +1055,49 @@ function getRandomSafeSpot() {
             const playerEl = document.createElement("div");
             playerEl.className = "lobby-player";
             playerEl.style.color = player.color;
+
+            // Add ready/not ready status
+            const readyStatus = player.isReady ? "Ready" : "Not Ready";
+            const statusClass = player.isReady
+              ? "status-ready"
+              : "status-not-ready";
+
             playerEl.innerHTML = `
               ${player.name} ${player.isHost ? "(Host)" : ""}
-              <div class="player-status">Ready</div>
+              <div class="player-status ${statusClass}">${readyStatus}</div>
             `;
+
+            // Add click handler for own player status
+            if (id === playerId) {
+              playerEl
+                .querySelector(".player-status")
+                .addEventListener("click", () => {
+                  const playerRef = roomRef.child(`players/${playerId}`);
+                  playerRef.update({
+                    isReady: !player.isReady,
+                  });
+                });
+              playerEl.querySelector(".player-status").style.cursor = "pointer";
+            }
+
             playersList.appendChild(playerEl);
           });
+
+          // Enable start button only if all players are ready
+          const startButton = document.querySelector("#start-game-btn");
+          const allPlayersReady = Object.values(roomData.players).every(
+            (p) => p.isReady
+          );
+
+          startButton.disabled = !allPlayersReady;
+          if (allPlayersReady) {
+            startButton.title = "All players ready - Click to start!";
+          } else {
+            startButton.title = "Waiting for all players to be ready";
+          }
+
+          // Remove opacity changes that were tied to host status
+          startButton.style.opacity = "1";
         }
       });
     }
@@ -1058,6 +1137,7 @@ function getRandomSafeSpot() {
                   joined: Date.now(),
                   name: savedPlayerName,
                   color: savedPlayerColor,
+                  isReady: false, // Initialize as not ready
                 },
               },
             };
