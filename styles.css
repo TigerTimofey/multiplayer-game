@@ -739,6 +739,9 @@ button {
   opacity: 1;
   transition: opacity 0.3s ease-out;
 }
+.lobby-form h3 {
+  color: white;
+}
 
 #lobby-name {
   background: rgba(255, 255, 255, 0.15);
@@ -857,6 +860,7 @@ button {
 }
 
 .lobby-button {
+  margin-top: 20px;
   background: linear-gradient(45deg, #ffd700, #ffa500);
   color: #000;
   border: none;
@@ -974,10 +978,11 @@ button {
 }
 
 .room-code {
+  color: white;
   font-size: 1.2em;
   font-weight: bold;
   letter-spacing: 2px;
-  margin: 5px 0;
+  margin-top: 20px;
 }
 
 .room-players {
@@ -993,6 +998,25 @@ button {
   text-align: center;
   font-weight: bold;
   color: #ffd700;
+}
+
+#room-code-display {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+#room-code-display:hover {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.6);
+  transform: translateY(-1px);
+}
+
+#room-code-display:active {
+  transform: translateY(0);
 }
 
 @keyframes fadeIn {
@@ -1012,7 +1036,7 @@ button {
 }
 
 .lobby-header {
-  margin-bottom: 20px;
+  margin: 30px;
   text-align: center;
 }
 
@@ -1121,4 +1145,70 @@ button {
     opacity: 0;
     transform: translate(-50%, -10px);
   }
+}
+
+.page-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  /* margin-bottom: 20px; */
+}
+
+.back-button {
+  margin-top: 10px;
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #ffd700;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.back-button:hover {
+  transform: translateY(-50%) scale(1.2);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Add styles for leave room state */
+.back-button[data-mode="leave"] {
+  font-size: 16px;
+  background: rgba(255, 69, 58, 0.2);
+  border: 1px solid rgba(255, 69, 58, 0.5);
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
+.back-button[data-mode="leave"]:hover {
+  background: rgba(255, 69, 58, 0.3);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.leave-room-btn {
+  background: rgba(255, 69, 58, 0.2);
+  border: 2px solid rgba(255, 69, 58, 0.5);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.leave-room-btn:hover {
+  background: rgba(255, 69, 58, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 69, 58, 0.3);
+}
+
+.leave-room-btn:active {
+  transform: translateY(0);
 }

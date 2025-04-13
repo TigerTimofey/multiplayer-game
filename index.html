@@ -18,10 +18,14 @@
     <div id="lobby" class="lobby">
       <div class="lobby-content">
         <button id="toggle-joke" class="toggle-button">Settings</button>
-        <h1 id="lobby-title">Welcome to Multiplayer Game</h1>
+        <div class="page-header">
+          <button class="back-button hidden">←</button>
+          <h1 id="lobby-title">Welcome to Multiplayer Game</h1>
+        </div>
         <div id="regular-content">
           <div id="initial-setup" class="hidden">
             <div class="lobby-form">
+              <h3>Nickname:</h3>
               <input
                 type="text"
                 id="lobby-name"
@@ -29,7 +33,7 @@
                 maxlength="10"
               />
               <div class="color-picker">
-                <span class="color-label">Choose Color:</span>
+                <span class="color-label"><h3>Choose Color:</h3></span>
                 <div class="color-options">
                   <!-- Colors will be added by JS -->
                 </div>
@@ -83,9 +87,7 @@
               />
               <div class="color-picker">
                 <span class="color-label">Choose Color:</span>
-                <div class="color-options">
-                  <!-- Colors will be added by JS -->
-                </div>
+                <div class="color-options"></div>
               </div>
               <button id="start-game" class="lobby-button">Start Game</button>
             </div>
@@ -98,7 +100,6 @@
               </div>
             </div>
             <div class="lobby-players">
-              <h3>Players</h3>
               <div id="lobby-players-list"></div>
             </div>
             <button id="start-game-btn" class="lobby-button">Start Game</button>

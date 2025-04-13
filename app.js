@@ -772,16 +772,59 @@ function getRandomSafeSpot() {
   }
 
   function showGameLobby(roomCode) {
-    currentRoomCode = roomCode; // Store room code
+    currentRoomCode = roomCode;
     document.querySelector("#room-creation").classList.add("hidden");
     document.querySelector("#room-join").classList.add("hidden");
     document.querySelector("#game-lobby").classList.remove("hidden");
     document.querySelector("#room-code-display").textContent = roomCode;
-    setupPlayerCleanup(roomCode);
+    document.querySelector("#toggle-joke").classList.add("hidden");
+    document.querySelector("#lobby-title").classList.add("hidden");
 
-    // Set up real-time room listener
+    // Add click-to-copy functionality
+    const roomCodeDisplay = document.querySelector("#room-code-display");
+    roomCodeDisplay.style.cursor = "pointer";
+    roomCodeDisplay.title = "Click to copy";
+    roomCodeDisplay.addEventListener("click", () => {
+      navigator.clipboard.writeText(roomCode).then(() => {
+        showTooltip(roomCodeDisplay, "Code copied!");
+      });
+    });
+
+    // Replace back button with styled leave room button
+    const backButton = document.querySelector(".back-button");
+    backButton.className = "leave-room-btn";
+    backButton.textContent = "Leave Room";
+    backButton.onclick = () => {
+      handlePlayerLeave(roomCode);
+      resetToMainMenu();
+    };
+
+    setupPlayerCleanup(roomCode);
     const roomRef = firebase.database().ref(`rooms/${roomCode}`);
     setupRoomListeners(roomRef);
+  }
+
+  function resetToMainMenu() {
+    // Reset UI elements
+    const leaveButton = document.querySelector(".leave-room-btn");
+    leaveButton.className = "back-button hidden";
+    leaveButton.textContent = "←";
+
+    // Reset title
+    document.querySelector("#lobby-title").textContent =
+      "Welcome to Multiplayer Game";
+
+    // Reset room code
+    currentRoomCode = null;
+
+    // Show main menu elements
+    document.querySelector("#lobby-title").classList.remove("hidden");
+    document.querySelector(".lobby-buttons").classList.remove("hidden");
+    document.querySelector("#game-lobby").classList.add("hidden");
+    document.querySelector("#toggle-joke").classList.remove("hidden");
+
+    // Clear any existing game state
+    document.querySelector("#lobby-players-list").innerHTML = "";
   }
 
   function setupRoomListeners(roomRef) {
@@ -1095,6 +1138,96 @@ function getRandomSafeSpot() {
     });
 
     // ...rest of existing initializeLobby code...
+
+    const backButton = document.querySelector(".back-button");
+    const lobbyTitle = document.querySelector("#lobby-title");
+    let currentStep = "main"; // Track current step
+
+    function showStep(step) {
+      currentStep = step;
+      const elements = {
+        backButton:
+          document.querySelector(".back-button") ||
+          document.querySelector(".leave-room-btn"),
+        lobbyTitle: document.querySelector("#lobby-title"),
+        toggleJoke: document.querySelector("#toggle-joke"),
+        initialSetup: document.querySelector("#initial-setup"),
+        lobbyButtons: document.querySelector(".lobby-buttons"),
+        roomCreation: document.querySelector("#room-creation"),
+        roomJoin: document.querySelector("#room-join"),
+      };
+
+      switch (step) {
+        case "main":
+          elements.backButton.classList.add("hidden");
+          elements.backButton.textContent = "←";
+          elements.lobbyTitle.classList.remove("hidden");
+          elements.lobbyTitle.textContent = "Welcome to Multiplayer Game"; // Reset title
+          elements.lobbyButtons.classList.remove("hidden");
+          elements.initialSetup.classList.add("hidden");
+          elements.roomCreation.classList.add("hidden");
+          elements.roomJoin.classList.add("hidden");
+          elements.toggleJoke.classList.remove("hidden");
+          break;
+        case "setup":
+          elements.backButton.textContent = "←";
+          elements.backButton.classList.remove("hidden");
+          elements.toggleJoke.classList.add("hidden");
+          elements.lobbyTitle.classList.remove("hidden");
+          elements.lobbyTitle.textContent = "Create Character"; // Change title for setup
+          elements.lobbyButtons.classList.add("hidden");
+          elements.initialSetup.classList.remove("hidden");
+          break;
+        case "create":
+          elements.backButton.classList.remove("hidden");
+          elements.toggleJoke.classList.add("hidden");
+          elements.lobbyTitle.textContent = "Create Room"; // Change title for room creation
+          elements.roomCreation.classList.remove("hidden");
+          elements.initialSetup.classList.add("hidden");
+          break;
+        // ...rest of switch cases remain the same...
+      }
+    }
+
+    backButton.addEventListener("click", () => {
+      switch (currentStep) {
+        case "setup":
+          showStep("main");
+          break;
+        case "create":
+        case "join":
+          showStep("setup");
+          break;
+      }
+    });
+
+    createRoomBtn.addEventListener("click", () => {
+      setupAction = "create";
+      showStep("setup");
+    });
+
+    joinRoomBtn.addEventListener("click", () => {
+      setupAction = "join";
+      showStep("setup");
+    });
+
+    continueSetup.addEventListener("click", () => {
+      if (!playerName) {
+        showTooltip(nameInput, "Please enter your name");
+        nameInput.focus();
+        return;
+      }
+
+      if (!selectedColor) {
+        showTooltip(colorOptions, "Please select a color");
+        return;
+      }
+
+      savedPlayerName = nameInput.value.trim();
+      savedPlayerColor = selectedColor;
+
+      showStep(setupAction);
+    });
   }
 
   function setupPlayerCleanup(roomCode) {
