@@ -171,11 +171,12 @@ function getRandomSafeSpot() {
   }
 
   function handleArrowPress(xChange = 0, yChange = 0) {
-    if (players[playerId].frozen) return;
+    const player = players[playerId];
+    if (!player || player.frozen) return;
 
-    const speed = players[playerId].speed || 1;
-    const newX = players[playerId].x + xChange * speed;
-    const newY = players[playerId].y + yChange * speed;
+    const speed = player.speed || 1;
+    const newX = player.x + xChange * speed;
+    const newY = player.y + yChange * speed;
 
     if (!isSolid(newX, newY)) {
       const newDirection =
@@ -762,15 +763,38 @@ function getRandomSafeSpot() {
       });
   }
 
+  // Add before initializeLobby
+  function generateRoomCode() {
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let code = "";
+    for (let i = 0; i < 5; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return code;
+  }
+
+  function showGameLobby(roomCode) {
+    document.querySelector("#room-creation").classList.add("hidden");
+    document.querySelector("#room-join").classList.add("hidden");
+    document.querySelector("#game-lobby").classList.remove("hidden");
+    document.querySelector("#room-code-display").textContent = roomCode;
+  }
+
   function initializeLobby() {
     const lobby = document.querySelector("#lobby");
+    const initialSetup = document.querySelector("#initial-setup");
     const lobbyName = document.querySelector("#lobby-name");
-    const startGame = document.querySelector("#start-game");
     const colorOptions = document.querySelector(".color-options");
-    const playersOnline = document.querySelector("#players-online");
-    const gameContent = document.querySelector("#game-content");
+    const continueSetup = document.querySelector("#continue-setup");
+    const createRoomBtn = document.querySelector("#create-room");
+    const joinRoomBtn = document.querySelector("#join-room");
+    const lobbyButtons = document.querySelector(".lobby-buttons");
 
-    // Add initial color option selection
+    let selectedColor = playerColors[0];
+    let playerName = "";
+    let setupAction = null; // Will store 'create' or 'join'
+
+    // Initialize color options
     playerColors.forEach((color, index) => {
       const option = document.createElement("div");
       option.className = "color-option" + (index === 0 ? " selected" : "");
@@ -779,7 +803,7 @@ function getRandomSafeSpot() {
       colorOptions.appendChild(option);
     });
 
-    let selectedColor = playerColors[0];
+    // Color selection handler
     colorOptions.addEventListener("click", (e) => {
       if (e.target.classList.contains("color-option")) {
         document
@@ -790,96 +814,41 @@ function getRandomSafeSpot() {
       }
     });
 
-    firebase
-      .database()
-      .ref("players")
-      .on("value", (snapshot) => {
-        const playerCount = snapshot.numChildren();
-        playersOnline.textContent = playerCount;
-      });
-
-    startGame.addEventListener("click", () => {
-      const name = lobbyName.value.trim() || createName();
-      savedPlayerName = name; // Save the name when starting game
-      const { x, y } = getRandomSafeSpot();
-
-      // Format display name with color
-      const displayName = `${
-        selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1)
-      } ${name}`;
-
-      playerRef
-        .set({
-          id: playerId,
-          name: displayName, // Use combined color + name
-          direction: "right",
-          color: selectedColor,
-          x: x,
-          y: y,
-          coins: 0,
-          eliminated: false,
-          isDefeated: false,
-          joinTime: Date.now(),
-        })
-        .then(() => {
-          // Only after successful player creation, show game and init
-          lobby.classList.add("hidden");
-          gameContent.classList.remove("hidden");
-          initGame();
-        })
-        .catch((error) => {
-          console.error("Failed to create player:", error);
-        });
+    // Show setup form when create/join is clicked
+    createRoomBtn.addEventListener("click", () => {
+      setupAction = "create";
+      lobbyButtons.classList.add("hidden");
+      initialSetup.classList.remove("hidden");
     });
 
-    // Update toggle button handler
-    const toggleButton = document.querySelector("#toggle-joke");
-    const lobbyTitle = document.querySelector("#lobby-title");
+    joinRoomBtn.addEventListener("click", () => {
+      setupAction = "join";
+      lobbyButtons.classList.add("hidden");
+      initialSetup.classList.remove("hidden");
+    });
 
-    toggleButton.addEventListener("click", () => {
-      document.querySelector("#regular-content").classList.toggle("hidden");
-      document.querySelector("#joke-content").classList.toggle("hidden");
+    // Handle continue after name/color selection
+    continueSetup.addEventListener("click", () => {
+      playerName = lobbyName.value.trim();
+      if (!playerName) {
+        alert("Please enter your name!");
+        return;
+      }
 
-      if (
-        document.querySelector("#regular-content").classList.contains("hidden")
-      ) {
-        toggleButton.textContent = "Back to lobby";
-        lobbyTitle.textContent = "Game Controls";
+      // Save player details
+      savedPlayerName = playerName;
+      savedPlayerColor = selectedColor;
+
+      // Hide setup and show appropriate next step
+      initialSetup.classList.add("hidden");
+      if (setupAction === "create") {
+        document.querySelector("#room-creation").classList.remove("hidden");
       } else {
-        toggleButton.textContent = "Settings";
-        lobbyTitle.textContent = "Welcome to Multiplayer Game";
+        document.querySelector("#room-join").classList.remove("hidden");
       }
     });
 
-    // Add new elements
-    const createRoomBtn = document.querySelector("#create-room");
-    const joinRoomBtn = document.querySelector("#join-room");
-    const roomCreation = document.querySelector("#room-creation");
-    const roomJoin = document.querySelector("#room-join");
-    const gameSetup = document.querySelector("#game-setup");
-    const roomCodeInput = document.querySelector("#room-code");
-    const joinGameBtn = document.querySelector("#join-game");
-
-    let currentRoom = null;
-
-    // Generate random room code
-    function generateRoomCode() {
-      return Math.random().toString(36).substring(2, 7).toUpperCase();
-    }
-
-    // Create room handler
-    createRoomBtn.addEventListener("click", () => {
-      roomCreation.classList.remove("hidden");
-      roomJoin.classList.add("hidden");
-    });
-
-    // Join room handler
-    joinRoomBtn.addEventListener("click", () => {
-      roomJoin.classList.remove("hidden");
-      roomCreation.classList.add("hidden");
-    });
-
-    // Player count selection
+    // Update existing handlers to use saved name/color
     document.querySelectorAll(".player-select button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const maxPlayers = parseInt(btn.dataset.players);
@@ -897,151 +866,106 @@ function getRandomSafeSpot() {
               [playerId]: {
                 isHost: true,
                 joined: Date.now(),
+                name: savedPlayerName,
+                color: savedPlayerColor,
               },
             },
           })
           .then(() => {
-            console.log("Room created successfully:", roomCode);
-            currentRoom = roomCode;
-            localStorage.setItem("currentRoom", roomCode);
-
-            // Hide the title
-            document.querySelector("#lobby-title").classList.add("hidden");
-
-            // Hide buttons and show room info
-            document.querySelector(".lobby-buttons").classList.add("hidden");
-            document.querySelector("#room-creation").classList.add("hidden");
-            document.querySelector("#room-join").classList.add("hidden");
-
-            // Update room info
-            const roomInfo = document.querySelector("#room-info");
-            document.querySelector("#current-room-code").textContent = roomCode;
-            roomInfo.classList.remove("hidden");
-
-            // Show game setup
-            document.querySelector("#game-setup").classList.remove("hidden");
-          })
-          .catch((error) => {
-            console.error("Error creating room:", error);
-            alert(`Error creating room: ${error.message}`);
+            showGameLobby(roomCode);
+            // Listen for players joining
+            roomRef.child("players").on("value", (snapshot) => {
+              const players = snapshot.val() || {};
+              updateLobbyPlayers(players);
+            });
           });
       });
     });
 
-    // Join game handler
-    joinGameBtn.addEventListener("click", () => {
-      const code = roomCodeInput.value.trim().toUpperCase();
+    // Update join game handler
+    document.querySelector("#join-game").addEventListener("click", () => {
+      const code = document
+        .querySelector("#room-code")
+        .value.trim()
+        .toUpperCase();
       const roomRef = firebase.database().ref(`rooms/${code}`);
 
       roomRef
         .once("value")
         .then((snapshot) => {
           const room = snapshot.val();
-          if (!room) {
-            throw new Error("Room not found!");
-          }
-          if (!room.isOpen) {
-            throw new Error("Room is closed!");
-          }
-          if (room.currentPlayers >= room.maxPlayers) {
+          if (!room) throw new Error("Room not found!");
+          if (!room.isOpen) throw new Error("Room is closed!");
+          if (room.currentPlayers >= room.maxPlayers)
             throw new Error("Room is full!");
-          }
 
-          // Add player to room
-          return roomRef
-            .child("players")
-            .child(playerId)
-            .set({
-              joined: Date.now(),
-            })
-            .then(() => {
-              return updateRoomPlayerCount(code);
-            });
+          return roomRef.child("players").child(playerId).set({
+            joined: Date.now(),
+            name: savedPlayerName,
+            color: savedPlayerColor,
+          });
         })
         .then(() => {
-          currentRoom = code;
-          localStorage.setItem("currentRoom", code);
-          roomJoin.classList.add("hidden");
-          gameSetup.classList.remove("hidden");
-        })
-        .catch((error) => {
-          console.error("Error joining room:", error);
-          alert(error.message);
-        });
-    });
-
-    // Add room cleanup on disconnect
-    window.addEventListener("beforeunload", () => {
-      const roomCode = localStorage.getItem("currentRoom");
-      if (roomCode) {
-        firebase
-          .database()
-          .ref(`rooms/${roomCode}/players/${playerId}`)
-          .remove();
-        firebase
-          .database()
-          .ref(`rooms/${roomCode}`)
-          .transaction((room) => {
-            if (room) {
-              room.currentPlayers = (room.currentPlayers || 1) - 1;
-              if (room.currentPlayers <= 0) {
-                return null; // Remove room if empty
-              }
-            }
-            return room;
+          showGameLobby(code);
+          roomRef.child("players").on("value", (snapshot) => {
+            const players = snapshot.val() || {};
+            updateLobbyPlayers(players);
           });
-      }
+        })
+        .catch((error) => alert(error.message));
     });
 
-    // Add cleanup on disconnect
-    if (playerId) {
-      firebase
-        .database()
-        .ref(".info/connected")
-        .on("value", (snapshot) => {
-          if (snapshot.val() === true) {
-            const roomCode = localStorage.getItem("currentRoom");
-            if (roomCode) {
-              const roomRef = firebase.database().ref(`rooms/${roomCode}`);
-              const playerRef = roomRef.child("players").child(playerId);
+    function updateLobbyPlayers(players) {
+      const playersList = document.querySelector("#lobby-players-list");
+      playersList.innerHTML = "";
 
-              playerRef.onDisconnect().remove();
-              roomRef
-                .child("currentPlayers")
-                .onDisconnect()
-                .transaction((currentPlayers) => {
-                  if (currentPlayers <= 1) {
-                    return null; // Remove room if last player
-                  }
-                  return currentPlayers - 1;
-                });
-            }
-          }
-        });
+      Object.entries(players).forEach(([id, player]) => {
+        const playerEl = document.createElement("div");
+        playerEl.className = "lobby-player";
+        playerEl.style.color = player.color;
+        playerEl.innerHTML = `
+          ${player.name} ${player.isHost ? "(Host)" : ""}
+          <div class="player-status">Ready</div>
+        `;
+        playersList.appendChild(playerEl);
+      });
     }
 
-    // Update disconnect handling
-    if (playerId) {
-      firebase
-        .database()
-        .ref(".info/connected")
-        .on("value", (snapshot) => {
-          if (snapshot.val()) {
-            const roomCode = localStorage.getItem("currentRoom");
-            if (roomCode) {
-              handlePlayerLeave(roomCode);
-            }
-          }
-        });
-    }
+    // Add start game handler
+    document.querySelector("#start-game-btn").addEventListener("click", () => {
+      const roomCode = document.querySelector("#room-code-display").textContent;
+      const roomRef = firebase.database().ref(`rooms/${roomCode}`);
 
-    // Clean up on window close/refresh
-    window.addEventListener("beforeunload", () => {
-      const roomCode = localStorage.getItem("currentRoom");
-      if (roomCode) {
-        handlePlayerLeave(roomCode);
-      }
+      // Initialize the player's starting position
+      const { x, y } = getRandomSafeSpot();
+      playerRef
+        .set({
+          id: playerId,
+          name: savedPlayerName,
+          direction: "right",
+          color: savedPlayerColor,
+          x,
+          y,
+          coins: 0,
+          frozen: false,
+          joinTime: Date.now(),
+        })
+        .then(() => {
+          roomRef
+            .update({
+              gameStarted: true,
+            })
+            .then(() => {
+              document.querySelector("#lobby").classList.add("hidden");
+              document
+                .querySelector("#game-content")
+                .classList.remove("hidden");
+              initGame();
+            });
+        });
     });
+
+    // ...rest of existing initializeLobby code...
   }
 
   firebase.auth().onAuthStateChanged((user) => {

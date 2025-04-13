@@ -20,6 +20,24 @@
         <button id="toggle-joke" class="toggle-button">Settings</button>
         <h1 id="lobby-title">Welcome to Multiplayer Game</h1>
         <div id="regular-content">
+          <div id="initial-setup" class="hidden">
+            <div class="lobby-form">
+              <input
+                type="text"
+                id="lobby-name"
+                placeholder="Enter your name"
+                maxlength="10"
+              />
+              <div class="color-picker">
+                <span class="color-label">Choose Color:</span>
+                <div class="color-options">
+                  <!-- Colors will be added by JS -->
+                </div>
+              </div>
+              <button id="continue-setup" class="lobby-button">Continue</button>
+            </div>
+          </div>
+
           <div class="lobby-buttons">
             <button id="create-room" class="lobby-button">Create</button>
             <button id="join-room" class="lobby-button">Join</button>
@@ -71,6 +89,19 @@
               </div>
               <button id="start-game" class="lobby-button">Start Game</button>
             </div>
+          </div>
+          <div id="game-lobby" class="hidden">
+            <div class="lobby-header">
+              <h2>Game Lobby</h2>
+              <div class="room-code">
+                Room Code: <span id="room-code-display"></span>
+              </div>
+            </div>
+            <div class="lobby-players">
+              <h3>Players</h3>
+              <div id="lobby-players-list"></div>
+            </div>
+            <button id="start-game-btn" class="lobby-button">Start Game</button>
           </div>
         </div>
         <div id="joke-content" class="hidden">

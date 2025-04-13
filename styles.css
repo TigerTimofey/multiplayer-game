@@ -632,6 +632,10 @@ button {
   padding: 10px 0;
 }
 
+#initial-setup {
+  animation: fadeIn 0.3s ease-out;
+}
+
 .lobby h1 {
   color: #fff;
   font-size: 1.4em;
@@ -670,6 +674,8 @@ button {
   flex-direction: column;
   gap: 1rem;
   align-items: center;
+  opacity: 1;
+  transition: opacity 0.3s ease-out;
 }
 
 #lobby-name {
@@ -915,4 +921,65 @@ button {
 .room-players {
   font-size: 18px;
   opacity: 0.9;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#game-lobby {
+  animation: fadeIn 0.3s ease-out;
+  width: 100%;
+}
+
+.lobby-header {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.lobby-header h2 {
+  color: #ffd700;
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+.lobby-players {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.lobby-players h3 {
+  color: white;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.lobby-player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  margin-bottom: 5px;
+  color: white;
+}
+
+.player-status {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+#start-game-btn {
+  width: 100%;
+  margin-top: 20px;
 }
