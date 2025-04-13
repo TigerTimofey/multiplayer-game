@@ -923,6 +923,16 @@ button {
   opacity: 0.9;
 }
 
+.room-capacity {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+  color: #ffd700;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

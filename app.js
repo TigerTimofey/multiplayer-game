@@ -734,11 +734,9 @@ function getRandomSafeSpot() {
       if (!room) return null;
 
       const playerCount = room.players ? Object.keys(room.players).length : 0;
-      return {
-        ...room,
-        currentPlayers: playerCount,
-        isOpen: playerCount < room.maxPlayers,
-      };
+      room.currentPlayers = playerCount;
+      room.isOpen = playerCount < room.maxPlayers;
+      return room;
     });
   }
 
@@ -873,14 +871,46 @@ function getRandomSafeSpot() {
           })
           .then(() => {
             showGameLobby(roomCode);
-            // Listen for players joining
             roomRef.child("players").on("value", (snapshot) => {
               const players = snapshot.val() || {};
-              updateLobbyPlayers(players);
+              updateLobbyPlayers(players, roomRef); // Pass roomRef here
             });
           });
       });
     });
+
+    function updateLobbyPlayers(players, roomRef) {
+      const playersList = document.querySelector("#lobby-players-list");
+      playersList.innerHTML = "";
+
+      // Show player list first while room data is loading
+      const currentPlayers = Object.keys(players).length;
+
+      Object.entries(players).forEach(([id, player]) => {
+        const playerEl = document.createElement("div");
+        playerEl.className = "lobby-player";
+        playerEl.style.color = player.color;
+        playerEl.innerHTML = `
+          ${player.name} ${player.isHost ? "(Host)" : ""}
+          <div class="player-status">Ready</div>
+        `;
+        playersList.appendChild(playerEl);
+      });
+
+      // If roomRef is provided, get max players
+      if (roomRef) {
+        roomRef.once("value").then((snapshot) => {
+          const room = snapshot.val();
+          if (room) {
+            // Add room capacity display at the top
+            const capacityDiv = document.createElement("div");
+            capacityDiv.className = "room-capacity";
+            capacityDiv.textContent = `Players: ${currentPlayers}/${room.maxPlayers}`;
+            playersList.insertBefore(capacityDiv, playersList.firstChild);
+          }
+        });
+      }
+    }
 
     // Update join game handler
     document.querySelector("#join-game").addEventListener("click", () => {
@@ -895,39 +925,65 @@ function getRandomSafeSpot() {
         .then((snapshot) => {
           const room = snapshot.val();
           if (!room) throw new Error("Room not found!");
-          if (!room.isOpen) throw new Error("Room is closed!");
-          if (room.currentPlayers >= room.maxPlayers)
-            throw new Error("Room is full!");
 
-          return roomRef.child("players").child(playerId).set({
-            joined: Date.now(),
-            name: savedPlayerName,
-            color: savedPlayerColor,
-          });
+          const playerCount = room.players
+            ? Object.keys(room.players).length
+            : 0;
+          if (playerCount >= room.maxPlayers) {
+            throw new Error(
+              `Room is full (${playerCount}/${room.maxPlayers} players)`
+            );
+          }
+
+          // Add player to room
+          return roomRef
+            .child("players")
+            .child(playerId)
+            .set({
+              joined: Date.now(),
+              name: savedPlayerName,
+              color: savedPlayerColor,
+            })
+            .then(() => {
+              return updateRoomPlayerCount(code);
+            });
         })
         .then(() => {
           showGameLobby(code);
           roomRef.child("players").on("value", (snapshot) => {
             const players = snapshot.val() || {};
-            updateLobbyPlayers(players);
+            updateLobbyPlayers(players, roomRef);
           });
         })
         .catch((error) => alert(error.message));
     });
 
-    function updateLobbyPlayers(players) {
+    function updateLobbyPlayers(players, roomRef) {
       const playersList = document.querySelector("#lobby-players-list");
       playersList.innerHTML = "";
 
-      Object.entries(players).forEach(([id, player]) => {
-        const playerEl = document.createElement("div");
-        playerEl.className = "lobby-player";
-        playerEl.style.color = player.color;
-        playerEl.innerHTML = `
-          ${player.name} ${player.isHost ? "(Host)" : ""}
-          <div class="player-status">Ready</div>
-        `;
-        playersList.appendChild(playerEl);
+      roomRef.once("value").then((snapshot) => {
+        const room = snapshot.val();
+        const maxPlayers = room.maxPlayers;
+        const currentPlayers = Object.keys(players).length;
+
+        // Add room capacity display
+        const capacityDiv = document.createElement("div");
+        capacityDiv.className = "room-capacity";
+        capacityDiv.textContent = `Players: ${currentPlayers}/${maxPlayers}`;
+        playersList.appendChild(capacityDiv);
+
+        // Add player list
+        Object.entries(players).forEach(([id, player]) => {
+          const playerEl = document.createElement("div");
+          playerEl.className = "lobby-player";
+          playerEl.style.color = player.color;
+          playerEl.innerHTML = `
+            ${player.name} ${player.isHost ? "(Host)" : ""}
+            <div class="player-status">Ready</div>
+          `;
+          playersList.appendChild(playerEl);
+        });
       });
     }
 
