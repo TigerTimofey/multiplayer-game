@@ -1350,9 +1350,9 @@ button.player-status:active {
 
 .back-button {
   margin-top: 10px;
-  /* position: absolute; */
-  left: -1rem;
-  top: 50%;
+  position: absolute;
+  left: -10px;
+  top: 0px;
   transform: translateY(-50%);
   background: none;
   border: none;
