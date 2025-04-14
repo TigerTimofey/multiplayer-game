@@ -830,7 +830,7 @@ button {
 .color-option {
   width: 35px;
   height: 35px;
-  border-radius: 50%;
+  /* border-radius: 50%; */
   cursor: pointer;
   position: relative;
   image-rendering: pixelated;
@@ -840,7 +840,7 @@ button {
 }
 
 .color-option:hover {
-  /* transform: scale(1.3); */
+  transform: scale(1.3);
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
@@ -1350,7 +1350,7 @@ button.player-status:active {
 
 .back-button {
   margin-top: 10px;
-  position: absolute;
+  /* position: absolute; */
   left: -1rem;
   top: 50%;
   transform: translateY(-50%);
