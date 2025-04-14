@@ -1314,10 +1314,22 @@ function getRandomSafeSpot() {
     const toggleJoke = document.querySelector("#toggle-joke");
     const regularContent = document.querySelector("#regular-content");
     const jokeContent = document.querySelector("#joke-content");
+    // Remove this line since lobbyTitle is already declared above
+    // const lobbyTitle = document.querySelector("#lobby-title");
 
     toggleJoke.addEventListener("click", () => {
       regularContent.classList.toggle("hidden");
       jokeContent.classList.toggle("hidden");
+
+      // Use the existing lobbyTitle variable
+      if (jokeContent.classList.contains("hidden")) {
+        lobbyTitle.textContent = "Welcome to Multiplayer Game";
+        lobbyTitle.classList.remove("hidden");
+        toggleJoke.textContent = "Settings";
+      } else {
+        lobbyTitle.classList.add("hidden");
+        toggleJoke.textContent = "Lobby";
+      }
     });
   }
 
