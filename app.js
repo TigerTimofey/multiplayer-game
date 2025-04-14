@@ -1057,7 +1057,7 @@ function getRandomSafeSpot() {
             playerEl.style.color = player.color;
 
             // Add ready/not ready status
-            const readyStatus = player.isReady ? "Ready" : "Not Ready";
+            const readyStatus = player.isReady ? "Is Ready" : "Not Ready";
             const statusClass = player.isReady
               ? "status-ready"
               : "status-not-ready";
