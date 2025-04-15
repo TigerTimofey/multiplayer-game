@@ -139,7 +139,9 @@ function getRandomSafeSpot() {
       x,
       y,
       coins: 0,
+      kills: 0, // Reset kills on restart
       joinTime: Date.now(), // Add join time on restart
+      startTime: Date.now(), // Reset start time on restart
     });
   }
 
@@ -221,7 +223,7 @@ function getRandomSafeSpot() {
     if (players[playerId].shield) return;
 
     const myCoins = players[playerId].isGiant
-      ? players[playerId].coins * 2 // Double power when giant
+      ? players[playerId].coins * 2
       : players[playerId].coins;
 
     Object.keys(players).forEach((key) => {
@@ -229,45 +231,65 @@ function getRandomSafeSpot() {
 
       const otherPlayer = players[key];
       if (otherPlayer.x === x && otherPlayer.y === y) {
-        // Check if shield is active
-        if (players[playerId].powers?.shield) {
-          return; // Shield blocks all collisions
-        }
+        if (players[playerId].powers?.shield) return;
+
         if (myCoins > otherPlayer.coins) {
-          // Я атакую игрока с меньшим количеством монет
-          // Отправляем сообщение о поражении атакованному игроку
+          // Update killer's stats first, then handle defeated player
+          const updates = {};
+          updates[`players/${playerId}/kills`] =
+            (players[playerId].kills || 0) + 1;
+          updates[`players/${key}/isDefeated`] = true;
+          updates[`players/${key}/defeatedBy`] = {
+            name: players[playerId].name,
+            coins: myCoins,
+            kills: (players[playerId].kills || 0) + 1,
+          };
+
+          // Use single update for atomic operation
           firebase
             .database()
-            .ref(`players/${key}`)
-            .update({
-              isDefeated: true,
-              defeatedBy: {
-                name: players[playerId].name,
-                coins: myCoins,
-              },
-            });
-
-          // Даем время на отображение модального окна
-          setTimeout(() => {
-            firebase.database().ref(`players/${key}`).remove();
-          }, 1000);
+            .ref()
+            .update(updates)
+            .then(() => {
+              setTimeout(() => {
+                firebase.database().ref(`players/${key}`).remove();
+              }, 1000);
+            })
+            .catch((error) => console.error("Update failed:", error));
         } else if (myCoins < otherPlayer.coins) {
-          // Меня атаковал игрок с большим количеством монет
-          const playerStats = {
-            coins: players[playerId].coins,
-            joinTime: players[playerId].joinTime,
-          };
-          showGameOver(
-            { name: otherPlayer.name, coins: otherPlayer.coins },
-            playerStats
-          );
+          // Update winner's kills first, then remove defeated player
+          const updates = {};
+          updates[`players/${key}/kills`] = (otherPlayer.kills || 0) + 1;
 
-          const myElement = playerElements[playerId];
-          myElement.classList.add("eliminated");
+          firebase
+            .database()
+            .ref()
+            .update(updates)
+            .then(() => {
+              const playerStats = {
+                coins: players[playerId].coins,
+                joinTime: players[playerId].joinTime,
+                kills: players[playerId].kills || 0,
+                startTime: players[playerId].startTime,
+              };
 
-          setTimeout(() => {
-            playerRef.remove();
-          }, 1000);
+              showGameOver(
+                {
+                  name: otherPlayer.name,
+                  coins: otherPlayer.coins,
+                  kills: (otherPlayer.kills || 0) + 1,
+                },
+                playerStats
+              );
+
+              const myElement = playerElements[playerId];
+              myElement.classList.add("eliminated");
+
+              setTimeout(() => {
+                playerRef.remove();
+              }, 1000);
+            })
+            .catch((error) => console.error("Update failed:", error));
         }
       }
     });
@@ -281,17 +303,15 @@ function getRandomSafeSpot() {
 
     document.querySelector("#final-coins").textContent = playerStats.coins;
 
-    // Check if joinTime exists before calculating
-    if (playerStats.joinTime) {
-      const timeAlive = Math.floor((Date.now() - playerStats.joinTime) / 1000);
-      const minutes = Math.floor(timeAlive / 60);
-      const seconds = timeAlive % 60;
-      document.querySelector(
-        "#time-survived"
-      ).textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
-    } else {
-      document.querySelector("#time-survived").textContent = "0:00";
-    }
+    // Calculate survival time
+    const survivalTime = Math.floor(
+      (Date.now() - playerStats.startTime) / 1000
+    );
+    const minutes = Math.floor(survivalTime / 60);
+    const seconds = survivalTime % 60;
+    document.querySelector("#time-survived").textContent = `${minutes}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
 
     const allPlayers = Object.values(players);
     const rank =
@@ -303,12 +323,19 @@ function getRandomSafeSpot() {
 
   function updateScoreboard() {
     const playersList = document.querySelector("#players-list");
-    playersList.innerHTML = "";
+    playersList.innerHTML = `
+      <div class="scoreboard-header">
+        <span>Name</span>
+        <span>Coins</span>
+        <span>Kills</span>
+      </div>
+    `;
 
-    // Sort players by coins
-    const sortedPlayers = Object.values(players).sort(
-      (a, b) => b.coins - a.coins
-    );
+    // Sort players by coins first, then kills
+    const sortedPlayers = Object.values(players).sort((a, b) => {
+      if (b.coins !== a.coins) return b.coins - a.coins;
+      return (b.kills || 0) - (a.kills || 0);
+    });
 
     sortedPlayers.forEach((player) => {
       const div = document.createElement("div");
@@ -319,6 +346,7 @@ function getRandomSafeSpot() {
       div.innerHTML = `
         <span>${player.name}</span>
         <span>${player.coins}</span>
+        <span>${player.kills || 0}</span>
       `;
       playersList.appendChild(div);
     });
@@ -1202,6 +1230,8 @@ function getRandomSafeSpot() {
           coins: 0,
           frozen: false,
           joinTime: Date.now(),
+          startTime: Date.now(), // Add this line to track when player starts
+          kills: 0,
         })
         .then(() => {
           roomRef

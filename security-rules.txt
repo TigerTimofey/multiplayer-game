@@ -11,7 +11,9 @@ For example, any logged in player could currently delete all the coins in the ga
     ".read": "auth != null",
     "players": {
       "$uid": {
-        ".write": "auth != null && auth.uid == $uid"
+        // Allow updates to own player data and kills
+        ".write": "auth != null && ($uid === auth.uid || data.parent().child(auth.uid).exists())",
+        ".validate": "newData.hasChild('name')"
       }
     },
     "coins": {

@@ -369,11 +369,31 @@ button {
 }
 
 .player-score {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 10px;
   margin-bottom: 5px;
   font-size: 14px;
   opacity: 0.9;
+  padding: 4px 8px;
+}
+
+.scoreboard-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 10px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 8px;
+}
+
+.player-score span:last-child,
+.player-score span:nth-child(2),
+.scoreboard-header span:last-child,
+.scoreboard-header span:nth-child(2) {
+  text-align: center;
 }
 
 .player-score.you {
