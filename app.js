@@ -283,7 +283,42 @@ function getRandomSafeSpot() {
               );
 
               const myElement = playerElements[playerId];
+              // Add random scatter directions for death animation
+              myElement.style.setProperty(
+                "--scatter-x",
+                Math.random() * 40 - 20 + "px"
+              );
+              myElement.style.setProperty(
+                "--scatter-y",
+                Math.random() * 40 - 20 + "px"
+              );
+              myElement.style.setProperty(
+                "--scatter-rotate",
+                Math.random() * 360 + "deg"
+              );
               myElement.classList.add("eliminated");
+
+              // Create additional pixel fragments
+              for (let i = 0; i < 6; i++) {
+                const fragment = document.createElement("div");
+                fragment.className = "Character_sprite";
+                fragment.style.position = "absolute";
+                fragment.style.setProperty(
+                  "--scatter-x",
+                  Math.random() * 60 - 30 + "px"
+                );
+                fragment.style.setProperty(
+                  "--scatter-y",
+                  Math.random() * 60 - 30 + "px"
+                );
+                fragment.style.setProperty(
+                  "--scatter-rotate",
+                  Math.random() * 360 + "deg"
+                );
+                fragment.style.animation = "pixelScatter 0.8s forwards";
+                fragment.style.opacity = "0.7";
+                myElement.appendChild(fragment);
+              }
 
               setTimeout(() => {
                 playerRef.remove();
@@ -554,6 +589,11 @@ function getRandomSafeSpot() {
       characterElement.innerHTML = `
         <div class="Character_shadow grid-cell"></div>
         <div class="Character_sprite grid-cell"></div>
+        <div class="Character_swords">
+          <div class="Character_sword"></div>
+          <div class="Character_sword"></div>
+          <div class="Character_sword"></div>
+        </div>
         <div class="Character_name-container">
           <span class="Character_name"></span>
           <span class="Character_coins">0</span>
@@ -573,6 +613,7 @@ function getRandomSafeSpot() {
       characterElement.setAttribute("data-color", addedPlayer.color);
       characterElement.setAttribute("data-direction", addedPlayer.direction);
 
+      // Update player position with their color for swords
       const left = 16 * addedPlayer.x + "px";
       const top = 16 * addedPlayer.y - 4 + "px";
       characterElement.style.transform = `translate3d(${left}, ${top}, 0)`;
@@ -605,8 +646,16 @@ function getRandomSafeSpot() {
         if (nameEl) nameEl.innerText = characterState.name;
         if (coinsEl) coinsEl.innerText = characterState.coins;
 
+        // Update color for both character and swords
         el.setAttribute("data-color", characterState.color);
         el.setAttribute("data-direction", characterState.direction);
+
+        // Ensure swords container exists and has the right color
+        const swordsContainer = el.querySelector(".Character_swords");
+        if (swordsContainer) {
+          // The CSS will handle the color based on the data-color attribute
+          swordsContainer.setAttribute("data-color", characterState.color);
+        }
 
         // Update position with scale
         updatePlayerPosition(

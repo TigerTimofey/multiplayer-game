@@ -139,19 +139,69 @@ button {
 }
 
 .Character.eliminated {
-  animation: eliminate 0.3s forwards;
-  pointer-events: none;
+  animation: none; /* Remove previous animation */
 }
 
-@keyframes eliminate {
+.Character.eliminated .Character_sprite {
+  animation: pixelExplosion 0.8s forwards;
+  transform-origin: center;
+}
+
+/* Create pixel fragments for death animation */
+.Character.eliminated::before,
+.Character.eliminated::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  background-position: inherit;
+  animation: pixelScatter 0.8s forwards;
+}
+
+.Character.eliminated::before {
+  clip-path: polygon(0 0, 50% 0, 50% 50%, 0 50%);
+  transform-origin: bottom right;
+}
+
+.Character.eliminated::after {
+  clip-path: polygon(100% 100%, 50% 100%, 50% 50%, 100% 50%);
+  transform-origin: top left;
+}
+
+@keyframes pixelExplosion {
   0% {
-    transform: scale(1) rotate(0deg);
+    transform: scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  20% {
+    transform: scale(1.2);
+    opacity: 1;
+    filter: brightness(2);
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+    filter: brightness(0);
+  }
+}
+
+@keyframes pixelScatter {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
     opacity: 1;
   }
   100% {
-    transform: scale(0) rotate(360deg);
+    transform: translate(var(--scatter-x, -20px), var(--scatter-y, -20px))
+      rotate(var(--scatter-rotate, -45deg));
     opacity: 0;
   }
+}
+
+/* Remove simple fade for eliminated class */
+.Character.eliminated {
+  pointer-events: none;
 }
 
 .Character_name-container {
@@ -1663,4 +1713,87 @@ button.player-status:active {
 
 .lobby-content::-webkit-scrollbar-thumb:hover {
   background: #5d4d85;
+}
+
+/* Add rotating swords around players */
+.Character_swords {
+  position: absolute;
+  width: 24px; /* Reduced from 100% */
+  height: 24px; /* Reduced from 100% */
+  pointer-events: none;
+  z-index: 1;
+  transform-origin: center;
+  animation: rotateSwords 1.5s linear infinite;
+  /* Center the swords around the character */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 1 !important; /* Force swords to always be visible */
+}
+
+.Character_sword {
+  position: absolute;
+  width: 8px; /* Smaller size */
+  height: 8px; /* Smaller size */
+  background: url(/images/arrow.png) no-repeat;
+  background-size: contain;
+  image-rendering: pixelated;
+  transform-origin: center;
+  /* Update positioning for each sword */
+  top: 50%;
+  left: 50%;
+  margin: -4px 0 0 -4px;
+  filter: brightness(1.5);
+  opacity: 1 !important; /* Force swords to always be visible */
+}
+
+/* Color filters for different player colors */
+.Character[data-color="blue"] .Character_sword {
+  filter: brightness(1.5) hue-rotate(0deg);
+}
+
+.Character[data-color="red"] .Character_sword {
+  filter: brightness(1.5) hue-rotate(330deg);
+}
+
+.Character[data-color="orange"] .Character_sword {
+  filter: brightness(1.5) hue-rotate(30deg);
+}
+
+.Character[data-color="yellow"] .Character_sword {
+  filter: brightness(1.5) hue-rotate(60deg);
+}
+
+.Character[data-color="green"] .Character_sword {
+  filter: brightness(1.5) hue-rotate(120deg);
+}
+
+.Character[data-color="purple"] .Character_sword {
+  filter: brightness(1.5) hue-rotate(270deg);
+}
+
+/* Position the arrows closer */
+.Character_sword:nth-child(1) {
+  transform: rotate(0deg) translateX(12px); /* Reduced from 20px */
+}
+.Character_sword:nth-child(2) {
+  transform: rotate(120deg) translateX(12px);
+}
+.Character_sword:nth-child(3) {
+  transform: rotate(240deg) translateX(12px);
+}
+
+@keyframes rotateSwords {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Remove any potential hiding of swords for non-host players */
+.Character:not(.you) .Character_swords {
+  display: block !important;
+  visibility: visible !important;
 }
