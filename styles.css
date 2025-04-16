@@ -1281,18 +1281,15 @@ button {
   padding: 6px 12px;
   border-radius: 4px;
   margin-left: 20px;
-  border: 1px solid transparent;
   cursor: default;
 }
 
 .status-not-ready {
-  background: rgba(255, 69, 58, 0.1);
   color: #ff4757;
   border-color: rgba(255, 69, 58, 0.3);
 }
 
 .status-ready {
-  background: rgba(46, 213, 115, 0.1);
   color: #2ed573;
   border-color: rgba(46, 213, 115, 0.3);
 }
@@ -1838,4 +1835,34 @@ button.player-status:active {
 /* Hide start button for non-host players */
 #start-game-btn:not(.host) {
   display: none;
+}
+
+/* Style updates for player status */
+button.player-status {
+  background: transparent;
+  /* border: 2px solid currentColor; */
+  /* color: inherit; */
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+button.player-status:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.player-status-display {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  /* border: 2px solid currentColor; */
+  opacity: 0.8;
+}
+
+.player-name {
+  font-weight: bold;
+  font-size: 16px;
 }

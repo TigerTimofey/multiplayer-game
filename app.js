@@ -1221,47 +1221,48 @@ function getRandomSafeSpot() {
             playerEl.style.color = player.color;
 
             // Add ready/not ready status
-            const readyStatus = player.isReady ? "Is Ready" : "Not Ready";
+            const readyStatus = player.isReady ? "Ready" : "Not Ready";
             const statusClass = player.isReady
               ? "status-ready"
               : "status-not-ready";
 
-            playerEl.innerHTML = `
-              ${player.name} ${player.isHost ? "(Host)" : ""}
-              <div class="player-status ${statusClass}">${readyStatus}</div>
-            `;
-
-            // Add click handler for own player status
+            // Different HTML for current player vs others
             if (id === playerId) {
-              playerEl
-                .querySelector(".player-status")
-                .addEventListener("click", () => {
-                  const playerRef = roomRef.child(`players/${playerId}`);
-                  playerRef.update({
-                    isReady: !player.isReady,
-                  });
+              // For current player: show interactive button
+              playerEl.innerHTML = `
+                <div class="player-name">${player.name} ${
+                player.isHost ? "(Host)" : ""
+              }</div>
+                <button class="player-status ${statusClass}">${readyStatus}</button>
+              `;
+
+              // Add click handler for status button
+              const statusBtn = playerEl.querySelector(".player-status");
+              statusBtn.addEventListener("click", () => {
+                const playerRef = roomRef.child(`players/${playerId}`);
+                playerRef.update({
+                  isReady: !player.isReady,
                 });
-              playerEl.querySelector(".player-status").style.cursor = "pointer";
+              });
+            } else {
+              // For other players: show status as text only
+              playerEl.innerHTML = `
+                <div class="player-name">${player.name} ${
+                player.isHost ? "(Host)" : ""
+              }</div>
+                <div class="player-status-display ${statusClass}">${readyStatus}</div>
+              `;
             }
 
             playersList.appendChild(playerEl);
           });
 
-          // Enable start button only if all players are ready
+          // Update start button visibility based on all players ready
           const startButton = document.querySelector("#start-game-btn");
           const allPlayersReady = Object.values(roomData.players).every(
             (p) => p.isReady
           );
-
           startButton.disabled = !allPlayersReady;
-          if (allPlayersReady) {
-            startButton.title = "All players ready - Click to start!";
-          } else {
-            startButton.title = "Waiting for all players to be ready";
-          }
-
-          // Remove opacity changes that were tied to host status
-          startButton.style.opacity = "1";
         }
       });
     }
