@@ -1415,7 +1415,6 @@ button.player-status:active {
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin-bottom: 1.5rem;
 }
 
 .back-button {
@@ -1607,7 +1606,7 @@ button.player-status:active {
   text-shadow: 3px 3px 0 #2a2a3f, -1px -1px 0 #2a2a3f, 1px -1px 0 #2a2a3f,
     -1px 1px 0 #2a2a3f, 1px 1px 0 #2a2a3f;
   font-size: 2em;
-  margin-bottom: 1.5em;
+  text-align: center;
   letter-spacing: 2px;
 }
 
