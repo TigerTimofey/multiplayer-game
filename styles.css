@@ -974,6 +974,7 @@ button {
   color: #fff;
   margin: 10px 0;
   font-size: 1.2em;
+  text-align: center;
 }
 
 .control-key.empty {
