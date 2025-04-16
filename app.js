@@ -977,8 +977,95 @@ function getRandomSafeSpot() {
         // Remove opacity changes that were tied to host status
         startButton.style.opacity = "1";
       }
+
+      // Show start button only for host
+      const startButton = document.querySelector("#start-game-btn");
+      if (playerId === roomData.hostId) {
+        startButton.classList.add("host");
+      } else {
+        startButton.classList.remove("host");
+      }
+
+      // Only start countdown if game hasn't started yet
+      if (
+        roomData.countdownStarted &&
+        !roomData.gameStarted &&
+        !window.countdownTriggered
+      ) {
+        window.countdownTriggered = true; // Set flag to prevent multiple countdowns
+        startCountdown(roomRef);
+      }
     });
   }
+
+  function startCountdown(roomRef) {
+    const countdownOverlay = document.createElement("div");
+    countdownOverlay.className = "countdown-overlay";
+    document.body.appendChild(countdownOverlay);
+
+    let count = 3;
+
+    function updateCount() {
+      countdownOverlay.innerHTML = `<div class="countdown-number">${count}</div>`;
+    }
+
+    updateCount();
+
+    const interval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        updateCount();
+      } else if (count === 0) {
+        countdownOverlay.innerHTML = `<div class="countdown-number">GO!</div>`;
+      } else {
+        clearInterval(interval);
+        countdownOverlay.remove();
+        // Set gameStarted flag in database when countdown finishes
+        roomRef.update({ gameStarted: true }).then(() => startGame());
+      }
+    }, 1000);
+  }
+
+  function startGame() {
+    const { x, y } = getRandomSafeSpot();
+    playerRef
+      .set({
+        id: playerId,
+        name: savedPlayerName,
+        direction: "right",
+        color: savedPlayerColor,
+        x,
+        y,
+        coins: 0,
+        frozen: false,
+        joinTime: Date.now(),
+        startTime: Date.now(),
+        kills: 0,
+      })
+      .then(() => {
+        document.querySelector("#lobby").classList.add("hidden");
+        document.querySelector("#game-content").classList.remove("hidden");
+        initGame();
+      });
+  }
+
+  // Update start game button handler
+  document.querySelector("#start-game-btn").addEventListener("click", () => {
+    const roomCode = document.querySelector("#room-code-display").textContent;
+    const roomRef = firebase.database().ref(`rooms/${roomCode}`);
+
+    roomRef.once("value").then((snapshot) => {
+      const roomData = snapshot.val();
+      if (
+        !roomData.gameStarted &&
+        roomData.currentPlayers === roomData.maxPlayers
+      ) {
+        roomRef.update({
+          countdownStarted: Date.now(),
+        });
+      }
+    });
+  });
 
   function initializeLobby() {
     const lobby = document.querySelector("#lobby");
@@ -1266,35 +1353,10 @@ function getRandomSafeSpot() {
       const roomCode = document.querySelector("#room-code-display").textContent;
       const roomRef = firebase.database().ref(`rooms/${roomCode}`);
 
-      // Initialize the player's starting position
-      const { x, y } = getRandomSafeSpot();
-      playerRef
-        .set({
-          id: playerId,
-          name: savedPlayerName,
-          direction: "right",
-          color: savedPlayerColor,
-          x,
-          y,
-          coins: 0,
-          frozen: false,
-          joinTime: Date.now(),
-          startTime: Date.now(), // Add this line to track when player starts
-          kills: 0,
-        })
-        .then(() => {
-          roomRef
-            .update({
-              gameStarted: true,
-            })
-            .then(() => {
-              document.querySelector("#lobby").classList.add("hidden");
-              document
-                .querySelector("#game-content")
-                .classList.remove("hidden");
-              initGame();
-            });
-        });
+      // Set countdown start time
+      roomRef.update({
+        countdownStarted: Date.now(),
+      });
     });
 
     // ...rest of existing initializeLobby code...

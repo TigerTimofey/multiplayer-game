@@ -1796,3 +1796,45 @@ button.player-status:active {
   display: block !important;
   visibility: visible !important;
 }
+
+/* Countdown styles */
+.countdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.countdown-number {
+  color: #ffd700;
+  font-size: 120px;
+  font-family: "Press Start 2P", cursive;
+  animation: countdownPulse 1s ease-out;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+@keyframes countdownPulse {
+  0% {
+    transform: scale(2);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Hide start button for non-host players */
+#start-game-btn:not(.host) {
+  display: none;
+}
