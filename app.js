@@ -1136,11 +1136,103 @@ function getRandomSafeSpot() {
             `Player: ${playerName} (ID: ${playerId}) - Total Coins: ${playerStats.totalCoins}, Total Kills: ${playerStats.totalKills}`
           );
         });
+
+        // Determine top players
+        let topKillsPlayer = { name: "None", kills: 0 };
+        let topCoinsPlayer = { name: "None", coins: 0 };
+
+        Object.entries(stats).forEach(([playerId, playerStats]) => {
+          const playerName = players[playerId]?.name || "Unknown";
+          if (playerStats.totalKills > topKillsPlayer.kills) {
+            topKillsPlayer = {
+              name: playerName,
+              kills: playerStats.totalKills,
+            };
+          }
+          if (playerStats.totalCoins > topCoinsPlayer.coins) {
+            topCoinsPlayer = {
+              name: playerName,
+              coins: playerStats.totalCoins,
+            };
+          }
+        });
+
+        // Show match ended modal
+        showMatchEndedModal(topKillsPlayer, topCoinsPlayer);
       }
     );
 
     // Additional logic to handle game end (e.g., show game over modal)
     // ...existing code...
+  }
+
+  function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
+    const isKillsDraw =
+      Object.values(players).filter((p) => p.kills === topKillsPlayer.kills)
+        .length > 1;
+
+    const isCoinsDraw =
+      Object.values(players).filter((p) => p.coins === topCoinsPlayer.coins)
+        .length > 1;
+
+    const matchEndedModal = document.createElement("div");
+    matchEndedModal.className = "modal";
+    matchEndedModal.innerHTML = `
+      <div class="modal-content">
+        <h2>MATCH ENDED</h2>
+        <div class="stats-container">
+          <div class="stat-item">
+            <div class="stat-label">Top Kills</div>
+            <div class="stat-value">${
+              isKillsDraw
+                ? "Draw"
+                : `${topKillsPlayer.name} (${topKillsPlayer.kills})`
+            }</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Top Coins</div>
+            <div class="stat-value">${
+              isCoinsDraw
+                ? "Draw"
+                : `${topCoinsPlayer.name} (${topCoinsPlayer.coins})`
+            }</div>
+          </div>
+        </div>
+        <button id="close-match-ended-modal">Go to lobby</button>
+      </div>
+    `;
+
+    document.body.appendChild(matchEndedModal);
+
+    // Disable player movement
+    if (playerRef) {
+      playerRef.update({ frozen: true });
+    }
+
+    const closeButton = matchEndedModal.querySelector(
+      "#close-match-ended-modal"
+    );
+    closeButton.addEventListener("click", () => {
+      // Remove the player from the game
+      if (playerRef) {
+        playerRef.remove().then(() => {
+          // Remove the room from Firebase
+          const roomRef = firebase.database().ref(`rooms/${currentRoomCode}`);
+          roomRef
+            .remove()
+            .then(() => {
+              // Show the lobby and hide the game
+              document.querySelector("#game-content").classList.add("hidden");
+              document.querySelector("#lobby").classList.remove("hidden");
+              resetToMainMenu();
+              matchEndedModal.remove();
+            })
+            .catch((error) => {
+              console.error("Failed to remove room:", error);
+            });
+        });
+      }
+    });
   }
 
   // Update start game button handler
