@@ -338,16 +338,6 @@ function getRandomSafeSpot() {
 
     document.querySelector("#final-coins").textContent = playerStats.coins;
 
-    // Calculate survival time
-    const survivalTime = Math.floor(
-      (Date.now() - playerStats.startTime) / 1000
-    );
-    const minutes = Math.floor(survivalTime / 60);
-    const seconds = survivalTime % 60;
-    document.querySelector("#time-survived").textContent = `${minutes}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
-
     const allPlayers = Object.values(players);
     const rank =
       allPlayers
