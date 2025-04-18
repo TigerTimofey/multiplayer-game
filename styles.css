@@ -1287,11 +1287,13 @@ button {
 .status-not-ready {
   color: #ff4757;
   border-color: rgba(255, 69, 58, 0.3);
+  font-weight: bold;
 }
 
 .status-ready {
   color: #2ed573;
   border-color: rgba(46, 213, 115, 0.3);
+  font-weight: bold;
 }
 
 button.player-status:hover {
