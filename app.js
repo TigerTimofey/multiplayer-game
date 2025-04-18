@@ -1116,6 +1116,33 @@ function getRandomSafeSpot() {
       });
   }
 
+  function endGame() {
+    const playerStatsRef = firebase
+      .database()
+      .ref(`rooms/${currentRoomCode}/playerStats`);
+    const playersRef = firebase
+      .database()
+      .ref(`rooms/${currentRoomCode}/players`);
+
+    Promise.all([playerStatsRef.once("value"), playersRef.once("value")]).then(
+      ([statsSnapshot, playersSnapshot]) => {
+        const stats = statsSnapshot.val();
+        const players = playersSnapshot.val();
+
+        console.log("Game Over! Player Stats:");
+        Object.entries(stats).forEach(([playerId, playerStats]) => {
+          const playerName = players[playerId]?.name || "Unknown";
+          console.log(
+            `Player: ${playerName} (ID: ${playerId}) - Total Coins: ${playerStats.totalCoins}, Total Kills: ${playerStats.totalKills}`
+          );
+        });
+      }
+    );
+
+    // Additional logic to handle game end (e.g., show game over modal)
+    // ...existing code...
+  }
+
   // Update start game button handler
   document.querySelector("#start-game-btn").addEventListener("click", () => {
     const roomCode = document.querySelector("#room-code-display").textContent;
