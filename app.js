@@ -921,9 +921,6 @@ function getRandomSafeSpot() {
         Object.entries(roomData.players).forEach(([id, player]) => {
           const playerEl = document.createElement("div");
           playerEl.className = "lobby-player";
-          if (roomData.lastJoined === id) {
-            playerEl.classList.add("player-joined");
-          }
           playerEl.style.color = player.color;
 
           // Render status differently for current user vs others
@@ -1027,25 +1024,61 @@ function getRandomSafeSpot() {
   }
 
   function startGame() {
-    const { x, y } = getRandomSafeSpot();
-    playerRef
-      .set({
-        id: playerId,
-        name: savedPlayerName,
-        direction: "right",
-        color: savedPlayerColor,
-        x,
-        y,
-        coins: 0,
-        frozen: false,
-        joinTime: Date.now(),
-        startTime: Date.now(),
-        kills: 0,
-      })
-      .then(() => {
-        document.querySelector("#lobby").classList.add("hidden");
-        document.querySelector("#game-content").classList.remove("hidden");
-        initGame();
+    const roomRef = firebase.database().ref(`rooms/${currentRoomCode}`);
+
+    roomRef.once("value").then((snapshot) => {
+      const roomData = snapshot.val();
+      const { x, y } = getRandomSafeSpot();
+
+      playerRef
+        .set({
+          id: playerId,
+          name: savedPlayerName,
+          direction: "right",
+          color: savedPlayerColor,
+          x,
+          y,
+          coins: 0,
+          kills: 0,
+          joinTime: Date.now(),
+          startTime: Date.now(),
+        })
+        .then(() => {
+          document.querySelector("#lobby").classList.add("hidden");
+          document.querySelector("#game-content").classList.remove("hidden");
+          startGameTimer(roomData.roundTime);
+          initGame();
+        });
+    });
+  }
+
+  function startGameTimer(duration) {
+    const timerDisplay = document.querySelector("#timer-display");
+    let timeLeft = duration;
+
+    const timer = setInterval(() => {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerDisplay.textContent = `${minutes}:${seconds
+        .toString()
+        .padStart(2, "0")}`;
+
+      if (timeLeft === 0) {
+        clearInterval(timer);
+        endGame();
+      }
+      timeLeft--;
+    }, 1000);
+
+    // Store timer reference in Firebase to keep all clients synchronized
+    firebase
+      .database()
+      .ref(`rooms/${currentRoomCode}`)
+      .update({
+        gameTimer: {
+          startTime: Date.now(),
+          duration: duration,
+        },
       });
   }
 
@@ -1167,13 +1200,44 @@ function getRandomSafeSpot() {
     // Update existing handlers to use saved name/color
     document.querySelectorAll(".player-select button").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const maxPlayers = parseInt(btn.dataset.players);
+        // First, remove selected class from other player buttons
+        document
+          .querySelectorAll(".player-select button")
+          .forEach((b) => b.classList.remove("selected"));
+        btn.classList.add("selected");
+
+        // Show time selection after player count is selected
+        document
+          .querySelector(".time-select-container")
+          .classList.remove("hidden");
+      });
+    });
+
+    // Update time selection handler to create room only when both selections are made
+    document.querySelectorAll(".time-select button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document
+          .querySelectorAll(".time-select button")
+          .forEach((b) => b.classList.remove("selected"));
+        btn.classList.add("selected");
+
+        const selectedPlayers = document.querySelector(
+          ".player-select button.selected"
+        );
+        if (!selectedPlayers) {
+          showTooltip(btn, "Please select number of players first");
+          return;
+        }
+
+        const maxPlayers = parseInt(selectedPlayers.dataset.players);
+        const roundTime = parseInt(btn.dataset.time);
         const roomCode = generateRoomCode();
         const roomRef = firebase.database().ref(`rooms/${roomCode}`);
 
         roomRef
           .set({
             maxPlayers,
+            roundTime,
             currentPlayers: 1,
             isOpen: true,
             created: Date.now(),
@@ -1184,16 +1248,12 @@ function getRandomSafeSpot() {
                 joined: Date.now(),
                 name: savedPlayerName,
                 color: savedPlayerColor,
-                isReady: false, // Initialize as not ready
+                isReady: false,
               },
             },
           })
           .then(() => {
             showGameLobby(roomCode);
-            roomRef.child("players").on("value", (snapshot) => {
-              const players = snapshot.val() || {};
-              updateLobbyPlayers(players, roomRef); // Pass roomRef here
-            });
           });
       });
     });
@@ -1614,4 +1674,14 @@ function getRandomSafeSpot() {
       setTimeout(() => modal.remove(), 300);
     });
   }
+
+  // Add time selection handler
+  document.querySelectorAll(".time-select button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll(".time-select button")
+        .forEach((b) => b.classList.remove("selected"));
+      btn.classList.add("selected");
+    });
+  });
 })();

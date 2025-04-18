@@ -60,10 +60,20 @@
             </div>
           </div>
           <div id="room-creation" class="hidden">
+            <h3>Select Players</h3>
             <div class="player-select">
               <button data-players="2">2 Players</button>
               <button data-players="3">3 Players</button>
               <button data-players="4">4 Players</button>
+            </div>
+            <div class="time-select-container hidden">
+              <h3>Select Round Time</h3>
+              <div class="time-select">
+                <button data-time="10">10 Sec</button>
+                <button data-time="60">1 Min</button>
+                <button data-time="120">2 Min</button>
+                <button data-time="180">3 Min</button>
+              </div>
             </div>
           </div>
           <div id="room-join" class="hidden">
@@ -145,6 +155,7 @@
     </div>
 
     <div id="game-content" class="hidden">
+      <div class="game-timer">Time: <span id="timer-display">0:00</span></div>
       <div class="game-container"></div>
       <div class="powers-menu">
         <div
