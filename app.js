@@ -169,6 +169,28 @@ function getRandomSafeSpot() {
       playerRef.update({
         coins: players[playerId].coins + 1,
       });
+
+      // Update room stats for total coins
+      const roomStatsRef = firebase
+        .database()
+        .ref(`rooms/${currentRoomCode}/stats`);
+      roomStatsRef.transaction((stats) => {
+        if (!stats) {
+          return { totalCoins: 1, totalKills: 0 };
+        }
+        return { ...stats, totalCoins: (stats.totalCoins || 0) + 1 };
+      });
+
+      // Update individual player stats for total coins
+      const playerStatsRef = firebase
+        .database()
+        .ref(`rooms/${currentRoomCode}/playerStats/${playerId}`);
+      playerStatsRef.transaction((stats) => {
+        if (!stats) {
+          return { totalCoins: 1, totalKills: 0 };
+        }
+        return { ...stats, totalCoins: (stats.totalCoins || 0) + 1 };
+      });
     }
   }
 
@@ -251,6 +273,28 @@ function getRandomSafeSpot() {
             .ref()
             .update(updates)
             .then(() => {
+              // Update room stats for total kills
+              const roomStatsRef = firebase
+                .database()
+                .ref(`rooms/${currentRoomCode}/stats`);
+              roomStatsRef.transaction((stats) => {
+                if (!stats) {
+                  return { totalCoins: 0, totalKills: 1 };
+                }
+                return { ...stats, totalKills: (stats.totalKills || 0) + 1 };
+              });
+
+              // Update individual player stats for total kills
+              const playerStatsRef = firebase
+                .database()
+                .ref(`rooms/${currentRoomCode}/playerStats/${playerId}`);
+              playerStatsRef.transaction((stats) => {
+                if (!stats) {
+                  return { totalCoins: 0, totalKills: 1 };
+                }
+                return { ...stats, totalKills: (stats.totalKills || 0) + 1 };
+              });
+
               setTimeout(() => {
                 firebase.database().ref(`players/${key}`).remove();
               }, 1000);

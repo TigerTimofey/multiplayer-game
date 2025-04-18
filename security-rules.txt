@@ -24,6 +24,18 @@
             ".write": "auth != null",
             ".validate": "newData.hasChild('joined')"
           }
+        },
+        "stats": {
+          // Allow updates to cumulative stats for kills and coins
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['totalKills', 'totalCoins'])"
+        },
+        "playerStats": {
+          "$playerId": {
+            // Allow updates to individual player stats
+            ".write": "auth != null",
+            ".validate": "newData.hasChildren(['totalKills', 'totalCoins'])"
+          }
         }
       }
     }
