@@ -556,43 +556,6 @@ function getRandomSafeSpot() {
     }
   }
 
-  function activatePower(power, button) {
-    const powerConfig = POWERS[power];
-    activePowers[power] = true;
-    button.classList.add("active");
-
-    // Add power effect
-    playerElements[playerId].classList.add(power);
-
-    // Handle power specific effects
-    if (power === "speed") {
-      // Double movement speed
-      players[playerId].speed = 2;
-    }
-
-    // Start cooldown animation
-    const cooldown = button.querySelector(".cooldown");
-    cooldown.style.width = "100%";
-
-    // Remove power after duration
-    setTimeout(() => {
-      playerRef.update({
-        [`powers.${power}`]: null,
-        speed: power === "speed" ? 1 : players[playerId].speed,
-      });
-      playerElements[playerId].classList.remove(power);
-      button.classList.remove("active");
-
-      // Start cooldown
-      button.classList.add("disabled");
-      setTimeout(() => {
-        button.classList.remove("disabled");
-        activePowers[power] = false;
-        cooldown.style.width = "0%";
-      }, powerConfig.cooldown);
-    }, powerConfig.duration);
-  }
-
   function updatePlayerPosition(characterElement, x, y, scale = 1) {
     const left = 16 * x + "px";
     const top = 16 * y - 4 + "px";
@@ -836,20 +799,6 @@ function getRandomSafeSpot() {
   };
 
   let activePowers = {};
-
-  function updateRoomPlayerCount(roomCode) {
-    if (!roomCode) return;
-
-    const roomRef = firebase.database().ref(`rooms/${roomCode}`);
-    return roomRef.transaction((room) => {
-      if (!room) return null;
-
-      const playerCount = room.players ? Object.keys(room.players).length : 0;
-      room.currentPlayers = playerCount;
-      room.isOpen = playerCount < room.maxPlayers;
-      return room;
-    });
-  }
 
   function handlePlayerLeave(roomCode) {
     if (!roomCode) return;
@@ -1782,50 +1731,6 @@ function getRandomSafeSpot() {
       tooltip.classList.add("fade-out");
       setTimeout(() => tooltip.remove(), 300);
     }, 2000);
-  }
-
-  function showErrorModal(message, onClose) {
-    const modal = document.createElement("div");
-    modal.className = "error-modal modal";
-    modal.innerHTML = `
-      <div class="modal-content error">
-        <div class="error-icon">!</div>
-        <h2>Error</h2>
-        <p>${message}</p>
-        <button class="error-button">OK</button>
-      </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    const closeBtn = modal.querySelector(".error-button");
-    closeBtn.addEventListener("click", () => {
-      modal.classList.add("fade-out");
-      setTimeout(() => {
-        modal.remove();
-        if (onClose) onClose();
-      }, 300);
-    });
-  }
-
-  function showErrorModal(message) {
-    const modal = document.createElement("div");
-    modal.className = "error-modal modal";
-    modal.innerHTML = `
-      <div class="modal-content error">
-        <div class="error-icon">!</div>
-        <h2>Error</h2>
-        <p>${message}</p>
-        <button class="error-button">OK</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-
-    const closeBtn = modal.querySelector(".error-button");
-    closeBtn.addEventListener("click", () => {
-      modal.classList.add("fade-out");
-      setTimeout(() => modal.remove(), 300);
-    });
   }
 
   // Add time selection handler
