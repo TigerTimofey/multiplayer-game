@@ -5,7 +5,15 @@ import { checkPlayerCollisions } from "./collisions.js";
 export function handleArrowPress(
   xChange = 0,
   yChange = 0,
-  { players, playerId, playerRef, coins, currentRoomCode }
+  {
+    players,
+    playerId,
+    playerRef,
+    coins,
+    currentRoomCode,
+    playerElements,
+    gameOverModal,
+  }
 ) {
   const player = players[playerId];
   if (!player || player.frozen) return;
@@ -22,14 +30,12 @@ export function handleArrowPress(
         ? "left"
         : players[playerId].direction;
 
-    // Update main player
     playerRef.update({
       x: newX,
       y: newY,
       direction: newDirection,
     });
 
-    // Update clones if they exist
     if (players[playerId].clones) {
       const updatedClones = players[playerId].clones.map((clone, index) => {
         const angleOffset =
@@ -47,7 +53,6 @@ export function handleArrowPress(
       playerRef.update({ clones: updatedClones });
     }
 
-    // Pass all required parameters to attemptGrabCoin
     attemptGrabCoin(newX, newY, {
       coins,
       playerRef,
@@ -60,6 +65,8 @@ export function handleArrowPress(
       playerId,
       playerRef,
       currentRoomCode,
+      playerElements,
+      gameOverModal,
     });
   }
 }

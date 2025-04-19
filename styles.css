@@ -331,30 +331,10 @@ button {
   color: #fff;
 }
 
-.stat-item {
-  text-align: center;
-  animation: fadeInUp 0.5s ease-out forwards;
-  opacity: 0;
-}
-
-.stat-item:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.stat-item:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
 .stat-label {
   font-size: 0.9em;
   color: #aaa;
   margin-bottom: 5px;
-}
-
-.stat-value {
-  font-size: 1.8em;
-  color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 @keyframes modalFadeIn {
@@ -837,11 +817,6 @@ button {
   font-size: 1.2em;
   font-weight: bold;
   color: #ffd700;
-}
-
-.stat-label {
-  font-size: 0.9em;
-  opacity: 0.8;
 }
 
 .lobby-form {

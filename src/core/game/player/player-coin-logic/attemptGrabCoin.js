@@ -7,13 +7,11 @@ export function attemptGrabCoin(x, y, gameState) {
   const key = getKeyString(x, y);
 
   if (coins[key]) {
-    // Remove this key from data, then uptick Player's coin count
     firebase.database().ref(`coins/${key}`).remove();
     playerRef.update({
       coins: players[playerId].coins + 1,
     });
 
-    // Update room stats for total coins
     const roomStatsRef = firebase
       .database()
       .ref(`rooms/${currentRoomCode}/stats`);
@@ -24,7 +22,6 @@ export function attemptGrabCoin(x, y, gameState) {
       return { ...stats, totalCoins: (stats.totalCoins || 0) + 1 };
     });
 
-    // Update individual player stats for total coins
     const playerStatsRef = firebase
       .database()
       .ref(`rooms/${currentRoomCode}/playerStats/${playerId}`);

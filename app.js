@@ -216,7 +216,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
   }
 
   function initGame() {
-    // Change back to arrow keys for movement
+    // Ensure gameOverModal is passed to handleArrowPress
     new KeyPressListener("ArrowUp", () =>
       handleArrowPress(0, -1, {
         players,
@@ -224,6 +224,8 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
         playerRef,
         coins,
         currentRoomCode,
+        gameOverModal, // Pass gameOverModal
+        playerElements,
       })
     );
     new KeyPressListener("ArrowDown", () =>
@@ -233,6 +235,8 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
         playerRef,
         coins,
         currentRoomCode,
+        gameOverModal, // Pass gameOverModal
+        playerElements,
       })
     );
     new KeyPressListener("ArrowLeft", () =>
@@ -242,6 +246,8 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
         playerRef,
         coins,
         currentRoomCode,
+        gameOverModal, // Pass gameOverModal
+        playerElements,
       })
     );
     new KeyPressListener("ArrowRight", () =>
@@ -251,6 +257,8 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
         playerRef,
         coins,
         currentRoomCode,
+        gameOverModal, // Pass gameOverModal
+        playerElements,
       })
     );
 
