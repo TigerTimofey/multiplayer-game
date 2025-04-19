@@ -2,6 +2,7 @@ import { mapData } from "./src/core/constants/mapData.js";
 import { playerColors } from "./src/core/constants/palyerColors.js";
 import { getRandomSafeSpot } from "./src/core/constants/mapData.js";
 import { POWERS } from "./src/core/constants/powers.js";
+import { randomFromArray } from "./src/utils/helpers.js";
 
 function getKeyString(x, y) {
   return `${x}x${y}`;
@@ -655,21 +656,6 @@ function isSolid(x, y) {
       const keyToRemove = getKeyString(x, y);
       gameContainer.removeChild(coinElements[keyToRemove]);
       delete coinElements[keyToRemove];
-    });
-
-    //Update player color on button click
-    playerColorButton.addEventListener("click", () => {
-      const mySkinIndex = playerColors.indexOf(players[playerId].color);
-      const nextColor = playerColors[mySkinIndex + 1] || playerColors[0];
-      const currentName = players[playerId].name.split(" ").slice(1).join(" "); // Remove old color prefix
-      const displayName = `${
-        nextColor.charAt(0).toUpperCase() + nextColor.slice(1)
-      } ${currentName}`;
-
-      playerRef.update({
-        color: nextColor,
-        name: displayName,
-      });
     });
 
     //Place my first coin
