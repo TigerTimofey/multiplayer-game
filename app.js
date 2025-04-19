@@ -2,11 +2,8 @@ import { mapData } from "./src/core/constants/mapData.js";
 import { playerColors } from "./src/core/constants/palyerColors.js";
 import { getRandomSafeSpot } from "./src/core/constants/mapData.js";
 import { POWERS } from "./src/core/constants/powers.js";
-import { randomFromArray } from "./src/utils/helpers.js";
-
-function getKeyString(x, y) {
-  return `${x}x${y}`;
-}
+import { randomFromArray, getKeyString } from "./src/utils/helpers.js";
+import { placeCoin } from "./src/core/game/CoinManager.js";
 
 function isSolid(x, y) {
   const blockedNextSpace = mapData.blockedSpaces[getKeyString(x, y)];
@@ -31,7 +28,6 @@ function isSolid(x, y) {
   let savedPlayerColor = ""; // Define savedPlayerColor here
 
   const gameContainer = document.querySelector(".game-container");
-  const playerNameInput = document.querySelector("#player-name");
   const gameOverModal = document.querySelector("#game-over-modal");
   const restartButton = document.querySelector("#restart-button");
 
@@ -55,20 +51,6 @@ function isSolid(x, y) {
   }
 
   restartButton.addEventListener("click", handleRestart);
-
-  function placeCoin() {
-    const { x, y } = getRandomSafeSpot();
-    const coinRef = firebase.database().ref(`coins/${getKeyString(x, y)}`);
-    coinRef.set({
-      x,
-      y,
-    });
-
-    const coinTimeouts = [2000, 3000, 4000, 5000];
-    setTimeout(() => {
-      placeCoin();
-    }, randomFromArray(coinTimeouts));
-  }
 
   function attemptGrabCoin(x, y) {
     const key = getKeyString(x, y);
@@ -658,7 +640,6 @@ function isSolid(x, y) {
       delete coinElements[keyToRemove];
     });
 
-    //Place my first coin
     placeCoin();
     initPowers();
   }
@@ -1350,35 +1331,6 @@ function isSolid(x, y) {
           showTooltip(codeInput, error.message);
         });
     });
-
-    // function updateLobbyPlayers(players, roomRef) {
-    //   const playersList = document.querySelector("#lobby-players-list");
-    //   playersList.innerHTML = "";
-
-    //   roomRef.once("value").then((snapshot) => {
-    //     const room = snapshot.val();
-    //     const maxPlayers = room.maxPlayers;
-    //     const currentPlayers = Object.keys(players).length;
-
-    //     // Add room capacity display
-    //     const capacityDiv = document.createElement("div");
-    //     capacityDiv.className = "room-capacity";
-    //     capacityDiv.textContent = `Players: ${currentPlayers}/${maxPlayers}`;
-    //     playersList.appendChild(capacityDiv);
-
-    //     // Add player list
-    //     Object.entries(players).forEach(([id, player]) => {
-    //       const playerEl = document.createElement("div");
-    //       playerEl.className = "lobby-player";
-    //       playerEl.style.color = player.color;
-    //       playerEl.innerHTML = `
-    //         ${player.name} ${player.isHost ? "(Host)" : ""}
-    //         <div class="player-status">Ready</div>
-    //       `;
-    //       playersList.appendChild(playerEl);
-    //     });
-    //   });
-    // }
 
     // Add start game handler
     document.querySelector("#start-game-btn").addEventListener("click", () => {
