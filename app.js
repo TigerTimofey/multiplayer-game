@@ -4,28 +4,19 @@ import { getRandomSafeSpot } from "./src/core/constants/mapData.js";
 import { POWERS } from "./src/core/constants/powers.js";
 import { randomFromArray, getKeyString } from "./src/utils/helpers.js";
 import { placeCoin } from "./src/core/game/CoinManager.js";
-
-function isSolid(x, y) {
-  const blockedNextSpace = mapData.blockedSpaces[getKeyString(x, y)];
-  return (
-    blockedNextSpace ||
-    x >= mapData.maxX ||
-    x < mapData.minX ||
-    y >= mapData.maxY ||
-    y < mapData.minY
-  );
-}
+import { showTooltip } from "./src/core/components/tooltip/tooltip.js";
+import { handleArrowPress } from "./src/core/game/player/movement.js";
 
 (function () {
   let playerId;
   let playerRef;
-  let currentRoomCode = null; // Add this to track current room
+  let currentRoomCode = null;
   let players = {};
   let playerElements = {};
   let coins = {};
   let coinElements = {};
-  let savedPlayerName = ""; // Add this at the top with other variables
-  let savedPlayerColor = ""; // Define savedPlayerColor here
+  let savedPlayerName = "";
+  let savedPlayerColor = ""; //
 
   const gameContainer = document.querySelector(".game-container");
   const gameOverModal = document.querySelector("#game-over-modal");
@@ -51,235 +42,6 @@ function isSolid(x, y) {
   }
 
   restartButton.addEventListener("click", handleRestart);
-
-  function attemptGrabCoin(x, y) {
-    const key = getKeyString(x, y);
-    if (coins[key]) {
-      // Remove this key from data, then uptick Player's coin count
-      firebase.database().ref(`coins/${key}`).remove();
-      playerRef.update({
-        coins: players[playerId].coins + 1,
-      });
-
-      // Update room stats for total coins
-      const roomStatsRef = firebase
-        .database()
-        .ref(`rooms/${currentRoomCode}/stats`);
-      roomStatsRef.transaction((stats) => {
-        if (!stats) {
-          return { totalCoins: 1, totalKills: 0 };
-        }
-        return { ...stats, totalCoins: (stats.totalCoins || 0) + 1 };
-      });
-
-      // Update individual player stats for total coins
-      const playerStatsRef = firebase
-        .database()
-        .ref(`rooms/${currentRoomCode}/playerStats/${playerId}`);
-      playerStatsRef.transaction((stats) => {
-        if (!stats) {
-          return { totalCoins: 1, totalKills: 0 };
-        }
-        return { ...stats, totalCoins: (stats.totalCoins || 0) + 1 };
-      });
-    }
-  }
-
-  function handleArrowPress(xChange = 0, yChange = 0) {
-    const player = players[playerId];
-    if (!player || player.frozen) return;
-
-    const speed = player.speed || 1;
-    const newX = player.x + xChange * speed;
-    const newY = player.y + yChange * speed;
-
-    if (!isSolid(newX, newY)) {
-      const newDirection =
-        xChange === 1
-          ? "right"
-          : xChange === -1
-          ? "left"
-          : players[playerId].direction;
-
-      // Update main player
-      playerRef.update({
-        x: newX,
-        y: newY,
-        direction: newDirection,
-      });
-
-      // Update clones if they exist
-      if (players[playerId].clones) {
-        const updatedClones = players[playerId].clones.map((clone, index) => {
-          // Calculate offset based on clone index to maintain formation
-          const angleOffset =
-            (index / players[playerId].clones.length) * Math.PI * 2;
-          const radius = 2; // Distance from player
-
-          return {
-            ...clone,
-            x: newX + Math.round(Math.cos(angleOffset) * radius),
-            y: newY + Math.round(Math.sin(angleOffset) * radius),
-            direction: newDirection,
-          };
-        });
-
-        playerRef.update({ clones: updatedClones });
-      }
-
-      attemptGrabCoin(newX, newY);
-      checkPlayerCollisions(newX, newY);
-    }
-  }
-
-  function checkPlayerCollisions(x, y) {
-    if (players[playerId].shield) return;
-
-    const myCoins = players[playerId].isGiant
-      ? players[playerId].coins * 2
-      : players[playerId].coins;
-
-    Object.keys(players).forEach((key) => {
-      if (key === playerId) return;
-
-      const otherPlayer = players[key];
-      if (otherPlayer.x === x && otherPlayer.y === y) {
-        if (players[playerId].powers?.shield) return;
-
-        if (myCoins > otherPlayer.coins) {
-          // Update killer's stats first, then handle defeated player
-          const updates = {};
-          updates[`players/${playerId}/kills`] =
-            (players[playerId].kills || 0) + 1;
-          updates[`players/${key}/isDefeated`] = true;
-          updates[`players/${key}/defeatedBy`] = {
-            name: players[playerId].name,
-            coins: myCoins,
-            kills: (players[playerId].kills || 0) + 1,
-          };
-
-          // Use single update for atomic operation
-          firebase
-            .database()
-            .ref()
-            .update(updates)
-            .then(() => {
-              // Update room stats for total kills
-              const roomStatsRef = firebase
-                .database()
-                .ref(`rooms/${currentRoomCode}/stats`);
-              roomStatsRef.transaction((stats) => {
-                if (!stats) {
-                  return { totalCoins: 0, totalKills: 1 };
-                }
-                return { ...stats, totalKills: (stats.totalKills || 0) + 1 };
-              });
-
-              // Update individual player stats for total kills
-              const playerStatsRef = firebase
-                .database()
-                .ref(`rooms/${currentRoomCode}/playerStats/${playerId}`);
-              playerStatsRef.transaction((stats) => {
-                if (!stats) {
-                  return { totalCoins: 0, totalKills: 1 };
-                }
-                return { ...stats, totalKills: (stats.totalKills || 0) + 1 };
-              });
-
-              setTimeout(() => {
-                firebase.database().ref(`players/${key}`).remove();
-              }, 1000);
-            })
-            .catch((error) => console.error("Update failed:", error));
-        } else if (myCoins < otherPlayer.coins) {
-          // Update winner's kills first, then remove defeated player
-          const updates = {};
-          updates[`players/${key}/kills`] = (otherPlayer.kills || 0) + 1;
-
-          firebase
-            .database()
-            .ref()
-            .update(updates)
-            .then(() => {
-              const playerStats = {
-                coins: players[playerId].coins,
-                joinTime: players[playerId].joinTime,
-                kills: players[playerId].kills || 0,
-                startTime: players[playerId].startTime,
-              };
-
-              showGameOver(
-                {
-                  name: otherPlayer.name,
-                  coins: otherPlayer.coins,
-                  kills: (otherPlayer.kills || 0) + 1,
-                },
-                playerStats
-              );
-
-              const myElement = playerElements[playerId];
-              // Add random scatter directions for death animation
-              myElement.style.setProperty(
-                "--scatter-x",
-                Math.random() * 40 - 20 + "px"
-              );
-              myElement.style.setProperty(
-                "--scatter-y",
-                Math.random() * 40 - 20 + "px"
-              );
-              myElement.style.setProperty(
-                "--scatter-rotate",
-                Math.random() * 360 + "deg"
-              );
-              myElement.classList.add("eliminated");
-
-              // Create additional pixel fragments
-              for (let i = 0; i < 6; i++) {
-                const fragment = document.createElement("div");
-                fragment.className = "Character_sprite";
-                fragment.style.position = "absolute";
-                fragment.style.setProperty(
-                  "--scatter-x",
-                  Math.random() * 60 - 30 + "px"
-                );
-                fragment.style.setProperty(
-                  "--scatter-y",
-                  Math.random() * 60 - 30 + "px"
-                );
-                fragment.style.setProperty(
-                  "--scatter-rotate",
-                  Math.random() * 360 + "deg"
-                );
-                fragment.style.animation = "pixelScatter 0.8s forwards";
-                fragment.style.opacity = "0.7";
-                myElement.appendChild(fragment);
-              }
-
-              setTimeout(() => {
-                playerRef.remove();
-              }, 1000);
-            })
-            .catch((error) => console.error("Update failed:", error));
-        }
-      }
-    });
-  }
-
-  function showGameOver(eliminatedBy, playerStats) {
-    gameOverModal.classList.remove("hidden");
-
-    const eliminatedByEl = document.querySelector("#eliminated-by");
-    eliminatedByEl.textContent = `Eliminated by ${eliminatedBy.name} who had ${eliminatedBy.coins} coins!`;
-
-    document.querySelector("#final-coins").textContent = playerStats.coins;
-
-    const allPlayers = Object.values(players);
-    const rank =
-      allPlayers
-        .sort((a, b) => b.coins - a.coins)
-        .findIndex((p) => p.id === playerId) + 1;
-    document.querySelector("#final-rank").textContent = `#${rank}`;
-  }
 
   function updateScoreboard() {
     const playersList = document.querySelector("#players-list");
@@ -455,10 +217,42 @@ function isSolid(x, y) {
 
   function initGame() {
     // Change back to arrow keys for movement
-    new KeyPressListener("ArrowUp", () => handleArrowPress(0, -1));
-    new KeyPressListener("ArrowDown", () => handleArrowPress(0, 1));
-    new KeyPressListener("ArrowLeft", () => handleArrowPress(-1, 0));
-    new KeyPressListener("ArrowRight", () => handleArrowPress(1, 0));
+    new KeyPressListener("ArrowUp", () =>
+      handleArrowPress(0, -1, {
+        players,
+        playerId,
+        playerRef,
+        coins,
+        currentRoomCode,
+      })
+    );
+    new KeyPressListener("ArrowDown", () =>
+      handleArrowPress(0, 1, {
+        players,
+        playerId,
+        playerRef,
+        coins,
+        currentRoomCode,
+      })
+    );
+    new KeyPressListener("ArrowLeft", () =>
+      handleArrowPress(-1, 0, {
+        players,
+        playerId,
+        playerRef,
+        coins,
+        currentRoomCode,
+      })
+    );
+    new KeyPressListener("ArrowRight", () =>
+      handleArrowPress(1, 0, {
+        players,
+        playerId,
+        playerRef,
+        coins,
+        currentRoomCode,
+      })
+    );
 
     // Powers with W and E keys
     new KeyPressListener("KeyW", () => activatePowerByKey("speed"));
@@ -667,7 +461,6 @@ function isSolid(x, y) {
       });
   }
 
-  // Add before initializeLobby
   function generateRoomCode() {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let code = "";
@@ -1053,9 +846,7 @@ function isSolid(x, y) {
   });
 
   function initializeLobby() {
-    const lobby = document.querySelector("#lobby");
     const initialSetup = document.querySelector("#initial-setup");
-    const lobbyName = document.querySelector("#lobby-name");
     const colorOptions = document.querySelector(".color-options");
     const continueSetup = document.querySelector("#continue-setup");
     const createRoomBtn = document.querySelector("#create-room");
@@ -1343,8 +1134,6 @@ function isSolid(x, y) {
       });
     });
 
-    // ...rest of existing initializeLobby code...
-
     const backButton = document.querySelector(".back-button");
     const lobbyTitle = document.querySelector("#lobby-title");
     let currentStep = "main"; // Track current step
@@ -1380,18 +1169,17 @@ function isSolid(x, y) {
           elements.backButton.classList.remove("hidden");
           elements.toggleJoke.classList.add("hidden");
           elements.lobbyTitle.classList.remove("hidden");
-          elements.lobbyTitle.textContent = "Create Character"; // Change title for setup
+          elements.lobbyTitle.textContent = "Create Character";
           elements.lobbyButtons.classList.add("hidden");
           elements.initialSetup.classList.remove("hidden");
           break;
         case "create":
           elements.backButton.classList.remove("hidden");
           elements.toggleJoke.classList.add("hidden");
-          elements.lobbyTitle.textContent = "Create Room"; // Change title for room creation
+          elements.lobbyTitle.textContent = "Create Room";
           elements.roomCreation.classList.remove("hidden");
           elements.initialSetup.classList.add("hidden");
           break;
-        // ...rest of switch cases remain the same...
       }
     }
 
@@ -1435,12 +1223,9 @@ function isSolid(x, y) {
       showStep(setupAction);
     });
 
-    // Add toggle functionality for settings
     const toggleJoke = document.querySelector("#toggle-joke");
     const regularContent = document.querySelector("#regular-content");
     const jokeContent = document.querySelector("#joke-content");
-    // Remove this line since lobbyTitle is already declared above
-    // const lobbyTitle = document.querySelector("#lobby-title");
 
     toggleJoke.addEventListener("click", () => {
       regularContent.classList.toggle("hidden");
@@ -1536,23 +1321,6 @@ function isSolid(x, y) {
       // ...
       console.log(errorCode, errorMessage);
     });
-
-  function showTooltip(element, message) {
-    const tooltip = document.createElement("div");
-    tooltip.className = "tooltip";
-    tooltip.textContent = message;
-
-    const rect = element.getBoundingClientRect();
-    tooltip.style.top = `${rect.top - 40}px`;
-    tooltip.style.left = `${rect.left + rect.width / 2}px`;
-
-    document.body.appendChild(tooltip);
-
-    setTimeout(() => {
-      tooltip.classList.add("fade-out");
-      setTimeout(() => tooltip.remove(), 300);
-    }, 2000);
-  }
 
   // Add time selection handler
   document.querySelectorAll(".time-select button").forEach((btn) => {

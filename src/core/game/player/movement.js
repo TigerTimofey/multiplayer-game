@@ -1,0 +1,65 @@
+import { isSolid } from "../../../utils/helpers.js";
+import { attemptGrabCoin } from "../player/player-coin-logic/attemptGrabCoin.js";
+import { checkPlayerCollisions } from "./collisions.js";
+
+export function handleArrowPress(
+  xChange = 0,
+  yChange = 0,
+  { players, playerId, playerRef, coins, currentRoomCode }
+) {
+  const player = players[playerId];
+  if (!player || player.frozen) return;
+
+  const speed = player.speed || 1;
+  const newX = player.x + xChange * speed;
+  const newY = player.y + yChange * speed;
+
+  if (!isSolid(newX, newY)) {
+    const newDirection =
+      xChange === 1
+        ? "right"
+        : xChange === -1
+        ? "left"
+        : players[playerId].direction;
+
+    // Update main player
+    playerRef.update({
+      x: newX,
+      y: newY,
+      direction: newDirection,
+    });
+
+    // Update clones if they exist
+    if (players[playerId].clones) {
+      const updatedClones = players[playerId].clones.map((clone, index) => {
+        const angleOffset =
+          (index / players[playerId].clones.length) * Math.PI * 2;
+        const radius = 2;
+
+        return {
+          ...clone,
+          x: newX + Math.round(Math.cos(angleOffset) * radius),
+          y: newY + Math.round(Math.sin(angleOffset) * radius),
+          direction: newDirection,
+        };
+      });
+
+      playerRef.update({ clones: updatedClones });
+    }
+
+    // Pass all required parameters to attemptGrabCoin
+    attemptGrabCoin(newX, newY, {
+      coins,
+      playerRef,
+      players,
+      playerId,
+      currentRoomCode,
+    });
+    checkPlayerCollisions(newX, newY, {
+      players,
+      playerId,
+      playerRef,
+      currentRoomCode,
+    });
+  }
+}
