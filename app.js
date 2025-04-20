@@ -8,6 +8,7 @@ import { showTooltip } from "./src/core/components/tooltip/tooltip.js";
 import { handleArrowPress } from "./src/core/game/player/player-interact/movement.js";
 import { handleRestart } from "./src/core/game/game-process/handleRestart.js";
 import { domElements } from "./src/utils/domElements.js";
+import { updateScoreboard } from "./src/core/components/scoreboard/updateScoreboard.js";
 
 (function () {
   let playerId;
@@ -20,63 +21,9 @@ import { domElements } from "./src/utils/domElements.js";
   let savedPlayerName = "";
   let savedPlayerColor = "";
 
-  // const domElements.gameContainer = document.querySelector(".game-container");
-  // const gameOverModal: domElements.gameOverModal = document.querySelector("#game-over-modal");
-  // const restartButton = document.querySelector("#restart-button");
-
-  // Add restart game handler
-  // function handleRestart() {
-  //   gameOverModal: domElements.gameOverModal.classList.add("hidden");
-  //   const { x, y } = getRandomSafeSpot();
-
-  //   playerRef.set({
-  //     id: playerId,
-  //     name: savedPlayerName,
-  //     direction: "right",
-  //     color: randomFromArray(playerColors),
-  //     x,
-  //     y,
-  //     coins: 0,
-  //     kills: 0,
-  //     joinTime: Date.now(),
-  //     startTime: Date.now(),
-  //   });
-  // }
-
   domElements.restartButton.addEventListener("click", () => {
     handleRestart(playerRef, playerId, savedPlayerName, playerColors);
   });
-
-  function updateScoreboard() {
-    const playersList = document.querySelector("#players-list");
-    playersList.innerHTML = `
-      <div class="scoreboard-header">
-        <span>Name</span>
-        <span>Coins</span>
-        <span>Kills</span>
-      </div>
-    `;
-
-    // Sort players by coins first, then kills
-    const sortedPlayers = Object.values(players).sort((a, b) => {
-      if (b.coins !== a.coins) return b.coins - a.coins;
-      return (b.kills || 0) - (a.kills || 0);
-    });
-
-    sortedPlayers.forEach((player) => {
-      const div = document.createElement("div");
-      div.classList.add("player-score");
-      if (player.id === playerId) {
-        div.classList.add("you");
-      }
-      div.innerHTML = `
-        <span>${player.name}</span>
-        <span>${player.coins}</span>
-        <span>${player.kills || 0}</span>
-      `;
-      playersList.appendChild(div);
-    });
-  }
 
   function initPowers() {
     // Update keyboard listeners
@@ -315,7 +262,7 @@ import { domElements } from "./src/utils/domElements.js";
 
     allPlayersRef.on("value", (snapshot) => {
       players = snapshot.val() || {};
-      updateScoreboard();
+      updateScoreboard(players, playerId);
 
       Object.keys(players).forEach((key) => {
         const characterState = players[key];
