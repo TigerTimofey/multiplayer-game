@@ -73,7 +73,6 @@ export function setupRoomListeners(roomRef) {
       startButton.classList.remove("host");
     }
 
-    // Only start countdown if game hasn't started yet
     if (
       roomData.countdownStarted &&
       !roomData.gameStarted &&
