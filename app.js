@@ -3,9 +3,11 @@ import { playerColors } from "./src/core/constants/palyerColors.js";
 import { getRandomSafeSpot } from "./src/core/constants/mapData.js";
 import { POWERS } from "./src/core/constants/powers.js";
 import { randomFromArray, getKeyString } from "./src/utils/helpers.js";
-import { placeCoin } from "./src/core/game/CoinManager.js";
+import { placeCoin } from "./src/core/game/player/player-coin-logic/coinManager.js";
 import { showTooltip } from "./src/core/components/tooltip/tooltip.js";
-import { handleArrowPress } from "./src/core/game/player/movement.js";
+import { handleArrowPress } from "./src/core/game/player/player-interact/movement.js";
+import { handleRestart } from "./src/core/game/game-process/handleRestart.js";
+import { domElements } from "./src/utils/domElements.js";
 
 (function () {
   let playerId;
@@ -16,32 +18,34 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
   let coins = {};
   let coinElements = {};
   let savedPlayerName = "";
-  let savedPlayerColor = ""; //
+  let savedPlayerColor = "";
 
-  const gameContainer = document.querySelector(".game-container");
-  const gameOverModal = document.querySelector("#game-over-modal");
-  const restartButton = document.querySelector("#restart-button");
+  // const domElements.gameContainer = document.querySelector(".game-container");
+  // const gameOverModal: domElements.gameOverModal = document.querySelector("#game-over-modal");
+  // const restartButton = document.querySelector("#restart-button");
 
   // Add restart game handler
-  function handleRestart() {
-    gameOverModal.classList.add("hidden");
-    const { x, y } = getRandomSafeSpot();
+  // function handleRestart() {
+  //   gameOverModal: domElements.gameOverModal.classList.add("hidden");
+  //   const { x, y } = getRandomSafeSpot();
 
-    playerRef.set({
-      id: playerId,
-      name: savedPlayerName, // Use saved name instead of input value
-      direction: "right",
-      color: randomFromArray(playerColors),
-      x,
-      y,
-      coins: 0,
-      kills: 0, // Reset kills on restart
-      joinTime: Date.now(), // Add join time on restart
-      startTime: Date.now(), // Reset start time on restart
-    });
-  }
+  //   playerRef.set({
+  //     id: playerId,
+  //     name: savedPlayerName,
+  //     direction: "right",
+  //     color: randomFromArray(playerColors),
+  //     x,
+  //     y,
+  //     coins: 0,
+  //     kills: 0,
+  //     joinTime: Date.now(),
+  //     startTime: Date.now(),
+  //   });
+  // }
 
-  restartButton.addEventListener("click", handleRestart);
+  domElements.restartButton.addEventListener("click", () => {
+    handleRestart(playerRef, playerId, savedPlayerName, playerColors);
+  });
 
   function updateScoreboard() {
     const playersList = document.querySelector("#players-list");
@@ -216,7 +220,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
   }
 
   function initGame() {
-    // Ensure gameOverModal is passed to handleArrowPress
+    // Ensure gameOverModal: domElements.gameOverModal is passed to handleArrowPress
     new KeyPressListener("ArrowUp", () =>
       handleArrowPress(0, -1, {
         players,
@@ -224,7 +228,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
         playerRef,
         coins,
         currentRoomCode,
-        gameOverModal, // Pass gameOverModal
+        gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
         playerElements,
       })
     );
@@ -235,7 +239,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
         playerRef,
         coins,
         currentRoomCode,
-        gameOverModal, // Pass gameOverModal
+        gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
         playerElements,
       })
     );
@@ -246,7 +250,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
         playerRef,
         coins,
         currentRoomCode,
-        gameOverModal, // Pass gameOverModal
+        gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
         playerElements,
       })
     );
@@ -257,7 +261,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
         playerRef,
         coins,
         currentRoomCode,
-        gameOverModal, // Pass gameOverModal
+        gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
         playerElements,
       })
     );
@@ -293,7 +297,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
 
       // Store element reference first
       playerElements[addedPlayer.id] = characterElement;
-      gameContainer.appendChild(characterElement);
+      domElements.gameContainer.appendChild(characterElement);
 
       // Then set initial state
       characterElement.querySelector(".Character_name").innerText =
@@ -322,7 +326,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
 
         // Check if player was defeated
         if (key === playerId && characterState.isDefeated) {
-          gameOverModal.classList.remove("hidden");
+          gameOverModal: domElements.gameOverModal.classList.remove("hidden");
           document.querySelector(
             "#eliminated-by"
           ).textContent = `Eliminated by ${characterState.defeatedBy.name} who had ${characterState.defeatedBy.coins} coins!`;
@@ -378,7 +382,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
                 </div>
               `;
               playerElements[cloneId] = cloneElement;
-              gameContainer.appendChild(cloneElement);
+              domElements.gameContainer.appendChild(cloneElement);
             }
 
             cloneElement.setAttribute("data-color", clone.color);
@@ -391,7 +395,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
           if (elementId.startsWith("clone-") && elementId.includes(key)) {
             const [, playerId] = elementId.split("-");
             if (!characterState.clones) {
-              gameContainer.removeChild(playerElements[elementId]);
+              domElements.gameContainer.removeChild(playerElements[elementId]);
               delete playerElements[elementId];
             }
           }
@@ -402,7 +406,7 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
     //Remove character DOM element after they leave
     allPlayersRef.on("child_removed", (snapshot) => {
       const removedKey = snapshot.val().id;
-      gameContainer.removeChild(playerElements[removedKey]);
+      domElements.gameContainer.removeChild(playerElements[removedKey]);
       delete playerElements[removedKey];
     });
 
@@ -433,12 +437,12 @@ import { handleArrowPress } from "./src/core/game/player/movement.js";
 
       // Keep a reference for removal later and add to DOM
       coinElements[key] = coinElement;
-      gameContainer.appendChild(coinElement);
+      domElements.gameContainer.appendChild(coinElement);
     });
     allCoinsRef.on("child_removed", (snapshot) => {
       const { x, y } = snapshot.val();
       const keyToRemove = getKeyString(x, y);
-      gameContainer.removeChild(coinElements[keyToRemove]);
+      domElements.gameContainer.removeChild(coinElements[keyToRemove]);
       delete coinElements[keyToRemove];
     });
 

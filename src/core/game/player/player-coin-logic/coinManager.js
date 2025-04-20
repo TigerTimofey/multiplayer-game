@@ -1,5 +1,5 @@
-import { getRandomSafeSpot } from "../constants/mapData.js";
-import { randomFromArray, getKeyString } from "../../utils/helpers.js";
+import { getRandomSafeSpot } from "../../../constants/mapData.js";
+import { randomFromArray, getKeyString } from "../../../../utils/helpers.js";
 
 export function placeCoin() {
   const { x, y } = getRandomSafeSpot();

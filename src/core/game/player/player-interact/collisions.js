@@ -1,4 +1,4 @@
-import { showGameOver } from "../game-process/gameOver.js";
+import { showGameOver } from "../../game-process/gameOver.js";
 
 export function checkPlayerCollisions(
   x,

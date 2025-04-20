@@ -1,6 +1,6 @@
-import { isSolid } from "../../../utils/helpers.js";
-import { attemptGrabCoin } from "../player/player-coin-logic/attemptGrabCoin.js";
-import { checkPlayerCollisions } from "./player-interact/collisions.js";
+import { isSolid } from "../../../../utils/helpers.js";
+import { attemptGrabCoin } from "../player-coin-logic/attemptGrabCoin.js";
+import { checkPlayerCollisions } from "./collisions.js";
 
 export function handleArrowPress(
   xChange = 0,
