@@ -12,8 +12,10 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
 import { startCountdown } from "./src/core/components/counter/startCountdown.js";
 import state from "./src/core/state.js";
 import { resetToMainMenu } from "./src/core/game/lobby/resetToMainMenu.js";
+import { handlePlayerLeave } from "./src/core/game/lobby/handlePlayerLeave.js";
 import { updatePlayerPosition } from "./src/core/game/player/player-interact/updatePlayerPosition.js";
 import { activatePowerByKey } from "./src/core/game/player/player-interact/activatePowerByKey.js";
+import { showGameLobby } from "./src/core/game/lobby/showGameLobby.js";
 
 (function () {
   domElements.restartButton.addEventListener("click", () => {
@@ -25,32 +27,6 @@ import { activatePowerByKey } from "./src/core/game/player/player-interact/activ
     );
   });
 
-  let activePowers = {};
-
-  function handlePlayerLeave(roomCode) {
-    if (!roomCode) return;
-
-    // Remove player from room's players list
-    firebase
-      .database()
-      .ref(`rooms/${roomCode}/players/${state.getPlayerId()}`)
-      .remove();
-
-    // Update current player count and room status
-    firebase
-      .database()
-      .ref(`rooms/${roomCode}`)
-      .transaction((room) => {
-        if (!room) return null;
-        const newPlayerCount = Math.max(0, (room.currentPlayers || 1) - 1);
-        return {
-          ...room,
-          currentPlayers: newPlayerCount,
-          isOpen: newPlayerCount < room.maxPlayers, // Set isOpen true if there's still space
-        };
-      });
-  }
-
   function generateRoomCode() {
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let code = "";
@@ -58,153 +34,6 @@ import { activatePowerByKey } from "./src/core/game/player/player-interact/activ
       code += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return code;
-  }
-
-  function showGameLobby(roomCode) {
-    state.setCurrentRoomCode(roomCode);
-    document.querySelector("#room-creation").classList.add("hidden");
-    document.querySelector("#room-join").classList.add("hidden");
-    document.querySelector("#game-lobby").classList.remove("hidden");
-    document.querySelector("#room-code-display").textContent = roomCode;
-    document.querySelector("#toggle-joke").classList.add("hidden");
-    document.querySelector("#lobby-title").classList.add("hidden");
-
-    // Add click-to-copy functionality
-    const roomCodeDisplay = document.querySelector("#room-code-display");
-    roomCodeDisplay.style.cursor = "pointer";
-    roomCodeDisplay.title = "Click to copy";
-    roomCodeDisplay.addEventListener("click", () => {
-      navigator.clipboard.writeText(roomCode).then(() => {
-        showTooltip(roomCodeDisplay, "Code copied!");
-      });
-    });
-
-    // Replace back button with styled leave room button
-    const backButton = document.querySelector(".back-button");
-    backButton.className = "leave-room-btn";
-    backButton.textContent = "Leave Room";
-    backButton.onclick = () => {
-      handlePlayerLeave(roomCode);
-      resetToMainMenu();
-    };
-
-    setupPlayerCleanup(roomCode);
-    const roomRef = firebase.database().ref(`rooms/${roomCode}`);
-    setupRoomListeners(roomRef);
-  }
-
-  // function resetToMainMenu() {
-  //   // Reset UI elements
-  //   const leaveButton = document.querySelector(".leave-room-btn");
-  //   leaveButton.className = "back-button hidden";
-  //   leaveButton.textContent = "←";
-
-  //   // Reset title
-  //   document.querySelector("#lobby-title").textContent =
-  //     "Welcome to Multiplayer Game";
-
-  //   // Reset room code
-  //   state.setCurrentRoomCode(null);
-
-  //   // Show main menu elements
-  //   document.querySelector("#lobby-title").classList.remove("hidden");
-  //   document.querySelector(".lobby-buttons").classList.remove("hidden");
-  //   document.querySelector("#game-lobby").classList.add("hidden");
-  //   document.querySelector("#toggle-joke").classList.remove("hidden");
-
-  //   // Clear any existing game state
-  //   document.querySelector("#lobby-players-list").innerHTML = "";
-  // }
-
-  function setupRoomListeners(roomRef) {
-    roomRef.on("value", (snapshot) => {
-      const roomData = snapshot.val();
-      if (!roomData) return;
-
-      const playersList = document.querySelector("#lobby-players-list");
-      playersList.innerHTML = "";
-
-      const capacityDiv = document.createElement("div");
-      capacityDiv.className = "room-capacity";
-      capacityDiv.textContent = `Players: ${roomData.currentPlayers}/${roomData.maxPlayers}`;
-      playersList.appendChild(capacityDiv);
-
-      if (roomData.players) {
-        Object.entries(roomData.players).forEach(([id, player]) => {
-          const playerEl = document.createElement("div");
-          playerEl.className = "lobby-player";
-          playerEl.style.color = player.color;
-
-          // Render status differently for current user vs others
-          const readyStatus = player.isReady ? "Is Ready" : "Not Ready";
-          const statusClass = player.isReady
-            ? "status-ready"
-            : "status-not-ready";
-
-          // For current user: clickable button
-          // For others: just text display
-          const statusHtml =
-            id === state.getPlayerId()
-              ? `<button class="player-status ${statusClass}">${readyStatus}</button>`
-              : `<div class="player-status-display ${statusClass}">${readyStatus}</div>`;
-
-          playerEl.innerHTML = `
-            <div class="player-name">${player.name} ${
-            player.isHost ? "(Host)" : ""
-          }</div>
-            ${statusHtml}
-          `;
-
-          // Add click handler only for current user
-          if (id === state.getPlayerId()) {
-            const statusBtn = playerEl.querySelector(".player-status");
-            statusBtn.title = "Click to toggle ready status";
-            statusBtn.addEventListener("click", () => {
-              const playerRef = roomRef.child(`players/${state.getPlayerId()}`);
-              playerRef.update({
-                isReady: !player.isReady,
-              });
-            });
-          }
-
-          playersList.appendChild(playerEl);
-        });
-
-        // Enable start button for everyone when all players are ready
-        const startButton = document.querySelector("#start-game-btn");
-        const allPlayersReady = Object.values(roomData.players).every(
-          (p) => p.isReady
-        );
-
-        startButton.disabled = !allPlayersReady;
-        if (allPlayersReady) {
-          startButton.title = "All players ready - Click to start!";
-        } else {
-          startButton.title = "Waiting for all players to be ready";
-        }
-
-        // Remove opacity changes that were tied to host status
-        startButton.style.opacity = "1";
-      }
-
-      // Show start button only for host
-      const startButton = document.querySelector("#start-game-btn");
-      if (state.getPlayerId() === roomData.hostId) {
-        startButton.classList.add("host");
-      } else {
-        startButton.classList.remove("host");
-      }
-
-      // Only start countdown if game hasn't started yet
-      if (
-        roomData.countdownStarted &&
-        !roomData.gameStarted &&
-        !window.countdownTriggered
-      ) {
-        window.countdownTriggered = true;
-        startCountdown(roomRef);
-      }
-    });
   }
 
   document.querySelector("#start-game-btn").addEventListener("click", () => {
@@ -623,43 +452,43 @@ import { activatePowerByKey } from "./src/core/game/player/player-interact/activ
     });
   }
 
-  function setupPlayerCleanup(roomCode) {
-    if (!roomCode) return;
+  // function setupPlayerCleanup(roomCode) {
+  //   if (!roomCode) return;
 
-    const roomRef = firebase.database().ref(`rooms/${roomCode}`);
-    const playerInRoomRef = roomRef.child("players").child(state.getPlayerId());
+  //   const roomRef = firebase.database().ref(`rooms/${roomCode}`);
+  //   const playerInRoomRef = roomRef.child("players").child(state.getPlayerId());
 
-    // Remove player from room on disconnect
-    playerInRoomRef.onDisconnect().remove();
+  //   // Remove player from room on disconnect
+  //   playerInRoomRef.onDisconnect().remove();
 
-    // Setup room cleanup
-    roomRef.child("players").on("value", (snapshot) => {
-      const players = snapshot.val() || {};
-      const playerCount = Object.keys(players).length;
+  //   // Setup room cleanup
+  //   roomRef.child("players").on("value", (snapshot) => {
+  //     const players = snapshot.val() || {};
+  //     const playerCount = Object.keys(players).length;
 
-      roomRef.once("value").then((roomSnapshot) => {
-        const roomData = roomSnapshot.val();
-        if (!roomData) return;
+  //     roomRef.once("value").then((roomSnapshot) => {
+  //       const roomData = roomSnapshot.val();
+  //       if (!roomData) return;
 
-        if (playerCount === 0) {
-          roomRef.remove();
-        } else {
-          roomRef.update({
-            currentPlayers: playerCount,
-            isOpen: playerCount < roomData.maxPlayers,
-          });
-        }
-      });
-    });
+  //       if (playerCount === 0) {
+  //         roomRef.remove();
+  //       } else {
+  //         roomRef.update({
+  //           currentPlayers: playerCount,
+  //           isOpen: playerCount < roomData.maxPlayers,
+  //         });
+  //       }
+  //     });
+  //   });
 
-    // Cancel cleanup listeners when disconnecting
-    playerInRoomRef
-      .onDisconnect()
-      .setWithPriority({}, null)
-      .then(() => {
-        roomRef.child("players").off();
-      });
-  }
+  //   // Cancel cleanup listeners when disconnecting
+  //   playerInRoomRef
+  //     .onDisconnect()
+  //     .setWithPriority({}, null)
+  //     .then(() => {
+  //       roomRef.child("players").off();
+  //     });
+  // }
 
   function cleanupPlayer() {
     if (state.getCurrentRoomCode()) {
