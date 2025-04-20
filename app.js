@@ -9,20 +9,16 @@ import { handleArrowPress } from "./src/core/game/player/player-interact/movemen
 import { handleRestart } from "./src/core/game/game-process/handleRestart.js";
 import { domElements } from "./src/utils/domElements.js";
 import { updateScoreboard } from "./src/core/components/scoreboard/updateScoreboard.js";
+import state from "./src/core/state.js";
 
 (function () {
-  let playerId;
-  let playerRef;
-  let currentRoomCode = null;
-  let players = {};
-  let playerElements = {};
-  let coins = {};
-  let coinElements = {};
-  let savedPlayerName = "";
-  let savedPlayerColor = "";
-
   domElements.restartButton.addEventListener("click", () => {
-    handleRestart(playerRef, playerId, savedPlayerName, playerColors);
+    handleRestart(
+      state.getPlayerRef(),
+      state.getPlayerId(),
+      state.getSavedPlayerName(),
+      playerColors
+    );
   });
 
   function initPowers() {
@@ -45,79 +41,87 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
     const button = document.querySelector(`[data-power="${power}"]`);
     const cost = parseInt(button.dataset.cost);
 
-    if (players[playerId].coins >= cost && !activePowers[power]) {
-      const newCoinAmount = players[playerId].coins - cost;
+    if (
+      state.getPlayers()[state.getPlayerId()].coins >= cost &&
+      !activePowers[power]
+    ) {
+      const newCoinAmount =
+        state.getPlayers()[state.getPlayerId()].coins - cost;
 
       switch (power) {
         case "speed":
-          playerRef.update({
+          state.getPlayerRef().update({
             coins: newCoinAmount,
             speed: 2,
           });
           break;
         case "shield":
-          playerRef.update({
+          state.getPlayerRef().update({
             coins: newCoinAmount,
             shield: true,
           });
           break;
         case "teleport":
           const randomSpot = getRandomSafeSpot();
-          playerRef.update({
+          state.getPlayerRef().update({
             coins: newCoinAmount,
             x: randomSpot.x,
             y: randomSpot.y,
           });
           break;
         case "grow":
-          playerRef.update({
+          state.getPlayerRef().update({
             coins: newCoinAmount,
             isGiant: true,
             scale: 2, // Add scale property
           });
-          const characterElement = playerElements[playerId];
+          const characterElement =
+            state.getPlayerElements()[state.getPlayerId()];
           characterElement.classList.add("giant");
           characterElement.style.transform = `translate3d(${
-            16 * players[playerId].x
-          }px, ${16 * players[playerId].y - 4}px, 0) scale(2)`;
+            16 * state.getPlayers()[state.getPlayerId()].x
+          }px, ${
+            16 * state.getPlayers()[state.getPlayerId()].y - 4
+          }px, 0) scale(2)`;
           break;
         case "ultimate":
           // Dragon form transformation with coin magnet effect
-          playerRef.update({
+          state.getPlayerRef().update({
             coins: newCoinAmount,
             isUltimate: true,
             isDragon: true,
             speed: 2,
             shield: true,
             scale: 2,
-            damage: players[playerId].coins * 3,
+            damage: state.getPlayers()[state.getPlayerId()].coins * 3,
             isMagnet: true, // Add magnet state
           });
 
           // Get all coins and animate them towards the player
-          Object.keys(coins).forEach((key) => {
+          Object.keys(state.getCoins()).forEach((key) => {
             const [coinX, coinY] = key.split("x").map(Number);
-            const coinElement = coinElements[key];
+            const coinElement = state.getCoinElements()[key];
 
             if (coinElement) {
               coinElement.classList.add("magnetized");
-              const targetX = 16 * players[playerId].x;
-              const targetY = 16 * players[playerId].y - 4;
+              const targetX = 16 * state.getPlayers()[state.getPlayerId()].x;
+              const targetY =
+                16 * state.getPlayers()[state.getPlayerId()].y - 4;
 
               setTimeout(() => {
                 coinElement.style.transform = `translate3d(${targetX}px, ${targetY}px, 0)`;
                 // Collect coin after animation
                 setTimeout(() => {
                   firebase.database().ref(`coins/${key}`).remove();
-                  playerRef.update({
-                    coins: players[playerId].coins + 1,
+                  state.getPlayerRef().update({
+                    coins: state.getPlayers()[state.getPlayerId()].coins + 1,
                   });
                 }, 500);
               }, 100);
             }
           });
 
-          const element = playerElements[playerId];
+          const element = state.getPlayerElements()[state.getPlayerId()];
           element.classList.add("dragon");
           break;
       }
@@ -130,18 +134,21 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
       if (POWERS[power].duration > 0) {
         setTimeout(() => {
           if (power === "grow") {
-            playerRef.update({
+            state.getPlayerRef().update({
               isGiant: false,
               scale: 1,
             });
-            const characterElement = playerElements[playerId];
+            const characterElement =
+              state.getPlayerElements()[state.getPlayerId()];
             characterElement.classList.remove("giant");
             characterElement.style.transform = `translate3d(${
-              16 * players[playerId].x
-            }px, ${16 * players[playerId].y - 4}px, 0) scale(1)`;
+              16 * state.getPlayers()[state.getPlayerId()].x
+            }px, ${
+              16 * state.getPlayers()[state.getPlayerId()].y - 4
+            }px, 0) scale(1)`;
           }
           if (power === "ultimate") {
-            playerRef.update({
+            state.getPlayerRef().update({
               isUltimate: false,
               isDragon: false,
               speed: 1,
@@ -149,7 +156,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
               scale: 1,
               damage: null,
             });
-            const element = playerElements[playerId];
+            const element = state.getPlayerElements()[state.getPlayerId()];
             element.classList.remove("dragon");
           }
           button.classList.remove("active");
@@ -170,46 +177,46 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
     // Ensure gameOverModal: domElements.gameOverModal is passed to handleArrowPress
     new KeyPressListener("ArrowUp", () =>
       handleArrowPress(0, -1, {
-        players,
-        playerId,
-        playerRef,
-        coins,
-        currentRoomCode,
+        players: state.getPlayers(),
+        playerId: state.getPlayerId(),
+        playerRef: state.getPlayerRef(),
+        coins: state.getCoins(),
+        currentRoomCode: state.getCurrentRoomCode(),
         gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
-        playerElements,
+        playerElements: state.getPlayerElements(),
       })
     );
     new KeyPressListener("ArrowDown", () =>
       handleArrowPress(0, 1, {
-        players,
-        playerId,
-        playerRef,
-        coins,
-        currentRoomCode,
+        players: state.getPlayers(),
+        playerId: state.getPlayerId(),
+        playerRef: state.getPlayerRef(),
+        coins: state.getCoins(),
+        currentRoomCode: state.getCurrentRoomCode(),
         gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
-        playerElements,
+        playerElements: state.getPlayerElements(),
       })
     );
     new KeyPressListener("ArrowLeft", () =>
       handleArrowPress(-1, 0, {
-        players,
-        playerId,
-        playerRef,
-        coins,
-        currentRoomCode,
+        players: state.getPlayers(),
+        playerId: state.getPlayerId(),
+        playerRef: state.getPlayerRef(),
+        coins: state.getCoins(),
+        currentRoomCode: state.getCurrentRoomCode(),
         gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
-        playerElements,
+        playerElements: state.getPlayerElements(),
       })
     );
     new KeyPressListener("ArrowRight", () =>
       handleArrowPress(1, 0, {
-        players,
-        playerId,
-        playerRef,
-        coins,
-        currentRoomCode,
+        players: state.getPlayers(),
+        playerId: state.getPlayerId(),
+        playerRef: state.getPlayerRef(),
+        coins: state.getCoins(),
+        currentRoomCode: state.getCurrentRoomCode(),
         gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
-        playerElements,
+        playerElements: state.getPlayerElements(),
       })
     );
 
@@ -224,7 +231,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
       const addedPlayer = snapshot.val();
       const characterElement = document.createElement("div");
       characterElement.classList.add("Character", "grid-cell");
-      if (addedPlayer.id === playerId) {
+      if (addedPlayer.id === state.getPlayerId()) {
         characterElement.classList.add("you");
       }
       characterElement.innerHTML = `
@@ -243,7 +250,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
       `;
 
       // Store element reference first
-      playerElements[addedPlayer.id] = characterElement;
+      state.getPlayerElements()[addedPlayer.id] = characterElement;
       domElements.gameContainer.appendChild(characterElement);
 
       // Then set initial state
@@ -261,18 +268,18 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
     });
 
     allPlayersRef.on("value", (snapshot) => {
-      players = snapshot.val() || {};
-      updateScoreboard(players, playerId);
+      state.setPlayers(snapshot.val() || {});
+      updateScoreboard(state.getPlayers(), state.getPlayerId());
 
-      Object.keys(players).forEach((key) => {
-        const characterState = players[key];
-        let el = playerElements[key];
+      Object.keys(state.getPlayers()).forEach((key) => {
+        const characterState = state.getPlayers()[key];
+        let el = state.getPlayerElements()[key];
 
         // Skip if element doesn't exist yet
         if (!el) return;
 
         // Check if player was defeated
-        if (key === playerId && characterState.isDefeated) {
+        if (key === state.getPlayerId() && characterState.isDefeated) {
           gameOverModal: domElements.gameOverModal.classList.remove("hidden");
           document.querySelector(
             "#eliminated-by"
@@ -316,7 +323,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
         if (characterState.clones) {
           characterState.clones.forEach((clone, index) => {
             const cloneId = `clone-${key}-${index}`;
-            let cloneElement = playerElements[cloneId];
+            let cloneElement = state.getPlayerElements()[cloneId];
 
             if (!cloneElement) {
               cloneElement = document.createElement("div");
@@ -328,7 +335,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
                   <span class="Character_name">${clone.ownerName}'s clone</span>
                 </div>
               `;
-              playerElements[cloneId] = cloneElement;
+              state.getPlayerElements()[cloneId] = cloneElement;
               domElements.gameContainer.appendChild(cloneElement);
             }
 
@@ -338,12 +345,14 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
         }
 
         // Clean up removed clones
-        Object.keys(playerElements).forEach((elementId) => {
+        Object.keys(state.getPlayerElements()).forEach((elementId) => {
           if (elementId.startsWith("clone-") && elementId.includes(key)) {
             const [, playerId] = elementId.split("-");
             if (!characterState.clones) {
-              domElements.gameContainer.removeChild(playerElements[elementId]);
-              delete playerElements[elementId];
+              domElements.gameContainer.removeChild(
+                state.getPlayerElements()[elementId]
+              );
+              delete state.getPlayerElements()[elementId];
             }
           }
         });
@@ -353,21 +362,23 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
     //Remove character DOM element after they leave
     allPlayersRef.on("child_removed", (snapshot) => {
       const removedKey = snapshot.val().id;
-      domElements.gameContainer.removeChild(playerElements[removedKey]);
-      delete playerElements[removedKey];
+      domElements.gameContainer.removeChild(
+        state.getPlayerElements()[removedKey]
+      );
+      delete state.getPlayerElements()[removedKey];
     });
 
     //New - not in the video!
     //This block will remove coins from local state when Firebase `coins` value updates
     allCoinsRef.on("value", (snapshot) => {
-      coins = snapshot.val() || {};
+      state.setCoins(snapshot.val() || {});
     });
     //
 
     allCoinsRef.on("child_added", (snapshot) => {
       const coin = snapshot.val();
       const key = getKeyString(coin.x, coin.y);
-      coins[key] = true;
+      state.getCoins()[key] = true;
 
       // Create the DOM Element
       const coinElement = document.createElement("div");
@@ -383,14 +394,16 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
       coinElement.style.transform = `translate3d(${left}, ${top}, 0)`;
 
       // Keep a reference for removal later and add to DOM
-      coinElements[key] = coinElement;
+      state.getCoinElements()[key] = coinElement;
       domElements.gameContainer.appendChild(coinElement);
     });
     allCoinsRef.on("child_removed", (snapshot) => {
       const { x, y } = snapshot.val();
       const keyToRemove = getKeyString(x, y);
-      domElements.gameContainer.removeChild(coinElements[keyToRemove]);
-      delete coinElements[keyToRemove];
+      domElements.gameContainer.removeChild(
+        state.getCoinElements()[keyToRemove]
+      );
+      delete state.getCoinElements()[keyToRemove];
     });
 
     placeCoin();
@@ -403,7 +416,10 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
     if (!roomCode) return;
 
     // Remove player from room's players list
-    firebase.database().ref(`rooms/${roomCode}/players/${playerId}`).remove();
+    firebase
+      .database()
+      .ref(`rooms/${roomCode}/players/${state.getPlayerId()}`)
+      .remove();
 
     // Update current player count and room status
     firebase
@@ -430,7 +446,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
   }
 
   function showGameLobby(roomCode) {
-    currentRoomCode = roomCode;
+    state.setCurrentRoomCode(roomCode);
     document.querySelector("#room-creation").classList.add("hidden");
     document.querySelector("#room-join").classList.add("hidden");
     document.querySelector("#game-lobby").classList.remove("hidden");
@@ -473,7 +489,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
       "Welcome to Multiplayer Game";
 
     // Reset room code
-    currentRoomCode = null;
+    state.setCurrentRoomCode(null);
 
     // Show main menu elements
     document.querySelector("#lobby-title").classList.remove("hidden");
@@ -513,7 +529,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
           // For current user: clickable button
           // For others: just text display
           const statusHtml =
-            id === playerId
+            id === state.getPlayerId()
               ? `<button class="player-status ${statusClass}">${readyStatus}</button>`
               : `<div class="player-status-display ${statusClass}">${readyStatus}</div>`;
 
@@ -525,11 +541,11 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
           `;
 
           // Add click handler only for current user
-          if (id === playerId) {
+          if (id === state.getPlayerId()) {
             const statusBtn = playerEl.querySelector(".player-status");
             statusBtn.title = "Click to toggle ready status";
             statusBtn.addEventListener("click", () => {
-              const playerRef = roomRef.child(`players/${playerId}`);
+              const playerRef = roomRef.child(`players/${state.getPlayerId()}`);
               playerRef.update({
                 isReady: !player.isReady,
               });
@@ -558,7 +574,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
 
       // Show start button only for host
       const startButton = document.querySelector("#start-game-btn");
-      if (playerId === roomData.hostId) {
+      if (state.getPlayerId() === roomData.hostId) {
         startButton.classList.add("host");
       } else {
         startButton.classList.remove("host");
@@ -605,18 +621,21 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
   }
 
   function startGame() {
-    const roomRef = firebase.database().ref(`rooms/${currentRoomCode}`);
+    const roomRef = firebase
+      .database()
+      .ref(`rooms/${state.getCurrentRoomCode()}`);
 
     roomRef.once("value").then((snapshot) => {
       const roomData = snapshot.val();
       const { x, y } = getRandomSafeSpot();
 
-      playerRef
+      state
+        .getPlayerRef()
         .set({
-          id: playerId,
-          name: savedPlayerName,
+          id: state.getPlayerId(),
+          name: state.getSavedPlayerName(),
           direction: "right",
-          color: savedPlayerColor,
+          color: state.getSavedPlayerColor(),
           x,
           y,
           coins: 0,
@@ -654,7 +673,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
     // Store timer reference in Firebase to keep all clients synchronized
     firebase
       .database()
-      .ref(`rooms/${currentRoomCode}`)
+      .ref(`rooms/${state.getCurrentRoomCode()}`)
       .update({
         gameTimer: {
           startTime: Date.now(),
@@ -666,10 +685,10 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
   function endGame() {
     const playerStatsRef = firebase
       .database()
-      .ref(`rooms/${currentRoomCode}/playerStats`);
+      .ref(`rooms/${state.getCurrentRoomCode()}/playerStats`);
     const playersRef = firebase
       .database()
-      .ref(`rooms/${currentRoomCode}/players`);
+      .ref(`rooms/${state.getCurrentRoomCode()}/players`);
 
     Promise.all([playerStatsRef.once("value"), playersRef.once("value")]).then(
       ([statsSnapshot, playersSnapshot]) => {
@@ -719,12 +738,14 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
 
   function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
     const isKillsDraw =
-      Object.values(players).filter((p) => p.kills === topKillsPlayer.kills)
-        .length > 1;
+      Object.values(state.getPlayers()).filter(
+        (p) => p.kills === topKillsPlayer.kills
+      ).length > 1;
 
     const isCoinsDraw =
-      Object.values(players).filter((p) => p.coins === topCoinsPlayer.coins)
-        .length > 1;
+      Object.values(state.getPlayers()).filter(
+        (p) => p.coins === topCoinsPlayer.coins
+      ).length > 1;
 
     const matchEndedModal = document.createElement("div");
     matchEndedModal.className = "modal";
@@ -756,8 +777,8 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
     document.body.appendChild(matchEndedModal);
 
     // Disable player movement
-    if (playerRef) {
-      playerRef.update({ frozen: true });
+    if (state.getPlayerRef()) {
+      state.getPlayerRef().update({ frozen: true });
     }
 
     const closeButton = matchEndedModal.querySelector(
@@ -765,23 +786,28 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
     );
     closeButton.addEventListener("click", () => {
       // Remove the player from the game
-      if (playerRef) {
-        playerRef.remove().then(() => {
-          // Remove the room from Firebase
-          const roomRef = firebase.database().ref(`rooms/${currentRoomCode}`);
-          roomRef
-            .remove()
-            .then(() => {
-              // Show the lobby and hide the game
-              document.querySelector("#game-content").classList.add("hidden");
-              document.querySelector("#lobby").classList.remove("hidden");
-              resetToMainMenu();
-              matchEndedModal.remove();
-            })
-            .catch((error) => {
-              console.error("Failed to remove room:", error);
-            });
-        });
+      if (state.getPlayerRef()) {
+        state
+          .getPlayerRef()
+          .remove()
+          .then(() => {
+            // Remove the room from Firebase
+            const roomRef = firebase
+              .database()
+              .ref(`rooms/${state.getCurrentRoomCode()}`);
+            roomRef
+              .remove()
+              .then(() => {
+                // Show the lobby and hide the game
+                document.querySelector("#game-content").classList.add("hidden");
+                document.querySelector("#lobby").classList.remove("hidden");
+                resetToMainMenu();
+                matchEndedModal.remove();
+              })
+              .catch((error) => {
+                console.error("Failed to remove room:", error);
+              });
+          });
       }
     });
   }
@@ -886,8 +912,8 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
       }
 
       // Save player details
-      savedPlayerName = nameInput.value.trim();
-      savedPlayerColor = selectedColor;
+      state.setSavedPlayerName(nameInput.value.trim());
+      state.setSavedPlayerColor(selectedColor);
 
       // Hide setup and show appropriate next step
       initialSetup.classList.add("hidden");
@@ -943,13 +969,13 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
             currentPlayers: 1,
             isOpen: true,
             created: Date.now(),
-            hostId: playerId,
+            hostId: state.getPlayerId(),
             players: {
-              [playerId]: {
+              [state.getPlayerId()]: {
                 isHost: true,
                 joined: Date.now(),
-                name: savedPlayerName,
-                color: savedPlayerColor,
+                name: state.getSavedPlayerName(),
+                color: state.getSavedPlayerColor(),
                 isReady: false,
               },
             },
@@ -989,7 +1015,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
               : "status-not-ready";
 
             // Different HTML for current player vs others
-            if (id === playerId) {
+            if (id === state.getPlayerId()) {
               // For current player: show interactive button
               playerEl.innerHTML = `
                 <div class="player-name">${player.name} ${
@@ -1001,7 +1027,9 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
               // Add click handler for status button
               const statusBtn = playerEl.querySelector(".player-status");
               statusBtn.addEventListener("click", () => {
-                const playerRef = roomRef.child(`players/${playerId}`);
+                const playerRef = roomRef.child(
+                  `players/${state.getPlayerId()}`
+                );
                 playerRef.update({
                   isReady: !player.isReady,
                 });
@@ -1057,13 +1085,13 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
               ...currentRoom,
               currentPlayers: playerCount + 1,
               isOpen: playerCount + 1 < room.maxPlayers,
-              lastJoined: playerId, // Add this to mark newest player
+              lastJoined: state.getPlayerId(), // Add this to mark newest player
               players: {
                 ...currentRoom.players,
-                [playerId]: {
+                [state.getPlayerId()]: {
                   joined: Date.now(),
-                  name: savedPlayerName,
-                  color: savedPlayerColor,
+                  name: state.getSavedPlayerName(),
+                  color: state.getSavedPlayerColor(),
                   isReady: false, // Initialize as not ready
                 },
               },
@@ -1176,8 +1204,8 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
         return;
       }
 
-      savedPlayerName = nameInput.value.trim();
-      savedPlayerColor = selectedColor;
+      state.setSavedPlayerName(nameInput.value.trim());
+      state.setSavedPlayerColor(selectedColor);
 
       showStep(setupAction);
     });
@@ -1206,7 +1234,7 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
     if (!roomCode) return;
 
     const roomRef = firebase.database().ref(`rooms/${roomCode}`);
-    const playerInRoomRef = roomRef.child("players").child(playerId);
+    const playerInRoomRef = roomRef.child("players").child(state.getPlayerId());
 
     // Remove player from room on disconnect
     playerInRoomRef.onDisconnect().remove();
@@ -1241,14 +1269,16 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
   }
 
   function cleanupPlayer() {
-    if (currentRoomCode) {
+    if (state.getCurrentRoomCode()) {
       const roomRef = firebase
         .database()
-        .ref(`rooms/${currentRoomCode}/players/${playerId}`);
+        .ref(
+          `rooms/${state.getCurrentRoomCode()}/players/${state.getPlayerId()}`
+        );
       roomRef.remove();
     }
-    if (playerRef) {
-      playerRef.remove();
+    if (state.getPlayerRef()) {
+      state.getPlayerRef().remove();
     }
   }
 
@@ -1260,13 +1290,15 @@ import { updateScoreboard } from "./src/core/components/scoreboard/updateScorebo
   firebase.auth().onAuthStateChanged((user) => {
     if (user) {
       //You're logged in!
-      playerId = user.uid;
-      playerRef = firebase.database().ref(`players/${playerId}`);
+      state.setPlayerId(user.uid);
+      state.setPlayerRef(
+        firebase.database().ref(`players/${state.getPlayerId()}`)
+      );
 
       // Make sure game is hidden initially
       document.querySelector("#game-content").classList.add("hidden");
 
-      playerRef.onDisconnect().remove();
+      state.getPlayerRef().onDisconnect().remove();
       initializeLobby();
     }
   });
