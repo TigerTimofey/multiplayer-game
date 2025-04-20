@@ -39,7 +39,7 @@ export function activatePowerByKey(power) {
         state.getPlayerRef().update({
           coins: newCoinAmount,
           isGiant: true,
-          scale: 2, // Add scale property
+          scale: 2,
         });
         const characterElement = state.getPlayerElements()[state.getPlayerId()];
         characterElement.classList.add("giant");
@@ -50,7 +50,6 @@ export function activatePowerByKey(power) {
         }px, 0) scale(2)`;
         break;
       case "ultimate":
-        // Dragon form transformation with coin magnet effect
         state.getPlayerRef().update({
           coins: newCoinAmount,
           isUltimate: true,
@@ -59,10 +58,9 @@ export function activatePowerByKey(power) {
           shield: true,
           scale: 2,
           damage: state.getPlayers()[state.getPlayerId()].coins * 3,
-          isMagnet: true, // Add magnet state
+          isMagnet: true,
         });
 
-        // Get all coins and animate them towards the player
         Object.keys(state.getCoins()).forEach((key) => {
           const [coinX, coinY] = key.split("x").map(Number);
           const coinElement = state.getCoinElements()[key];
@@ -74,7 +72,7 @@ export function activatePowerByKey(power) {
 
             setTimeout(() => {
               coinElement.style.transform = `translate3d(${targetX}px, ${targetY}px, 0)`;
-              // Collect coin after animation
+
               setTimeout(() => {
                 firebase.database().ref(`coins/${key}`).remove();
                 state.getPlayerRef().update({
@@ -90,7 +88,6 @@ export function activatePowerByKey(power) {
         break;
     }
 
-    // Visual feedback and cooldown
     button.classList.add("active");
     const cooldown = button.querySelector(".cooldown");
     cooldown.style.width = "100%";

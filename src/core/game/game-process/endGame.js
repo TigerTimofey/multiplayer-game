@@ -24,7 +24,6 @@ export function endGame() {
         });
       }
 
-      // Determine top players
       let topKillsPlayer = { name: "None", kills: 0 };
       let topCoinsPlayer = { name: "None", coins: 0 };
 

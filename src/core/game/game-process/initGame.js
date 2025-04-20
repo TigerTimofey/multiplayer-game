@@ -8,7 +8,6 @@ import { updateScoreboard } from "../../components/scoreboard/updateScoreboard.j
 import { updatePlayerPosition } from "../player/player-interact/updatePlayerPosition.js";
 
 export function initGame() {
-  // Ensure gameOverModal: domElements.gameOverModal is passed to handleArrowPress
   new KeyPressListener("ArrowUp", () =>
     handleArrowPress(0, -1, {
       players: state.getPlayers(),
@@ -16,7 +15,7 @@ export function initGame() {
       playerRef: state.getPlayerRef(),
       coins: state.getCoins(),
       currentRoomCode: state.getCurrentRoomCode(),
-      gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
+      gameOverModal: domElements.gameOverModal,
       playerElements: state.getPlayerElements(),
     })
   );
@@ -27,7 +26,7 @@ export function initGame() {
       playerRef: state.getPlayerRef(),
       coins: state.getCoins(),
       currentRoomCode: state.getCurrentRoomCode(),
-      gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
+      gameOverModal: domElements.gameOverModal,
       playerElements: state.getPlayerElements(),
     })
   );
@@ -38,7 +37,7 @@ export function initGame() {
       playerRef: state.getPlayerRef(),
       coins: state.getCoins(),
       currentRoomCode: state.getCurrentRoomCode(),
-      gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
+      gameOverModal: domElements.gameOverModal,
       playerElements: state.getPlayerElements(),
     })
   );
@@ -49,12 +48,11 @@ export function initGame() {
       playerRef: state.getPlayerRef(),
       coins: state.getCoins(),
       currentRoomCode: state.getCurrentRoomCode(),
-      gameOverModal: domElements.gameOverModal, // Pass gameOverModal: domElements.gameOverModal
+      gameOverModal: domElements.gameOverModal,
       playerElements: state.getPlayerElements(),
     })
   );
 
-  // Powers with W and E keys
   new KeyPressListener("KeyW", () => activatePowerByKey("speed"));
   new KeyPressListener("KeyE", () => activatePowerByKey("shield"));
 
@@ -83,11 +81,9 @@ export function initGame() {
         <div class="Character_you-arrow"></div>
       `;
 
-    // Store element reference first
     state.getPlayerElements()[addedPlayer.id] = characterElement;
     domElements.gameContainer.appendChild(characterElement);
 
-    // Then set initial state
     characterElement.querySelector(".Character_name").innerText =
       addedPlayer.name;
     characterElement.querySelector(".Character_coins").innerText =
@@ -95,7 +91,6 @@ export function initGame() {
     characterElement.setAttribute("data-color", addedPlayer.color);
     characterElement.setAttribute("data-direction", addedPlayer.direction);
 
-    // Update player position with their color for swords
     const left = 16 * addedPlayer.x + "px";
     const top = 16 * addedPlayer.y - 4 + "px";
     characterElement.style.transform = `translate3d(${left}, ${top}, 0)`;
@@ -109,10 +104,8 @@ export function initGame() {
       const characterState = state.getPlayers()[key];
       let el = state.getPlayerElements()[key];
 
-      // Skip if element doesn't exist yet
       if (!el) return;
 
-      // Check if player was defeated
       if (key === state.getPlayerId() && characterState.isDefeated) {
         gameOverModal: domElements.gameOverModal.classList.remove("hidden");
         document.querySelector(
@@ -121,25 +114,20 @@ export function initGame() {
         el.classList.add("eliminated");
       }
 
-      // Update DOM elements safely
       const nameEl = el.querySelector(".Character_name");
       const coinsEl = el.querySelector(".Character_coins");
 
       if (nameEl) nameEl.innerText = characterState.name;
       if (coinsEl) coinsEl.innerText = characterState.coins;
 
-      // Update color for both character and swords
       el.setAttribute("data-color", characterState.color);
       el.setAttribute("data-direction", characterState.direction);
 
-      // Ensure swords container exists and has the right color
       const swordsContainer = el.querySelector(".Character_swords");
       if (swordsContainer) {
-        // The CSS will handle the color based on the data-color attribute
         swordsContainer.setAttribute("data-color", characterState.color);
       }
 
-      // Update position with scale
       updatePlayerPosition(
         el,
         characterState.x,
@@ -153,7 +141,6 @@ export function initGame() {
         el.classList.remove("giant");
       }
 
-      // Handle clones
       if (characterState.clones) {
         characterState.clones.forEach((clone, index) => {
           const cloneId = `clone-${key}-${index}`;
@@ -178,7 +165,6 @@ export function initGame() {
         });
       }
 
-      // Clean up removed clones
       Object.keys(state.getPlayerElements()).forEach((elementId) => {
         if (elementId.startsWith("clone-") && elementId.includes(key)) {
           const [, playerId] = elementId.split("-");
@@ -193,7 +179,6 @@ export function initGame() {
     });
   });
 
-  //Remove character DOM element after they leave
   allPlayersRef.on("child_removed", (snapshot) => {
     const removedKey = snapshot.val().id;
     domElements.gameContainer.removeChild(
@@ -202,19 +187,15 @@ export function initGame() {
     delete state.getPlayerElements()[removedKey];
   });
 
-  //New - not in the video!
-  //This block will remove coins from local state when Firebase `coins` value updates
   allCoinsRef.on("value", (snapshot) => {
     state.setCoins(snapshot.val() || {});
   });
-  //
 
   allCoinsRef.on("child_added", (snapshot) => {
     const coin = snapshot.val();
     const key = getKeyString(coin.x, coin.y);
     state.getCoins()[key] = true;
 
-    // Create the DOM Element
     const coinElement = document.createElement("div");
     coinElement.classList.add("Coin", "grid-cell");
     coinElement.innerHTML = `
@@ -222,12 +203,10 @@ export function initGame() {
         <div class="Coin_sprite grid-cell"></div>
       `;
 
-    // Position the Element
     const left = 16 * coin.x + "px";
     const top = 16 * coin.y - 4 + "px";
     coinElement.style.transform = `translate3d(${left}, ${top}, 0)`;
 
-    // Keep a reference for removal later and add to DOM
     state.getCoinElements()[key] = coinElement;
     domElements.gameContainer.appendChild(coinElement);
   });
@@ -242,7 +221,6 @@ export function initGame() {
   initPowers();
 }
 function initPowers() {
-  // Update keyboard listeners
   new KeyPressListener("KeyW", () => activatePowerByKey("speed"));
   new KeyPressListener("KeyE", () => activatePowerByKey("shield"));
   new KeyPressListener("KeyR", () => activatePowerByKey("teleport"));

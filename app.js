@@ -136,7 +136,7 @@ import { activatePowerByKey } from "./src/core/game/player/player-interact/activ
           playerEl.style.color = player.color;
 
           // Render status differently for current user vs others
-          const readyStatus = player.isReady ? "Ready" : "Not Ready";
+          const readyStatus = player.isReady ? "Is Ready" : "Not Ready";
           const statusClass = player.isReady
             ? "status-ready"
             : "status-not-ready";

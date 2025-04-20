@@ -22,7 +22,6 @@ export function startCountdown(roomRef) {
     } else {
       clearInterval(interval);
       countdownOverlay.remove();
-      // Set gameStarted flag in database when countdown finishes
       roomRef.update({ gameStarted: true }).then(() => startGame());
     }
   }, 1000);

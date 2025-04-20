@@ -41,27 +41,23 @@ export function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
 
   document.body.appendChild(matchEndedModal);
 
-  // Disable player movement
   if (state.getPlayerRef()) {
     state.getPlayerRef().update({ frozen: true });
   }
 
   const closeButton = matchEndedModal.querySelector("#close-match-ended-modal");
   closeButton.addEventListener("click", () => {
-    // Remove the player from the game
     if (state.getPlayerRef()) {
       state
         .getPlayerRef()
         .remove()
         .then(() => {
-          // Remove the room from Firebase
           const roomRef = firebase
             .database()
             .ref(`rooms/${state.getCurrentRoomCode()}`);
           roomRef
             .remove()
             .then(() => {
-              // Show the lobby and hide the game
               document.querySelector("#game-content").classList.add("hidden");
               document.querySelector("#lobby").classList.remove("hidden");
               resetToMainMenu();
