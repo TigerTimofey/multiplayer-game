@@ -7,6 +7,19 @@ import { initializeLobby } from "./src/core/game/lobby/initializeLobby.js";
 import { cleanupPlayer } from "./src/core/game/lobby/cleanupPlayer.js";
 
 (function () {
+  const lobbyAudio = new Audio("./assets/audio/lobbybg.mp3");
+  lobbyAudio.loop = true;
+
+  document.addEventListener(
+    "click",
+    () => {
+      if (lobbyAudio.paused) {
+        lobbyAudio.play();
+      }
+    },
+    { once: true }
+  );
+
   domElements.restartButton.addEventListener("click", () => {
     handleRestart(
       state.getPlayerRef(),
@@ -17,6 +30,12 @@ import { cleanupPlayer } from "./src/core/game/lobby/cleanupPlayer.js";
   });
 
   document.querySelector("#start-game-btn").addEventListener("click", () => {
+    const audio = new Audio("./assets/audio/gameStart.mp3");
+    setTimeout(() => {
+      audio.play();
+      lobbyAudio.pause();
+    }, 2500);
+
     const roomCode = document.querySelector("#room-code-display").textContent;
     const roomRef = firebase.database().ref(`rooms/${roomCode}`);
 
