@@ -16,18 +16,32 @@ export function activatePowerByKey(power) {
 
     switch (power) {
       case "speed":
+        const speedAudio = new Audio(
+          "../../../../../assets/audio/super-power/speed.mp3"
+        );
+        speedAudio.play();
+
         state.getPlayerRef().update({
           coins: newCoinAmount,
           speed: 2,
         });
         break;
       case "shield":
+        const shieldAudio = new Audio(
+          "../../../../../assets/audio/super-power/shield.mp3"
+        );
+        shieldAudio.play();
         state.getPlayerRef().update({
           coins: newCoinAmount,
           shield: true,
         });
         break;
       case "teleport":
+        const teleportAudio = new Audio(
+          "../../../../../assets/audio/super-power/teleport.mp3"
+        );
+        teleportAudio.play();
+
         const randomSpot = getRandomSafeSpot();
         state.getPlayerRef().update({
           coins: newCoinAmount,
@@ -36,6 +50,11 @@ export function activatePowerByKey(power) {
         });
         break;
       case "grow":
+        const giantAudio = new Audio(
+          "../../../../../assets/audio/super-power/giant.mp3"
+        );
+        giantAudio.play();
+
         state.getPlayerRef().update({
           coins: newCoinAmount,
           isGiant: true,
@@ -50,6 +69,18 @@ export function activatePowerByKey(power) {
         }px, 0) scale(2)`;
         break;
       case "ultimate":
+        const ultimateAudio = new Audio(
+          "../../../../../assets/audio/super-power/ultimate.mp3"
+        );
+        ultimateAudio.play();
+
+        ultimateAudio.addEventListener("ended", () => {
+          const ultimateAudio2 = new Audio(
+            "../../../../../assets/audio/super-power/ultimate2.mp3"
+          );
+          ultimateAudio2.play();
+        });
+
         state.getPlayerRef().update({
           coins: newCoinAmount,
           isUltimate: true,

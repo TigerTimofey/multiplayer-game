@@ -21,7 +21,7 @@ export function startGame() {
         color: state.getSavedPlayerColor(),
         x,
         y,
-        coins: 0,
+        coins: 140,
         kills: 0,
         joinTime: Date.now(),
         startTime: Date.now(),

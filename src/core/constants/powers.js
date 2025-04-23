@@ -1,8 +1,8 @@
 export const POWERS = {
   speed: {
     cost: 4,
-    duration: 5000,
-    cooldown: 8000,
+    duration: 1000,
+    cooldown: 10000,
   },
   shield: {
     cost: 5,

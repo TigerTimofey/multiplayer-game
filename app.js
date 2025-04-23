@@ -20,6 +20,13 @@ import { cleanupPlayer } from "./src/core/game/lobby/cleanupPlayer.js";
     { once: true }
   );
 
+  document.addEventListener("click", (event) => {
+    if (event.target.tagName === "BUTTON") {
+      const clickAudio = new Audio("./assets/audio/click.mp3");
+      clickAudio.play();
+    }
+  });
+
   domElements.restartButton.addEventListener("click", () => {
     handleRestart(
       state.getPlayerRef(),
