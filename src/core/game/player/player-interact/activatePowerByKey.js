@@ -25,6 +25,27 @@ export function activatePowerByKey(power) {
           coins: newCoinAmount,
           speed: 2,
         });
+
+        firebase
+          .database()
+          .ref(`players/${state.getPlayerId()}/effects`)
+          .set({ speed: true });
+
+        const speedCharacterElement =
+          state.getPlayerElements()[state.getPlayerId()];
+        speedCharacterElement.classList.add("speed-boost");
+
+        setTimeout(() => {
+          speedCharacterElement.classList.remove("speed-boost");
+          state.getPlayerRef().update({
+            speed: 1,
+          });
+
+          firebase
+            .database()
+            .ref(`players/${state.getPlayerId()}/effects`)
+            .remove();
+        }, POWERS[power].duration);
         break;
       case "shield":
         const shieldAudio = new Audio(

@@ -143,5 +143,11 @@ import { cleanupPlayer } from "./src/core/game/lobby/cleanupPlayer.js";
           16 * snapshot.val().x
         }px, ${16 * snapshot.val().y - 4}px, 0) scale(1)`;
       }
+
+      if (effects.speed) {
+        playerElement.classList.add("speed-boost");
+      } else {
+        playerElement.classList.remove("speed-boost");
+      }
     });
 })();
