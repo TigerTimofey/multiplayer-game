@@ -92,4 +92,56 @@ import { cleanupPlayer } from "./src/core/game/lobby/cleanupPlayer.js";
       btn.classList.add("selected");
     });
   });
+
+  firebase
+    .database()
+    .ref("players")
+    .on("child_changed", (snapshot) => {
+      const playerId = snapshot.key;
+      const effects = snapshot.val().effects || {};
+
+      const playerElement = state.getPlayerElements()[playerId];
+      if (!playerElement) return;
+
+      if (effects.shield) {
+        playerElement.classList.add("shield");
+        const sprite = playerElement.querySelector(".Character_sprite");
+        if (sprite) {
+          sprite.style.filter = "brightness(1.2) hue-rotate(180deg)";
+        }
+      } else {
+        playerElement.classList.remove("shield");
+        const sprite = playerElement.querySelector(".Character_sprite");
+        if (sprite) {
+          sprite.style.filter = "";
+        }
+      }
+
+      if (effects.ultimate) {
+        playerElement.classList.add("dragon");
+        const sprite = playerElement.querySelector(".Character_sprite");
+        if (sprite) {
+          sprite.style.filter =
+            "brightness(1.5) saturate(2) hue-rotate(360deg)";
+        }
+      } else {
+        playerElement.classList.remove("dragon");
+        const sprite = playerElement.querySelector(".Character_sprite");
+        if (sprite) {
+          sprite.style.filter = "";
+        }
+      }
+
+      if (effects.grow) {
+        playerElement.classList.add("giant");
+        playerElement.style.transform = `translate3d(${
+          16 * snapshot.val().x
+        }px, ${16 * snapshot.val().y - 4}px, 0) scale(2)`;
+      } else {
+        playerElement.classList.remove("giant");
+        playerElement.style.transform = `translate3d(${
+          16 * snapshot.val().x
+        }px, ${16 * snapshot.val().y - 4}px, 0) scale(1)`;
+      }
+    });
 })();

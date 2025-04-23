@@ -37,6 +37,11 @@ export function activatePowerByKey(power) {
           shield: true,
         });
 
+        firebase
+          .database()
+          .ref(`players/${state.getPlayerId()}/effects`)
+          .set({ shield: true });
+
         const shieldCharacterElement =
           state.getPlayerElements()[state.getPlayerId()];
         shieldCharacterElement.classList.add("shield");
@@ -56,6 +61,11 @@ export function activatePowerByKey(power) {
           if (shieldSprite) {
             shieldSprite.style.filter = "";
           }
+
+          firebase
+            .database()
+            .ref(`players/${state.getPlayerId()}/effects`)
+            .remove();
         }, POWERS[power].duration);
         break;
       case "teleport":
@@ -113,6 +123,43 @@ export function activatePowerByKey(power) {
           damage: state.getPlayers()[state.getPlayerId()].coins * 3,
           isMagnet: true,
         });
+
+        firebase
+          .database()
+          .ref(`players/${state.getPlayerId()}/effects`)
+          .set({ ultimate: true });
+
+        const ultimateCharacterElement =
+          state.getPlayerElements()[state.getPlayerId()];
+        ultimateCharacterElement.classList.add("dragon");
+
+        const ultimateSprite =
+          ultimateCharacterElement.querySelector(".Character_sprite");
+        if (ultimateSprite) {
+          ultimateSprite.style.filter =
+            "brightness(1.5) saturate(2) hue-rotate(360deg)";
+        }
+
+        setTimeout(() => {
+          ultimateCharacterElement.classList.remove("dragon");
+          state.getPlayerRef().update({
+            isUltimate: false,
+            isDragon: false,
+            speed: 1,
+            shield: false,
+            scale: 1,
+            damage: null,
+          });
+
+          if (ultimateSprite) {
+            ultimateSprite.style.filter = "";
+          }
+
+          firebase
+            .database()
+            .ref(`players/${state.getPlayerId()}/effects`)
+            .remove();
+        }, POWERS[power].duration);
 
         Object.keys(state.getCoins()).forEach((key) => {
           const [coinX, coinY] = key.split("x").map(Number);
