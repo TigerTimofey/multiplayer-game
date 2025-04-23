@@ -31,10 +31,32 @@ export function activatePowerByKey(power) {
           "../../../../../assets/audio/super-power/shield.mp3"
         );
         shieldAudio.play();
+
         state.getPlayerRef().update({
           coins: newCoinAmount,
           shield: true,
         });
+
+        const shieldCharacterElement =
+          state.getPlayerElements()[state.getPlayerId()];
+        shieldCharacterElement.classList.add("shield");
+
+        const shieldSprite =
+          shieldCharacterElement.querySelector(".Character_sprite");
+        if (shieldSprite) {
+          shieldSprite.style.filter = "brightness(1.2) hue-rotate(180deg)";
+        }
+
+        setTimeout(() => {
+          shieldCharacterElement.classList.remove("shield");
+          state.getPlayerRef().update({
+            shield: false,
+          });
+
+          if (shieldSprite) {
+            shieldSprite.style.filter = "";
+          }
+        }, POWERS[power].duration);
         break;
       case "teleport":
         const teleportAudio = new Audio(

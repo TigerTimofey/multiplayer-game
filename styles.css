@@ -1906,3 +1906,38 @@ button.player-status:hover {
   color: black;
   border-color: #ffd700;
 }
+
+.Character.shield {
+  z-index: 5;
+}
+
+.Character.shield .Character_sprite {
+  position: relative;
+  z-index: 2;
+}
+
+.Character.shield::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 136, 255, 0.3);
+  box-shadow: 0 0 15px rgba(0, 136, 255, 0.5), 0 0 30px rgba(0, 136, 255, 0.3);
+  animation: shieldPulse 1.5s infinite alternate;
+  pointer-events: none;
+  z-index: 4;
+}
+
+@keyframes shieldPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+}
