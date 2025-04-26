@@ -67,6 +67,8 @@ export function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
               document.querySelector("#lobby").classList.remove("hidden");
               resetToMainMenu();
               matchEndedModal.remove();
+
+              location.reload();
             })
             .catch((error) => {
               console.error("Failed to remove room:", error);
