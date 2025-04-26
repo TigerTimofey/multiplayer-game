@@ -252,9 +252,18 @@ export function initGame() {
   });
 
   quitButton.addEventListener("click", () => {
+    const playerName = state.getSavedPlayerName();
+    logActionToFirebase("Quit the game");
+    firebase
+      .database()
+      .ref(`rooms/${state.getCurrentRoomCode()}/messages`)
+      .push({
+        playerId: state.getPlayerId(),
+        action: `${playerName} has quit the game.`,
+        timestamp: Date.now(),
+      });
     optionsModal.classList.add("hidden");
     window.location.href = "/";
-    logActionToFirebase("Quit the game");
   });
 
   document.addEventListener("keydown", (event) => {
@@ -274,7 +283,11 @@ export function initGame() {
   messagesRef.on("child_added", (snapshot) => {
     const { playerId, action } = snapshot.val();
     const playerName = state.getPlayers()[playerId]?.name || "Unknown Player";
-    displayMessage(`${playerName} ${action}`);
+    if (action.includes("has quit the game")) {
+      displayMessage(action);
+    } else {
+      displayMessage(`${playerName} ${action}`);
+    }
   });
 }
 
