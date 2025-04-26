@@ -223,7 +223,7 @@ export function initGame() {
   const optionsButton = document.getElementById("options-button");
   const optionsModal = document.getElementById("options-modal");
   const continueButton = document.getElementById("continue-button");
-  const restartButton = document.getElementById("restart-button");
+  const restartButton = document.getElementById("restart-button-modal");
   const quitButton = document.getElementById("quit-button");
 
   optionsButton.addEventListener("click", () => {
