@@ -3,6 +3,7 @@
     ".read": "auth != null",
     "players": {
       "$uid": {
+        // Allow updates to own player data and kills
         ".write": "auth != null && ($uid === auth.uid || data.parent().child(auth.uid).exists())",
         ".validate": "newData.hasChild('name')"
       }
@@ -25,11 +26,13 @@
           }
         },
         "stats": {
+          // Allow updates to cumulative stats for kills and coins
           ".write": "auth != null",
           ".validate": "newData.hasChildren(['totalKills', 'totalCoins'])"
         },
         "playerStats": {
           "$playerId": {
+            // Allow updates to individual player stats
             ".write": "auth != null",
             ".validate": "newData.hasChildren(['totalKills', 'totalCoins'])"
           }

@@ -232,11 +232,10 @@ export function initGame() {
 
   continueButton.addEventListener("click", () => {
     optionsModal.classList.add("hidden");
-    console.log("continue");
+    logActionToFirebase("Continued the game");
   });
 
   restartButton.addEventListener("click", () => {
-    console.log("restart");
     optionsModal.classList.add("hidden");
 
     const playerRef = state.getPlayerRef();
@@ -248,12 +247,14 @@ export function initGame() {
       coins: 0,
       kills: 0,
     });
+
+    logActionToFirebase("Restarted the game");
   });
 
   quitButton.addEventListener("click", () => {
     optionsModal.classList.add("hidden");
     window.location.href = "/";
-    console.log("quit");
+    logActionToFirebase("Quit the game");
   });
 
   document.addEventListener("keydown", (event) => {
@@ -266,7 +267,37 @@ export function initGame() {
       }
     }
   });
+
+  const messagesRef = firebase
+    .database()
+    .ref(`rooms/${state.getCurrentRoomCode()}/messages`);
+  messagesRef.on("child_added", (snapshot) => {
+    const { playerId, action } = snapshot.val();
+    const playerName = state.getPlayers()[playerId]?.name || "Unknown Player";
+    displayMessage(`${playerName} ${action}`);
+  });
 }
+
+function logActionToFirebase(action) {
+  const roomRef = firebase
+    .database()
+    .ref(`rooms/${state.getCurrentRoomCode()}/messages`);
+  roomRef.push({
+    playerId: state.getPlayerId(),
+    action,
+    timestamp: Date.now(),
+  });
+}
+
+function displayMessage(message) {
+  const messageContainer = document.createElement("div");
+  messageContainer.className = "message";
+  messageContainer.textContent = message;
+  domElements.gameContainer.appendChild(messageContainer);
+
+  setTimeout(() => messageContainer.remove(), 3000);
+}
+
 function initPowers() {
   new KeyPressListener("KeyW", () => activatePowerByKey("speed"));
   new KeyPressListener("KeyE", () => activatePowerByKey("shield"));
