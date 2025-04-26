@@ -81,16 +81,25 @@ export function initializeLobby() {
       return;
     }
 
-    state.setSavedPlayerName(nameInput.value.trim());
-    state.setSavedPlayerColor(selectedColor);
+    firebase
+      .database()
+      .ref("players")
+      .once("value")
+      .then(() => {
+        state.setSavedPlayerName(nameInput.value.trim());
+        state.setSavedPlayerColor(selectedColor);
 
-    initialSetup.classList.add("hidden");
-    if (setupAction === "create") {
-      document.querySelector("#room-creation").classList.remove("hidden");
-    } else {
-      document.querySelector("#room-join").classList.remove("hidden");
-      document.querySelector("#lobby-title").textContent = "Joining Room";
-    }
+        initialSetup.classList.add("hidden");
+        if (setupAction === "create") {
+          document.querySelector("#room-creation").classList.remove("hidden");
+        } else if (setupAction === "join") {
+          document.querySelector("#room-join").classList.remove("hidden");
+          document.querySelector("#lobby-title").textContent = "Joining Room";
+        }
+      })
+      .catch((error) => {
+        console.error(error.message);
+      });
   });
 
   document.querySelectorAll(".player-select button").forEach((btn) => {
@@ -165,6 +174,15 @@ export function initializeLobby() {
         if (playerCount >= room.maxPlayers) {
           throw new Error(
             `Room is full (${playerCount}/${room.maxPlayers} players)`
+          );
+        }
+
+        const existingNames = Object.values(room.players || {}).map(
+          (player) => player.name
+        );
+        if (existingNames.includes(state.getSavedPlayerName())) {
+          throw new Error(
+            `The name "${state.getSavedPlayerName()}" is already taken in this room.`
           );
         }
 
@@ -245,6 +263,7 @@ export function initializeLobby() {
         elements.lobbyTitle.textContent = "Create Character";
         elements.lobbyButtons.classList.add("hidden");
         elements.initialSetup.classList.remove("hidden");
+        elements.roomJoin.classList.add("hidden");
         break;
       case "create":
         elements.backButton.classList.remove("hidden");
@@ -290,10 +309,19 @@ export function initializeLobby() {
       return;
     }
 
-    state.setSavedPlayerName(nameInput.value.trim());
-    state.setSavedPlayerColor(selectedColor);
+    firebase
+      .database()
+      .ref("players")
+      .once("value")
+      .then(() => {
+        state.setSavedPlayerName(nameInput.value.trim());
+        state.setSavedPlayerColor(selectedColor);
 
-    showStep(setupAction);
+        showStep(setupAction);
+      })
+      .catch((error) => {
+        console.error(error.message);
+      });
   });
 
   const toggleJoke = document.querySelector("#toggle-joke");

@@ -14,16 +14,6 @@ export function endGame() {
       const stats = statsSnapshot.val();
       const players = playersSnapshot.val();
 
-      console.log("Game Over! Player Stats:");
-      if (stats) {
-        Object.entries(stats).forEach(([playerId, playerStats]) => {
-          const playerName = players[playerId]?.name || "Unknown";
-          console.log(
-            `Player: ${playerName} (ID: ${playerId}) - Total Coins: ${playerStats.totalCoins}, Total Kills: ${playerStats.totalKills}`
-          );
-        });
-      }
-
       let topKillsPlayer = { name: "None", kills: 0 };
       let topCoinsPlayer = { name: "None", coins: 0 };
 
