@@ -219,6 +219,53 @@ export function initGame() {
 
   placeCoin();
   initPowers();
+
+  const optionsButton = document.getElementById("options-button");
+  const optionsModal = document.getElementById("options-modal");
+  const continueButton = document.getElementById("continue-button");
+  const restartButton = document.getElementById("restart-button");
+  const quitButton = document.getElementById("quit-button");
+
+  optionsButton.addEventListener("click", () => {
+    optionsModal.classList.remove("hidden");
+  });
+
+  continueButton.addEventListener("click", () => {
+    optionsModal.classList.add("hidden");
+    console.log("continue");
+  });
+
+  restartButton.addEventListener("click", () => {
+    console.log("restart");
+    optionsModal.classList.add("hidden");
+
+    const playerRef = state.getPlayerRef();
+    const { x, y } = { x: 8, y: 8 };
+
+    playerRef.update({
+      x,
+      y,
+      coins: 0,
+      kills: 0,
+    });
+  });
+
+  quitButton.addEventListener("click", () => {
+    optionsModal.classList.add("hidden");
+    window.location.href = "/";
+    console.log("quit");
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      const optionsModal = document.getElementById("options-modal");
+      if (optionsModal.classList.contains("hidden")) {
+        optionsModal.classList.remove("hidden");
+      } else {
+        optionsModal.classList.add("hidden");
+      }
+    }
+  });
 }
 function initPowers() {
   new KeyPressListener("KeyW", () => activatePowerByKey("speed"));
