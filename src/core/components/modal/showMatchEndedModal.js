@@ -2,9 +2,7 @@ import state from "../../state.js";
 import { resetToMainMenu } from "../../game/lobby/resetToMainMenu.js";
 
 export function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
-  const gameOverAudio = new Audio(
-    "../../../../assets/audio/modal-over/gameOver.mp3"
-  );
+  const gameOverAudio = new Audio("./assets/audio/gameOver.mp3");
   gameOverAudio.play();
 
   const isKillsDraw =
