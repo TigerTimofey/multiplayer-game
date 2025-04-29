@@ -7,7 +7,7 @@ export function attemptGrabCoin(x, y, gameState) {
   const key = getKeyString(x, y);
 
   if (coins[key]) {
-    const audio = new Audio("../../../../../assets/audio/getCoin.mp3");
+    const audio = new Audio("./assets/audio/getCoin.mp3");
     audio.play();
 
     firebase.database().ref(`coins/${key}`).remove();

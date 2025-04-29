@@ -23,7 +23,7 @@ export function handleArrowPress(
   const newY = player.y + yChange * speed;
 
   if (!isSolid(newX, newY)) {
-    const audio = new Audio("../../../../../assets/audio/walk.mp3");
+    const audio = new Audio("./assets/audio/walk.mp3");
     audio.volume = 0.3;
     audio.play();
 

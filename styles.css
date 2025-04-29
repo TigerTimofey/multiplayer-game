@@ -23,7 +23,7 @@ body {
   position: relative;
   width: 240px;
   height: 208px;
-  background: url(/images/map.png) no-repeat no-repeat;
+  background: url(./assets/images/map.png) no-repeat no-repeat;
   transform: scale(3);
   image-rendering: pixelated;
 }
@@ -109,12 +109,12 @@ button {
   left: 5px;
   width: 7px;
   height: 5px;
-  background: url(/images/arrow.png) no-repeat no-repeat;
+  background: url(./assets/images/arrow.png) no-repeat no-repeat;
 }
 .Character_sprite {
   overflow: hidden;
   top: -3px;
-  background: url(/images/characters.png);
+  background: url(./assets/images/characters.png);
 }
 .Character[data-direction="right"] .Character_sprite {
   background-position-x: 16px;
@@ -135,7 +135,7 @@ button {
   background-position-y: -80px;
 }
 .Character_shadow {
-  background: url(/images/shadow.png) no-repeat no-repeat;
+  background: url(./assets/images/shadow.png) no-repeat no-repeat;
 }
 
 .Character.eliminated {
@@ -224,7 +224,7 @@ button {
 
 /* Coins */
 .Coin_sprite {
-  background: url(/images/coin.png) no-repeat no-repeat;
+  background: url(./assets/images/coin.png) no-repeat no-repeat;
   animation: coinFloat 0.8s linear infinite alternate-reverse;
 }
 @keyframes coinFloat {
@@ -236,7 +236,7 @@ button {
   }
 }
 .Coin_shadow {
-  background: url(/images/coin-shadow.png) no-repeat no-repeat;
+  background: url(./assets/images/coin-shadow.png) no-repeat no-repeat;
 }
 
 .Coin {
@@ -1717,7 +1717,7 @@ button.player-status:active {
   position: absolute;
   width: 8px; /* Smaller size */
   height: 8px; /* Smaller size */
-  background: url(/images/arrow.png) no-repeat;
+  /* background: url(./assets/images/arrow.png) no-repeat; */
   background-size: contain;
   image-rendering: pixelated;
   transform-origin: center;

@@ -25,7 +25,7 @@ export function checkPlayerCollisions(
     if (otherPlayer.x === x && otherPlayer.y === y) {
       if (players[playerId].powers?.shield) return;
 
-      const hitAudio = new Audio("../../../../../assets/audio/hit.mp3");
+      const hitAudio = new Audio("./assets/audio/hit.mp3");
       hitAudio.play();
 
       if (myCoins > otherPlayer.coins) {
