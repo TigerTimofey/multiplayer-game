@@ -86,7 +86,6 @@ button {
   cursor: pointer;
 }
 
-/* Characters */
 .grid-cell {
   position: absolute;
   width: 16px;
@@ -139,7 +138,7 @@ button {
 }
 
 .Character.eliminated {
-  animation: none; /* Remove previous animation */
+  animation: none;
 }
 
 .Character.eliminated .Character_sprite {
@@ -147,7 +146,6 @@ button {
   transform-origin: center;
 }
 
-/* Create pixel fragments for death animation */
 .Character.eliminated::before,
 .Character.eliminated::after {
   content: "";
@@ -199,7 +197,6 @@ button {
   }
 }
 
-/* Remove simple fade for eliminated class */
 .Character.eliminated {
   pointer-events: none;
 }
@@ -222,7 +219,6 @@ button {
   color: gold;
 }
 
-/* Coins */
 .Coin_sprite {
   background: url(./assets/images/coin.png) no-repeat no-repeat;
   animation: coinFloat 0.8s linear infinite alternate-reverse;
@@ -261,7 +257,6 @@ button {
   }
 }
 
-/* Modal Styles */
 .modal {
   position: fixed;
   top: 0;
@@ -393,7 +388,6 @@ button {
   }
 }
 
-/* Scoreboard Styles */
 .scoreboard {
   position: fixed;
   top: 20px;
@@ -444,7 +438,6 @@ button {
   font-weight: bold;
 }
 
-/* Powers Menu */
 .powers-menu {
   position: fixed;
   bottom: 10px;
@@ -517,7 +510,6 @@ button {
   width: var(--progress, 0%);
 }
 
-/* Add glow effect for active powers */
 .Character.speed-boost .Character_sprite {
   filter: drop-shadow(0 0 5px #00ff00);
 }
@@ -614,7 +606,6 @@ button {
   }
 }
 
-/* Remove clone styles and add dragon styles */
 .Character.dragon {
   z-index: 3;
   filter: drop-shadow(0 0 20px #ff3300);
@@ -652,7 +643,6 @@ button {
   }
 }
 
-/* Error Modal Styles */
 .error-modal .modal-content {
   background: linear-gradient(45deg, #2a2a2a, #3a3a3a);
   max-width: 320px;
@@ -714,7 +704,6 @@ button {
   }
 }
 
-/* Lobby Styles */
 .lobby {
   background: #1a1124;
   position: fixed;
@@ -776,12 +765,10 @@ button {
 }
 
 .lobby-content::before {
-  content: "";
   position: absolute;
   inset: -4px;
   background: linear-gradient(45deg, #ffd700, #ff6b6b, #4834d4, #ffd700);
   z-index: -1;
-  /* animation: borderGradient 4s infinite linear; */
 }
 
 #regular-content,
@@ -816,7 +803,7 @@ button {
 .lobby-stats {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem; /* Reduced from 2rem */
+  margin-bottom: 1rem;
 }
 
 .stat {
@@ -888,7 +875,6 @@ button {
 .color-option {
   width: 35px;
   height: 35px;
-  /* border-radius: 50%; */
   cursor: pointer;
   position: relative;
   image-rendering: pixelated;
@@ -952,6 +938,31 @@ button {
   color: #ffd700;
   font-size: 20px;
   font-weight: bold;
+}
+
+.control-key {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffd700;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.control-label {
+  position: absolute;
+  bottom: -20px;
+  font-size: 12px;
+  color: white;
+  text-align: center;
+  width: 100%;
 }
 
 .controls-section {
@@ -1344,7 +1355,6 @@ button.player-status:active {
   margin-top: 20px;
 }
 
-/* Tooltip Styles */
 .tooltip {
   position: fixed;
   background: #ff4757;
@@ -1428,7 +1438,6 @@ button.player-status:active {
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-/* Add styles for leave room state */
 .back-button[data-mode="leave"] {
   font-size: 16px;
   background: rgba(255, 69, 58, 0.2);
@@ -1464,7 +1473,6 @@ button.player-status:active {
   transform: translateY(0);
 }
 
-/* Pixel Art Lobby Styles */
 .lobby {
   background: #1a1124;
   position: fixed;
@@ -1609,7 +1617,6 @@ button.player-status:active {
   animation: playerJoinEffect 0.5s ease-out, pixelate 0.5s ease-out;
 }
 
-/* Pixel art input styles */
 #lobby-name {
   background: #2a2a3f;
   border: 3px solid #8d7eb5;
@@ -1697,39 +1704,35 @@ button.player-status:active {
   background: #5d4d85;
 }
 
-/* Add rotating swords around players */
 .Character_swords {
   position: absolute;
-  width: 24px; /* Reduced from 100% */
-  height: 24px; /* Reduced from 100% */
+  width: 24px;
+  height: 24px;
   pointer-events: none;
   z-index: 1;
   transform-origin: center;
   animation: rotateSwords 1.5s linear infinite;
-  /* Center the swords around the character */
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  opacity: 1 !important; /* Force swords to always be visible */
+  opacity: 1 !important;
 }
 
 .Character_sword {
   position: absolute;
-  width: 8px; /* Smaller size */
-  height: 8px; /* Smaller size */
+  width: 8px;
+  height: 8px;
   /* background: url(./assets/images/arrow.png) no-repeat; */
   background-size: contain;
   image-rendering: pixelated;
   transform-origin: center;
-  /* Update positioning for each sword */
   top: 50%;
   left: 50%;
   margin: -4px 0 0 -4px;
   filter: brightness(1.5);
-  opacity: 1 !important; /* Force swords to always be visible */
+  opacity: 1 !important;
 }
 
-/* Color filters for different player colors */
 .Character[data-color="blue"] .Character_sword {
   filter: brightness(1.5) hue-rotate(0deg);
 }
@@ -1754,9 +1757,8 @@ button.player-status:active {
   filter: brightness(1.5) hue-rotate(270deg);
 }
 
-/* Position the arrows closer */
 .Character_sword:nth-child(1) {
-  transform: rotate(0deg) translateX(12px); /* Reduced from 20px */
+  transform: rotate(0deg) translateX(12px);
 }
 .Character_sword:nth-child(2) {
   transform: rotate(120deg) translateX(12px);
@@ -1774,13 +1776,11 @@ button.player-status:active {
   }
 }
 
-/* Remove any potential hiding of swords for non-host players */
 .Character:not(.you) .Character_swords {
   display: block !important;
   visibility: visible !important;
 }
 
-/* Countdown styles */
 .countdown-overlay {
   position: fixed;
   top: 0;
@@ -1817,16 +1817,12 @@ button.player-status:active {
   }
 }
 
-/* Hide start button for non-host players */
 #start-game-btn:not(.host) {
   display: none;
 }
 
-/* Style updates for player status */
 button.player-status {
   background: transparent;
-  /* border: 2px solid currentColor; */
-  /* color: inherit; */
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
@@ -1843,7 +1839,6 @@ button.player-status:hover {
   padding: 8px 16px;
   border-radius: 4px;
   font-size: 14px;
-  /* border: 2px solid currentColor; */
   opacity: 0.8;
 }
 
@@ -2030,4 +2025,17 @@ button.player-status:hover {
     opacity: 0;
     transform: translateY(10px) translateX(-50%);
   }
+}
+
+.Character.invisible .Character_sprite {
+  opacity: 0.2;
+  filter: brightness(0.5);
+}
+
+.powers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px 20px;
+  justify-content: center;
+  align-items: center;
 }

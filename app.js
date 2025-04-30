@@ -103,6 +103,17 @@ import { cleanupPlayer } from "./src/core/game/lobby/cleanupPlayer.js";
       const playerElement = state.getPlayerElements()[playerId];
       if (!playerElement) return;
 
+      if (effects.invisible) {
+        if (playerId === state.getPlayerId()) {
+          playerElement.style.opacity = "0.2";
+        } else {
+          playerElement.style.visibility = "hidden";
+        }
+      } else {
+        playerElement.style.visibility = "visible";
+        playerElement.style.opacity = "1";
+      }
+
       if (effects.shield) {
         playerElement.classList.add("shield");
         const sprite = playerElement.querySelector(".Character_sprite");

@@ -24,4 +24,14 @@ export const POWERS = {
     duration: 8000,
     cooldown: 20000,
   },
+  invisibility: {
+    cost: 8,
+    duration: 5000,
+    cooldown: 15000,
+  },
+  doubleCoins: {
+    cost: 10,
+    duration: 10000,
+    cooldown: 20000,
+  },
 };

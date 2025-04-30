@@ -11,8 +11,9 @@ export function attemptGrabCoin(x, y, gameState) {
     audio.play();
 
     firebase.database().ref(`coins/${key}`).remove();
+    const coinsToAdd = players[playerId].doubleCoins ? 2 : 1;
     playerRef.update({
-      coins: players[playerId].coins + 1,
+      coins: players[playerId].coins + coinsToAdd,
     });
 
     const roomStatsRef = firebase

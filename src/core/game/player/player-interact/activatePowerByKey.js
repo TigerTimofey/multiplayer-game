@@ -201,6 +201,50 @@ export function activatePowerByKey(power) {
         const element = state.getPlayerElements()[state.getPlayerId()];
         element.classList.add("dragon");
         break;
+      case "invisibility":
+        const invisibilityPlay = new Audio(
+          "./assets/audio/super-power/hide.mp3"
+        );
+        invisibilityPlay.play();
+
+        state.getPlayerRef().update({
+          coins: newCoinAmount,
+          isInvisible: true,
+        });
+
+        firebase
+          .database()
+          .ref(`players/${state.getPlayerId()}/effects`)
+          .update({ invisible: true });
+
+        setTimeout(() => {
+          state.getPlayerRef().update({
+            isInvisible: false,
+          });
+
+          firebase
+            .database()
+            .ref(`players/${state.getPlayerId()}/effects`)
+            .update({ invisible: null });
+        }, POWERS[power].duration);
+        break;
+      case "doubleCoins":
+        const doubleCoinsAudio = new Audio(
+          "./assets/audio/super-power/doubleCoin.mp3"
+        );
+        doubleCoinsAudio.play();
+
+        state.getPlayerRef().update({
+          coins: newCoinAmount,
+          doubleCoins: true,
+        });
+
+        setTimeout(() => {
+          state.getPlayerRef().update({
+            doubleCoins: false,
+          });
+        }, POWERS[power].duration);
+        break;
     }
 
     button.classList.add("active");

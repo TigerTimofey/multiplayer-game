@@ -289,6 +289,22 @@ export function initGame() {
       displayMessage(`${playerName} ${action}`);
     }
   });
+
+  const powersMenu = document.querySelector(".powers-menu");
+  powersMenu.innerHTML += `
+    <div class="power-button" data-power="invisibility" data-cost="8" data-key="KeyI">
+      <div class="key-hint">I</div>
+      <span>Hide</span>
+      <div class="cost">8 coins</div>
+      <div class="cooldown"></div>
+    </div>
+    <div class="power-button" data-power="doubleCoins" data-cost="10" data-key="KeyD">
+      <div class="key-hint">D</div>
+      <span>Double</span>
+      <div class="cost">10 coins</div>
+      <div class="cooldown"></div>
+    </div>
+  `;
 }
 
 function logActionToFirebase(action) {
@@ -317,6 +333,8 @@ function initPowers() {
   new KeyPressListener("KeyR", () => activatePowerByKey("teleport"));
   new KeyPressListener("KeyA", () => activatePowerByKey("grow"));
   new KeyPressListener("KeyQ", () => activatePowerByKey("ultimate"));
+  new KeyPressListener("KeyI", () => activatePowerByKey("invisibility"));
+  new KeyPressListener("KeyD", () => activatePowerByKey("doubleCoins"));
 
   document.querySelectorAll(".power-button").forEach((button) => {
     button.addEventListener("click", () => {
