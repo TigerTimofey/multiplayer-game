@@ -2,6 +2,7 @@ import { startGameTimer } from "../../components/counter/startGameTimer.js";
 import { getRandomSafeSpot } from "../../constants/mapData.js";
 import { initGame } from "./initGame.js";
 import state from "../../state.js";
+import { GAME_MODES } from "../../constants/gameModes.js";
 
 export function startGame() {
   const roomRef = firebase
@@ -10,7 +11,11 @@ export function startGame() {
 
   roomRef.once("value").then((snapshot) => {
     const roomData = snapshot.val();
+    const gameMode = GAME_MODES[roomData.gameMode];
     const { x, y } = getRandomSafeSpot();
+
+    const startingCoins = gameMode.specialRules?.startingCoins || 0;
+    const speedMultiplier = gameMode.specialRules?.speedMultiplier || 1;
 
     state
       .getPlayerRef()
@@ -21,7 +26,8 @@ export function startGame() {
         color: state.getSavedPlayerColor(),
         x,
         y,
-        coins: 140,
+        coins: startingCoins,
+        speed: speedMultiplier,
         kills: 0,
         joinTime: Date.now(),
         startTime: Date.now(),

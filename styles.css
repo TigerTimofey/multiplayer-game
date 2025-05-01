@@ -2039,3 +2039,48 @@ button.player-status:hover {
   justify-content: center;
   align-items: center;
 }
+
+.game-mode-select-container {
+  margin-top: 20px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease-out;
+}
+
+.game-mode-select-container.hidden {
+  display: none;
+}
+
+.game-mode-select-container:not(.hidden) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.game-mode-select {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.game-mode-select button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  color: white;
+  padding: 8px;
+  font-size: 0.9em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.game-mode-select button:hover {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: #ffd700;
+}
+
+.game-mode-select button.selected {
+  background: #ffd700;
+  color: black;
+  border-color: #ffd700;
+}

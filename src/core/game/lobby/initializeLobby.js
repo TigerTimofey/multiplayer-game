@@ -3,6 +3,7 @@ import { showGameLobby } from "./showGameLobby.js";
 import { generateRoomCode } from "./generateRoomCode.js";
 import { playerColors } from "../../constants/palyerColors.js";
 import { updateLobbyPlayers } from "./updateLobbyPlayers.js";
+import { GAME_MODES } from "../../constants/gameModes.js";
 
 import state from "../../state.js";
 
@@ -110,6 +111,24 @@ export function initializeLobby() {
       btn.classList.add("selected");
 
       document
+        .querySelector(".game-mode-select-container")
+        .classList.remove("hidden");
+    });
+  });
+
+  document.querySelector(".game-mode-select").innerHTML = `
+    <button data-mode="classic">Classic mode</button>
+    <button data-mode="coolMode">Extra Coin mode</button>
+  `;
+
+  document.querySelectorAll(".game-mode-select button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document
+        .querySelectorAll(".game-mode-select button")
+        .forEach((b) => b.classList.remove("selected"));
+      btn.classList.add("selected");
+
+      document
         .querySelector(".time-select-container")
         .classList.remove("hidden");
     });
@@ -125,13 +144,17 @@ export function initializeLobby() {
       const selectedPlayers = document.querySelector(
         ".player-select button.selected"
       );
-      if (!selectedPlayers) {
-        showTooltip(btn, "Please select number of players first");
+      const selectedMode = document.querySelector(
+        ".game-mode-select button.selected"
+      );
+      if (!selectedPlayers || !selectedMode) {
+        showTooltip(btn, "Please select players and game mode first");
         return;
       }
 
       const maxPlayers = parseInt(selectedPlayers.dataset.players);
       const roundTime = parseInt(btn.dataset.time);
+      const gameMode = selectedMode.dataset.mode;
       const roomCode = generateRoomCode();
       const roomRef = firebase.database().ref(`rooms/${roomCode}`);
 
@@ -139,6 +162,7 @@ export function initializeLobby() {
         .set({
           maxPlayers,
           roundTime,
+          gameMode,
           currentPlayers: 1,
           isOpen: true,
           created: Date.now(),
