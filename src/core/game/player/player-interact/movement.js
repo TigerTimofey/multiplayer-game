@@ -1,6 +1,7 @@
 import { isSolid } from "../../../../utils/helpers.js";
 import { attemptGrabCoin } from "../player-coin-logic/attemptGrabCoin.js";
 import { checkPlayerCollisions } from "./collisions.js";
+import { mapData } from "../../../constants/mapData.js";
 
 export function handleArrowPress(
   xChange = 0,
@@ -33,6 +34,19 @@ export function handleArrowPress(
         : xChange === -1
         ? "left"
         : players[playerId].direction;
+
+    const hazardKey = `${newX}x${newY}`;
+    if (mapData.hazards[hazardKey]) {
+      playerRef.update({
+        isDefeated: true,
+        defeatedBy: {
+          name: "Hazard",
+          isHazard: true,
+          coins: mapData.hazards[hazardKey].coins,
+        },
+      });
+      return;
+    }
 
     playerRef.update({
       x: newX,

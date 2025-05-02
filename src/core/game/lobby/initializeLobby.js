@@ -119,6 +119,7 @@ export function initializeLobby() {
   document.querySelector(".game-mode-select").innerHTML = `
     <button data-mode="classic">Classic mode</button>
     <button data-mode="coolMode">Extra Coin mode</button>
+    <button data-mode="survival">Hazard Mode</button>
   `;
 
   document.querySelectorAll(".game-mode-select button").forEach((btn) => {

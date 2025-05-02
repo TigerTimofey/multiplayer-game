@@ -3,6 +3,7 @@ import { getRandomSafeSpot } from "../../constants/mapData.js";
 import { initGame } from "./initGame.js";
 import state from "../../state.js";
 import { GAME_MODES } from "../../constants/gameModes.js";
+import { mapData } from "../../constants/mapData.js";
 
 export function startGame() {
   const roomRef = firebase
@@ -38,5 +39,13 @@ export function startGame() {
         startGameTimer(roomData.roundTime);
         initGame();
       });
+
+    if (gameMode.specialRules?.hazardsEnabled) {
+      mapData.generateRandomHazards(5);
+      const hazardsRef = firebase
+        .database()
+        .ref(`rooms/${state.getCurrentRoomCode()}/hazards`);
+      hazardsRef.set(mapData.hazards);
+    }
   });
 }

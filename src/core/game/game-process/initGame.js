@@ -108,9 +108,11 @@ export function initGame() {
 
       if (key === state.getPlayerId() && characterState.isDefeated) {
         gameOverModal: domElements.gameOverModal.classList.remove("hidden");
+        const defeatedByName = characterState.defeatedBy?.name || "Unknown";
+        const defeatedByCoins = characterState.defeatedBy?.coins || 0;
         document.querySelector(
           "#eliminated-by"
-        ).textContent = `Eliminated by ${characterState.defeatedBy.name} who had ${characterState.defeatedBy.coins} coins!`;
+        ).textContent = `Eliminated by ${defeatedByName} who had ${defeatedByCoins} coins!`;
         el.classList.add("eliminated");
       }
 
@@ -305,6 +307,26 @@ export function initGame() {
       <div class="cooldown"></div>
     </div>
   `;
+
+  const hazardsRef = firebase
+    .database()
+    .ref(`rooms/${state.getCurrentRoomCode()}/hazards`);
+  hazardsRef.once("value").then((snapshot) => {
+    const hazards = snapshot.val() || {};
+    Object.keys(hazards).forEach((key) => {
+      const [x, y] = key.split("x").map(Number);
+      const hazardElement = document.createElement("div");
+      hazardElement.classList.add("Hazard", "grid-cell");
+      hazardElement.innerHTML = `
+        <div class="Hazard_shadow grid-cell"></div>
+        <div class="Hazard_sprite grid-cell"></div>
+      `;
+      hazardElement.style.transform = `translate3d(${16 * x}px, ${
+        16 * y - 4
+      }px, 0)`;
+      domElements.gameContainer.appendChild(hazardElement);
+    });
+  });
 }
 
 function logActionToFirebase(action) {

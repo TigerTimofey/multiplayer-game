@@ -34,7 +34,7 @@ export function checkPlayerCollisions(
         updates[`players/${key}/defeatedBy`] = {
           name: players[playerId].name,
           coins: myCoins,
-          kills: (players[playerId].kills || 0) + 1,
+          color: players[playerId].color,
         };
 
         firebase

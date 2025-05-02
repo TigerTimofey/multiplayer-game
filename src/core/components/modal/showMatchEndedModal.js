@@ -1,4 +1,3 @@
-import state from "../../state.js";
 import { resetToMainMenu } from "../../game/lobby/resetToMainMenu.js";
 
 export function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
@@ -7,10 +6,12 @@ export function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
 
   const matchEndedModal = document.createElement("div");
   matchEndedModal.className = "modal";
+
   matchEndedModal.innerHTML = `
     <div class="modal-content">
       <h2>MATCH ENDED</h2>
       <div class="stats-container">
+
         <div class="stat-item">
           <div class="stat-label">Top Kills</div>
           <div class="stat-value">${topKillsPlayer.name} (${topKillsPlayer.kills})</div>

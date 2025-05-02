@@ -19,6 +19,16 @@ export const mapData = {
     "8x9": true,
     "9x9": true,
   },
+  hazards: {},
+
+  generateRandomHazards(count) {
+    const hazards = {};
+    for (let i = 0; i < count; i++) {
+      const { x, y } = getRandomSafeSpot();
+      hazards[`${x}x${y}`] = { coins: 666 };
+    }
+    this.hazards = hazards;
+  },
 };
 
 export function getRandomSafeSpot() {

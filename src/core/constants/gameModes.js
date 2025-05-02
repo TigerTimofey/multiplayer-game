@@ -10,4 +10,12 @@ export const GAME_MODES = {
       startingCoins: 70,
     },
   },
+  survival: {
+    name: "Hazard Mode",
+    description:
+      "Avoid hazards while collecting coins. Last player standing wins.",
+    specialRules: {
+      hazardsEnabled: true,
+    },
+  },
 };

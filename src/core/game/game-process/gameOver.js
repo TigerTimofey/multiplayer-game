@@ -2,7 +2,27 @@ export function showGameOver(eliminatedBy, playerStats, gameOverModal) {
   gameOverModal.classList.remove("hidden");
 
   const eliminatedByEl = document.querySelector("#eliminated-by");
-  eliminatedByEl.textContent = `Eliminated by ${eliminatedBy.name} who had ${eliminatedBy.coins} coins!`;
+
+  if (eliminatedBy.isHazard) {
+    eliminatedByEl.textContent = `Eliminated by a hazard worth ${
+      eliminatedBy.coins || 0
+    } coins!`;
+  } else {
+    eliminatedByEl.textContent = `Eliminated by ${eliminatedBy.name} who had ${eliminatedBy.coins} coins!`;
+  }
+
+  const causeOfDeathEl = document.createElement("div");
+  causeOfDeathEl.className = "cause-of-death";
+
+  if (eliminatedBy.isHazard) {
+    causeOfDeathEl.textContent = "You hit a hazard!";
+    causeOfDeathEl.style.backgroundColor = "red";
+  } else {
+    causeOfDeathEl.textContent = `Killed by ${eliminatedBy.name}`;
+    causeOfDeathEl.style.backgroundColor = eliminatedBy.color || "gray";
+  }
+
+  gameOverModal.appendChild(causeOfDeathEl);
 
   const audio = new Audio("./assets/audio/die.mp3");
   audio.play();

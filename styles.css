@@ -2084,3 +2084,74 @@ button.player-status:hover {
   color: black;
   border-color: #ffd700;
 }
+
+.Hazard {
+  width: 20px; /* Increased size for better visibility */
+  height: 20px;
+  position: absolute;
+  z-index: 2;
+}
+
+.Hazard_shadow {
+  width: 15px;
+  height: 15px;
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
+}
+
+.Hazard_sprite {
+  width: 15px;
+  height: 15px;
+  background-image: url("./assets/images/hazard.png");
+  background-size: cover;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 2;
+  animation: hazardPulse 1.5s infinite;
+}
+
+@keyframes hazardPulse {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.9;
+  }
+}
+
+.cause-of-death {
+  margin-top: 20px;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  border-radius: 5px;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.Hazard_coins {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 5px;
+  font-weight: bold;
+  color: gold;
+  text-shadow: 0 0 5px black;
+}
