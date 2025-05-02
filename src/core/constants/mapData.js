@@ -29,6 +29,15 @@ export const mapData = {
     }
     this.hazards = hazards;
   },
+
+  regenerateHazards() {
+    const hazards = {};
+    Object.keys(this.hazards).forEach(() => {
+      const { x, y } = getRandomSafeSpot();
+      hazards[`${x}x${y}`] = { coins: 666 };
+    });
+    this.hazards = hazards;
+  },
 };
 
 export function getRandomSafeSpot() {

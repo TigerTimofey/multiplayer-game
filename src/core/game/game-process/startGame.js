@@ -41,7 +41,7 @@ export function startGame() {
       });
 
     if (gameMode.specialRules?.hazardsEnabled) {
-      mapData.generateRandomHazards(5);
+      mapData.generateRandomHazards(8);
       const hazardsRef = firebase
         .database()
         .ref(`rooms/${state.getCurrentRoomCode()}/hazards`);

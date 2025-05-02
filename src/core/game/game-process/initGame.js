@@ -6,6 +6,7 @@ import { placeCoin } from "../player/player-coin-logic/coinManager.js";
 import { getKeyString } from "../../../utils/helpers.js";
 import { updateScoreboard } from "../../components/scoreboard/updateScoreboard.js";
 import { updatePlayerPosition } from "../player/player-interact/updatePlayerPosition.js";
+import { mapData } from "../../constants/mapData.js";
 
 export function initGame() {
   new KeyPressListener("ArrowUp", () =>
@@ -327,6 +328,31 @@ export function initGame() {
       domElements.gameContainer.appendChild(hazardElement);
     });
   });
+
+  // Periodically update hazard positions
+  setInterval(() => {
+    mapData.regenerateHazards();
+    hazardsRef.set(mapData.hazards);
+
+    // Update hazard elements on the map
+    document.querySelectorAll(".Hazard").forEach((hazardElement) => {
+      hazardElement.remove();
+    });
+
+    Object.keys(mapData.hazards).forEach((key) => {
+      const [x, y] = key.split("x").map(Number);
+      const hazardElement = document.createElement("div");
+      hazardElement.classList.add("Hazard", "grid-cell");
+      hazardElement.innerHTML = `
+        <div class="Hazard_shadow grid-cell"></div>
+        <div class="Hazard_sprite grid-cell"></div>
+      `;
+      hazardElement.style.transform = `translate3d(${16 * x}px, ${
+        16 * y - 4
+      }px, 0)`;
+      domElements.gameContainer.appendChild(hazardElement);
+    });
+  }, 10000); // Update every 10 seconds
 }
 
 function logActionToFirebase(action) {
