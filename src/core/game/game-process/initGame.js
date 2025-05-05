@@ -284,13 +284,8 @@ export function initGame() {
     .database()
     .ref(`rooms/${state.getCurrentRoomCode()}/messages`);
   messagesRef.on("child_added", (snapshot) => {
-    const { playerId, action } = snapshot.val();
-    const playerName = state.getPlayers()[playerId]?.name || "Unknown Player";
-    if (action.includes("has quit the game")) {
-      displayMessage(action);
-    } else {
-      displayMessage(`${playerName} ${action}`);
-    }
+    const { action } = snapshot.val();
+    displayMessage(action);
   });
 
   const powersMenu = document.querySelector(".powers-menu");

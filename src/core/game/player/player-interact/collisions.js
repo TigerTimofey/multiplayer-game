@@ -1,4 +1,5 @@
 import { showGameOver } from "../../game-process/gameOver.js";
+import state from "../../../state.js";
 
 export function checkPlayerCollisions(
   x,
@@ -42,6 +43,15 @@ export function checkPlayerCollisions(
           .ref()
           .update(updates)
           .then(() => {
+            // Broadcast kill message
+            const messageRef = firebase
+              .database()
+              .ref(`rooms/${currentRoomCode}/messages`);
+            messageRef.push({
+              action: `${players[playerId].name} killed ${otherPlayer.name}`,
+              timestamp: Date.now(),
+            });
+
             const roomStatsRef = firebase
               .database()
               .ref(`rooms/${currentRoomCode}/stats`);
@@ -76,6 +86,15 @@ export function checkPlayerCollisions(
           .ref()
           .update(updates)
           .then(() => {
+            // Broadcast kill message
+            const messageRef = firebase
+              .database()
+              .ref(`rooms/${currentRoomCode}/messages`);
+            messageRef.push({
+              action: `${otherPlayer.name} killed ${players[playerId].name}`,
+              timestamp: Date.now(),
+            });
+
             const playerStats = {
               coins: players[playerId].coins,
               joinTime: players[playerId].joinTime,
