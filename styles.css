@@ -2058,7 +2058,7 @@ button.player-status:hover {
 
 .game-mode-select {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin: 10px 0;
 }
@@ -2086,7 +2086,7 @@ button.player-status:hover {
 }
 
 .Hazard {
-  width: 20px; /* Increased size for better visibility */
+  width: 20px;
   height: 20px;
   position: absolute;
   z-index: 2;
