@@ -218,13 +218,15 @@ export function initGame() {
       ) {
         const coinsToStore = characterState.coins;
         if (coinsToStore > 0) {
-          firebase
-            .database()
-            .ref(`players/${key}`)
-            .update({
-              coins: 0,
-              storedCoins: (characterState.storedCoins || 0) + coinsToStore,
-            });
+          const updates = {
+            [`players/${key}/coins`]: 0,
+            [`players/${key}/storedCoins`]: Math.min(
+              (characterState.storedCoins || 0) + coinsToStore,
+              75
+            ),
+          };
+
+          firebase.database().ref().update(updates);
 
           const boxElement = document.querySelector(
             `.TreasureBox[data-player-id="${key}"]`
@@ -239,12 +241,6 @@ export function initGame() {
             coinsDisplay.innerHTML = `${characterState.name} <span class="coin-value">${totalCoins}/75</span>`;
 
             if (totalCoins >= 75) {
-              console.log(`${characterState.name} wins!`);
-              firebase.database().ref(`players/${key}`).update({
-                coins: 0,
-                storedCoins: 75,
-              });
-
               firebase
                 .database()
                 .ref(`rooms/${state.getCurrentRoomCode()}`)
@@ -255,31 +251,57 @@ export function initGame() {
                     color: characterState.color,
                     coins: 75,
                   },
-                })
-                .then(() => {
-                  import("../../components/modal/showMatchEndedModal.js").then(
-                    (module) => {
-                      const { showMatchEndedModal } = module;
-
-                      const players = state.getPlayers();
-                      const topKillsPlayer = Object.values(players).reduce(
-                        (top, player) =>
-                          (player.kills || 0) > (top.kills || 0) ? player : top,
-                        { name: "None", kills: 0 }
-                      );
-                      const topCoinsPlayer = Object.values(players).reduce(
-                        (top, player) =>
-                          (player.coins || 0) > (top.coins || 0) ? player : top,
-                        { name: "None", coins: 0 }
-                      );
-                      showMatchEndedModal(topKillsPlayer, topCoinsPlayer);
-                    }
-                  );
                 });
             }
           }
         }
       }
+
+      Object.entries(mapData.treasureBoxPositions).forEach(
+        ([index, position]) => {
+          if (
+            characterState.x === position.x &&
+            characterState.y === position.y
+          ) {
+            const boxOwnerId = Object.keys(state.getPlayers()).find(
+              (pid) => state.getPlayers()[pid].playerIndex === parseInt(index)
+            );
+
+            if (boxOwnerId && boxOwnerId !== key) {
+              const targetPlayer = state.getPlayers()[boxOwnerId];
+              if (targetPlayer.storedCoins > 0) {
+                const updates = {
+                  [`players/${key}/coins`]:
+                    (characterState.coins || 0) + targetPlayer.storedCoins,
+                  [`players/${boxOwnerId}/storedCoins`]: 0,
+                };
+
+                firebase.database().ref().update(updates);
+
+                const stealAudio = new Audio("./assets/audio/steal.mp3");
+                stealAudio.play();
+
+                const boxElement = document.querySelector(
+                  `.TreasureBox[data-player-id="${boxOwnerId}"]`
+                );
+                if (boxElement) {
+                  const coinsDisplay =
+                    boxElement.querySelector(".TreasureBox_coins");
+                  coinsDisplay.innerHTML = `${targetPlayer.name} <span class="coin-value">0/75</span>`;
+                }
+
+                firebase
+                  .database()
+                  .ref(`rooms/${state.getCurrentRoomCode()}/messages`)
+                  .push({
+                    action: `${characterState.name} stole ${targetPlayer.storedCoins} coins from ${targetPlayer.name}'s treasure!`,
+                    timestamp: Date.now(),
+                  });
+              }
+            }
+          }
+        }
+      );
     });
   });
 
@@ -425,12 +447,10 @@ export function initGame() {
     });
   });
 
-  // Periodically update hazard positions
   setInterval(() => {
     mapData.regenerateHazards();
     hazardsRef.set(mapData.hazards);
 
-    // Update hazard elements on the map
     document.querySelectorAll(".Hazard").forEach((hazardElement) => {
       hazardElement.remove();
     });
@@ -448,7 +468,7 @@ export function initGame() {
       }px, 0)`;
       domElements.gameContainer.appendChild(hazardElement);
     });
-  }, 10000); // Update every 10 seconds
+  }, 10000);
 }
 
 function logActionToFirebase(action) {
