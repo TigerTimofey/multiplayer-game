@@ -214,6 +214,7 @@ export function initGame() {
       const boxPosition = mapData.getTreasureBoxPosition(
         characterState.playerIndex
       );
+
       if (
         characterState.x === boxPosition.x &&
         characterState.y === boxPosition.y
@@ -221,12 +222,11 @@ export function initGame() {
         const coinsToStore = characterState.coins;
         const now = Date.now();
 
-        // Check cooldown
         if (
           coinsToStore > 0 &&
           (!storeCooldowns[key] || now - storeCooldowns[key] >= 2000)
         ) {
-          storeCooldowns[key] = now; // Set last store time
+          storeCooldowns[key] = now;
 
           const updates = {
             [`players/${key}/coins`]: 0,
@@ -292,6 +292,82 @@ export function initGame() {
           }
         }
       }
+
+      const stealingTimers = {};
+
+      Object.entries(mapData.treasureBoxPositions).forEach(
+        ([index, position]) => {
+          if (
+            characterState.x === position.x &&
+            characterState.y === position.y
+          ) {
+            const boxOwnerId = Object.keys(state.getPlayers()).find(
+              (pid) => state.getPlayers()[pid].playerIndex === parseInt(index)
+            );
+
+            if (boxOwnerId && boxOwnerId !== key) {
+              const targetPlayer = state.getPlayers()[boxOwnerId];
+              if (targetPlayer.storedCoins > 0) {
+                if (!stealingTimers[key]) {
+                  const boxElement = document.querySelector(
+                    `.TreasureBox[data-player-id="${boxOwnerId}"]`
+                  );
+
+                  boxElement.classList.add("stealing");
+                  const progressBar = document.createElement("div");
+                  progressBar.className = "TreasureBox_stealing-progress";
+                  boxElement.appendChild(progressBar);
+
+                  void progressBar.offsetWidth;
+
+                  stealingTimers[key] = setTimeout(() => {
+                    const updates = {
+                      [`players/${key}/coins`]:
+                        (characterState.coins || 0) + targetPlayer.storedCoins,
+                      [`players/${boxOwnerId}/storedCoins`]: 0,
+                    };
+
+                    firebase.database().ref().update(updates);
+
+                    const stealAudio = new Audio("./assets/audio/steal.mp3");
+                    stealAudio.play();
+
+                    boxElement.classList.remove("stealing");
+                    progressBar.remove();
+
+                    const coinsDisplay =
+                      boxElement.querySelector(".TreasureBox_coins");
+                    coinsDisplay.innerHTML = `${targetPlayer.name} <span class="coin-value">0/25</span>`;
+
+                    firebase
+                      .database()
+                      .ref(`rooms/${state.getCurrentRoomCode()}/messages`)
+                      .push({
+                        action: `${characterState.name} stole ${targetPlayer.storedCoins} coins from ${targetPlayer.name}'s treasure!`,
+                        timestamp: Date.now(),
+                      });
+
+                    delete stealingTimers[key];
+                  }, 5000);
+                }
+              }
+            } else {
+              if (stealingTimers[key]) {
+                clearTimeout(stealingTimers[key]);
+                delete stealingTimers[key];
+
+                document.querySelectorAll(".TreasureBox").forEach((box) => {
+                  box.classList.remove("stealing");
+                  const progressBar = box.querySelector(
+                    ".TreasureBox_stealing-progress"
+                  );
+                  if (progressBar) progressBar.remove();
+                });
+              }
+            }
+          }
+        }
+      );
     });
   });
 
@@ -437,12 +513,10 @@ export function initGame() {
     });
   });
 
-  // Periodically update hazard positions
   setInterval(() => {
     mapData.regenerateHazards();
     hazardsRef.set(mapData.hazards);
 
-    // Update hazard elements on the map
     document.querySelectorAll(".Hazard").forEach((hazardElement) => {
       hazardElement.remove();
     });
@@ -460,7 +534,7 @@ export function initGame() {
       }px, 0)`;
       domElements.gameContainer.appendChild(hazardElement);
     });
-  }, 10000); // Update every 10 seconds
+  }, 10000);
 }
 
 function logActionToFirebase(action) {
