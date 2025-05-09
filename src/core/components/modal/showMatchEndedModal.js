@@ -19,13 +19,20 @@ export function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
 
       matchEndedModal.innerHTML = `
         <div class="modal-content">
-          <h2>MATCH ENDED</h2>
+          <h2>${winner ? "VICTORY!" : "MATCH ENDED"}</h2>
           ${
             winner
               ? `
-            <div class="winner-announcement" style="color: white; margin: 20px 0; font-size: 1.2em; font-weight: bold;">
-              ${winner.name} Won!
-              <div style="font-size: 0.8em">First to fill their treasure box!</div>
+            <div class="winner-announcement" 
+                 style="color: white; 
+                        margin: 20px 0; 
+                        font-size: 1.5em; 
+                        font-weight: bold;
+                        text-shadow: 0 0 10px rgba(255,255,255,0.5)">
+              ${winner.name} Won The Game!
+              <div style="font-size: 0.65em; color: gold">
+                First to collect 75 coins in treasure box!
+              </div>
             </div>
           `
               : ""

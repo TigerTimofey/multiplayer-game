@@ -8,6 +8,8 @@ import { updateScoreboard } from "../../components/scoreboard/updateScoreboard.j
 import { updatePlayerPosition } from "../player/player-interact/updatePlayerPosition.js";
 import { mapData } from "../../constants/mapData.js";
 
+const storeCooldowns = {};
+
 export function initGame() {
   new KeyPressListener("ArrowUp", () =>
     handleArrowPress(0, -1, {
@@ -76,7 +78,7 @@ export function initGame() {
         <div class="TreasureBox_sprite grid-cell"></div>
         <div class="TreasureBox_coins" style="color: ${player.color}">
           <div>${player.name}</div>
-          <span class="coin-value">0/75</span>
+          <span class="coin-value">0/25</span>
         </div>
       `;
       boxElement.style.transform = `translate3d(${16 * boxPosition.x}px, ${
@@ -217,12 +219,20 @@ export function initGame() {
         characterState.y === boxPosition.y
       ) {
         const coinsToStore = characterState.coins;
-        if (coinsToStore > 0) {
+        const now = Date.now();
+
+        // Check cooldown
+        if (
+          coinsToStore > 0 &&
+          (!storeCooldowns[key] || now - storeCooldowns[key] >= 2000)
+        ) {
+          storeCooldowns[key] = now; // Set last store time
+
           const updates = {
             [`players/${key}/coins`]: 0,
             [`players/${key}/storedCoins`]: Math.min(
               (characterState.storedCoins || 0) + coinsToStore,
-              75
+              25
             ),
           };
 
@@ -236,11 +246,17 @@ export function initGame() {
             coinsDisplay.style.color = characterState.color;
             const totalCoins = Math.min(
               (characterState.storedCoins || 0) + coinsToStore,
-              75
+              25
             );
-            coinsDisplay.innerHTML = `${characterState.name} <span class="coin-value">${totalCoins}/75</span>`;
+            coinsDisplay.innerHTML = `${characterState.name} <span class="coin-value">${totalCoins}/25</span>`;
 
-            if (totalCoins >= 75) {
+            if (totalCoins >= 25) {
+              console.log(`${characterState.name} wins!`);
+              firebase.database().ref(`players/${key}`).update({
+                coins: 0,
+                storedCoins: 25,
+              });
+
               firebase
                 .database()
                 .ref(`rooms/${state.getCurrentRoomCode()}`)
@@ -249,59 +265,33 @@ export function initGame() {
                   winner: {
                     name: characterState.name,
                     color: characterState.color,
-                    coins: 75,
+                    coins: 25,
                   },
+                })
+                .then(() => {
+                  import("../../components/modal/showMatchEndedModal.js").then(
+                    (module) => {
+                      const { showMatchEndedModal } = module;
+
+                      const players = state.getPlayers();
+                      const topKillsPlayer = Object.values(players).reduce(
+                        (top, player) =>
+                          (player.kills || 0) > (top.kills || 0) ? player : top,
+                        { name: "None", kills: 0 }
+                      );
+                      const topCoinsPlayer = Object.values(players).reduce(
+                        (top, player) =>
+                          (player.coins || 0) > (top.coins || 0) ? player : top,
+                        { name: "None", coins: 0 }
+                      );
+                      showMatchEndedModal(topKillsPlayer, topCoinsPlayer);
+                    }
+                  );
                 });
             }
           }
         }
       }
-
-      Object.entries(mapData.treasureBoxPositions).forEach(
-        ([index, position]) => {
-          if (
-            characterState.x === position.x &&
-            characterState.y === position.y
-          ) {
-            const boxOwnerId = Object.keys(state.getPlayers()).find(
-              (pid) => state.getPlayers()[pid].playerIndex === parseInt(index)
-            );
-
-            if (boxOwnerId && boxOwnerId !== key) {
-              const targetPlayer = state.getPlayers()[boxOwnerId];
-              if (targetPlayer.storedCoins > 0) {
-                const updates = {
-                  [`players/${key}/coins`]:
-                    (characterState.coins || 0) + targetPlayer.storedCoins,
-                  [`players/${boxOwnerId}/storedCoins`]: 0,
-                };
-
-                firebase.database().ref().update(updates);
-
-                const stealAudio = new Audio("./assets/audio/steal.mp3");
-                stealAudio.play();
-
-                const boxElement = document.querySelector(
-                  `.TreasureBox[data-player-id="${boxOwnerId}"]`
-                );
-                if (boxElement) {
-                  const coinsDisplay =
-                    boxElement.querySelector(".TreasureBox_coins");
-                  coinsDisplay.innerHTML = `${targetPlayer.name} <span class="coin-value">0/75</span>`;
-                }
-
-                firebase
-                  .database()
-                  .ref(`rooms/${state.getCurrentRoomCode()}/messages`)
-                  .push({
-                    action: `${characterState.name} stole ${targetPlayer.storedCoins} coins from ${targetPlayer.name}'s treasure!`,
-                    timestamp: Date.now(),
-                  });
-              }
-            }
-          }
-        }
-      );
     });
   });
 
@@ -447,10 +437,12 @@ export function initGame() {
     });
   });
 
+  // Periodically update hazard positions
   setInterval(() => {
     mapData.regenerateHazards();
     hazardsRef.set(mapData.hazards);
 
+    // Update hazard elements on the map
     document.querySelectorAll(".Hazard").forEach((hazardElement) => {
       hazardElement.remove();
     });
@@ -468,7 +460,7 @@ export function initGame() {
       }px, 0)`;
       domElements.gameContainer.appendChild(hazardElement);
     });
-  }, 10000);
+  }, 10000); // Update every 10 seconds
 }
 
 function logActionToFirebase(action) {

@@ -7,7 +7,7 @@ export const GAME_MODES = {
     name: "Extra coins mode",
     description: "Players start with double coins and faster movement.",
     specialRules: {
-      startingCoins: 70,
+      startingCoins: 10,
     },
   },
   survival: {
