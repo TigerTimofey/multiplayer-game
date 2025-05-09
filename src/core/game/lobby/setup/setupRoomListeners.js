@@ -32,7 +32,7 @@ export function setupRoomListeners(roomRef) {
 
         playerEl.innerHTML = `
             <div class="player-name">${player.name} ${
-          player.isHost ? "(Host)" : ""
+          player.isHost ? "🌟" : ""
         }</div>
             ${statusHtml}
           `;
