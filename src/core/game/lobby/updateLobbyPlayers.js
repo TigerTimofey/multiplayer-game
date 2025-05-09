@@ -28,7 +28,7 @@ export function updateLobbyPlayers(players, roomRef) {
         if (id === state.getPlayerId()) {
           playerEl.innerHTML = `
               <div class="player-name">${player.name} ${
-            player.isHost ? "(Host)" : ""
+            player.isHost ? "🌟" : ""
           }</div>
               <button class="player-status ${statusClass}">${readyStatus}</button>
             `;
@@ -43,7 +43,7 @@ export function updateLobbyPlayers(players, roomRef) {
         } else {
           playerEl.innerHTML = `
               <div class="player-name">${player.name} ${
-            player.isHost ? "(Host)" : ""
+            player.isHost ? "🌟" : ""
           }</div>
               <div class="player-status-display ${statusClass}">${readyStatus}</div>
             `;
