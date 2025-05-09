@@ -2155,3 +2155,62 @@ button.player-status:hover {
   color: gold;
   text-shadow: 0 0 5px black;
 }
+
+.TreasureBox {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.TreasureBox_sprite {
+  width: 28px;
+  height: 28px;
+  /* skip and add image for treasure box later */
+  /* background-image: url("./assets/images/treasure-box.png"); */
+  background-size: cover;
+  image-rendering: pixelated;
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  z-index: 1;
+}
+
+.TreasureBox_coins {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 5px;
+  background: #333;
+  padding: 1px 3px;
+  color: white;
+  border-radius: 3px;
+  white-space: nowrap;
+  z-index: 2;
+  font-weight: bold;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: white !important;
+}
+
+.TreasureBox_coins .coin-value {
+  color: gold !important;
+}
+
+.TreasureBox_coins .coin-value {
+  color: gold;
+  margin-left: 2px;
+}
+
+.TreasureBox::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 2px solid;
+  border-radius: 4px;
+  opacity: 0.5;
+}

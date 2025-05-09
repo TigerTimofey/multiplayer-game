@@ -13,6 +13,8 @@ export function startGame() {
   roomRef.once("value").then((snapshot) => {
     const roomData = snapshot.val();
     const gameMode = GAME_MODES[roomData.gameMode];
+    const players = roomData.players || {};
+    const playerIndex = Object.keys(players).indexOf(state.getPlayerId());
     const { x, y } = getRandomSafeSpot();
 
     const startingCoins = gameMode.specialRules?.startingCoins || 0;
@@ -28,6 +30,8 @@ export function startGame() {
         x,
         y,
         coins: startingCoins,
+        storedCoins: 0,
+        playerIndex,
         speed: speedMultiplier,
         kills: 0,
         joinTime: Date.now(),

@@ -20,6 +20,12 @@ export const mapData = {
     "9x9": true,
   },
   hazards: {},
+  treasureBoxPositions: {
+    0: { x: 2, y: 4 },
+    1: { x: 12, y: 4 },
+    2: { x: 2, y: 11 },
+    3: { x: 12, y: 11 },
+  },
 
   generateRandomHazards(count) {
     const hazards = {};
@@ -37,6 +43,12 @@ export const mapData = {
       hazards[`${x}x${y}`] = { coins: 666 };
     });
     this.hazards = hazards;
+  },
+
+  getTreasureBoxPosition(playerIndex) {
+    return (
+      this.treasureBoxPositions[playerIndex] || this.treasureBoxPositions[0]
+    );
   },
 };
 

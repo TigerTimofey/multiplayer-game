@@ -60,6 +60,35 @@ export function initGame() {
   const allPlayersRef = firebase.database().ref(`players`);
   const allCoinsRef = firebase.database().ref(`coins`);
 
+  const roomRef = firebase
+    .database()
+    .ref(`rooms/${state.getCurrentRoomCode()}`);
+
+  roomRef.child("players").once("value", (snapshot) => {
+    const players = snapshot.val();
+    let playerIndex = 0;
+
+    Object.entries(players).forEach(([playerId, player]) => {
+      const boxPosition = mapData.getTreasureBoxPosition(playerIndex);
+      const boxElement = document.createElement("div");
+      boxElement.classList.add("TreasureBox", "grid-cell");
+      boxElement.innerHTML = `
+        <div class="TreasureBox_sprite grid-cell"></div>
+        <div class="TreasureBox_coins" style="color: ${player.color}">
+          <div>${player.name}</div>
+          <span class="coin-value">0/75</span>
+        </div>
+      `;
+      boxElement.style.transform = `translate3d(${16 * boxPosition.x}px, ${
+        16 * boxPosition.y - 4
+      }px, 0)`;
+      boxElement.setAttribute("data-player-id", playerId);
+      boxElement.style.borderColor = player.color;
+      domElements.gameContainer.appendChild(boxElement);
+      playerIndex++;
+    });
+  });
+
   allPlayersRef.on("child_added", (snapshot) => {
     const addedPlayer = snapshot.val();
     const characterElement = document.createElement("div");
@@ -179,6 +208,78 @@ export function initGame() {
           }
         }
       });
+
+      const boxPosition = mapData.getTreasureBoxPosition(
+        characterState.playerIndex
+      );
+      if (
+        characterState.x === boxPosition.x &&
+        characterState.y === boxPosition.y
+      ) {
+        const coinsToStore = characterState.coins;
+        if (coinsToStore > 0) {
+          firebase
+            .database()
+            .ref(`players/${key}`)
+            .update({
+              coins: 0,
+              storedCoins: (characterState.storedCoins || 0) + coinsToStore,
+            });
+
+          const boxElement = document.querySelector(
+            `.TreasureBox[data-player-id="${key}"]`
+          );
+          if (boxElement) {
+            const coinsDisplay = boxElement.querySelector(".TreasureBox_coins");
+            coinsDisplay.style.color = characterState.color;
+            const totalCoins = Math.min(
+              (characterState.storedCoins || 0) + coinsToStore,
+              75
+            );
+            coinsDisplay.innerHTML = `${characterState.name} <span class="coin-value">${totalCoins}/75</span>`;
+
+            if (totalCoins >= 75) {
+              console.log(`${characterState.name} wins!`);
+              firebase.database().ref(`players/${key}`).update({
+                coins: 0,
+                storedCoins: 75,
+              });
+
+              firebase
+                .database()
+                .ref(`rooms/${state.getCurrentRoomCode()}`)
+                .update({
+                  gameEnded: true,
+                  winner: {
+                    name: characterState.name,
+                    color: characterState.color,
+                    coins: 75,
+                  },
+                })
+                .then(() => {
+                  import("../../components/modal/showMatchEndedModal.js").then(
+                    (module) => {
+                      const { showMatchEndedModal } = module;
+
+                      const players = state.getPlayers();
+                      const topKillsPlayer = Object.values(players).reduce(
+                        (top, player) =>
+                          (player.kills || 0) > (top.kills || 0) ? player : top,
+                        { name: "None", kills: 0 }
+                      );
+                      const topCoinsPlayer = Object.values(players).reduce(
+                        (top, player) =>
+                          (player.coins || 0) > (top.coins || 0) ? player : top,
+                        { name: "None", coins: 0 }
+                      );
+                      showMatchEndedModal(topKillsPlayer, topCoinsPlayer);
+                    }
+                  );
+                });
+            }
+          }
+        }
+      }
     });
   });
 

@@ -12,7 +12,6 @@ export function showGameOver(eliminatedBy, playerStats, gameOverModal) {
   }
 
   const causeOfDeathEl = document.createElement("div");
-  causeOfDeathEl.className = "cause-of-death";
 
   if (eliminatedBy.isHazard) {
     causeOfDeathEl.textContent = "You hit a hazard!";
