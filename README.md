@@ -1,6 +1,8 @@
 # Multiplayer Coin Battle Game 🎮
 
-![Game Preview](./assets/images/preview.png)
+<img src="https://github.com/user-attachments/assets/e3ceac19-6705-48f8-b6fd-3f7d0a7d31cb" width="200" height="200" />
+<img src="https://github.com/user-attachments/assets/0c1bb280-5b05-4609-8808-d2afe1c83dcf" width="200" height="200" />
+<img src="https://github.com/user-attachments/assets/67413a32-2fe5-4719-ba10-679e8ecef56b" width="200" height="200" />
 
 ## 🎯 Play Now
 
