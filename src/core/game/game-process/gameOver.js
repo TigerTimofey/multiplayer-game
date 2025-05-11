@@ -16,11 +16,7 @@ export function showGameOver(eliminatedBy, playerStats, gameOverModal) {
   if (eliminatedBy.isHazard) {
     causeOfDeathEl.textContent = "You hit a hazard!";
     causeOfDeathEl.style.backgroundColor = "red";
-  } else {
-    causeOfDeathEl.textContent = `Killed by ${eliminatedBy.name}`;
-    causeOfDeathEl.style.backgroundColor = eliminatedBy.color || "gray";
   }
-
   gameOverModal.appendChild(causeOfDeathEl);
 
   const audio = new Audio("./assets/audio/die.mp3");

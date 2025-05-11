@@ -43,7 +43,6 @@ export function checkPlayerCollisions(
           .ref()
           .update(updates)
           .then(() => {
-            // Broadcast kill message
             const messageRef = firebase
               .database()
               .ref(`rooms/${currentRoomCode}/messages`);
