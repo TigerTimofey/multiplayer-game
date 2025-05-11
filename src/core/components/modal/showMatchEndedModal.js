@@ -2,10 +2,10 @@ import { resetToMainMenu } from "../../game/lobby/resetToMainMenu.js";
 import state from "../../state.js"; // Add this import
 
 export function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
+  document.querySelector("#game-content").classList.add("hidden");
   const gameOverAudio = new Audio("./assets/audio/gameOver.mp3");
   gameOverAudio.play();
 
-  // Get room data to check for winner
   firebase
     .database()
     .ref(`rooms/${state.getCurrentRoomCode()}`)
