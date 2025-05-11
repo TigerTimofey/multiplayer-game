@@ -28,8 +28,22 @@ export function showGameLobby(roomCode) {
   backButton.className = "leave-room-btn";
   backButton.textContent = "Leave Room";
   backButton.onclick = () => {
-    handlePlayerLeave(roomCode);
-    resetToMainMenu();
+    const roomRef = firebase.database().ref(`rooms/${roomCode}`);
+
+    roomRef.once("value", (snapshot) => {
+      const roomData = snapshot.val();
+      const isHost = roomData.hostId === state.getPlayerId();
+
+      if (isHost) {
+        roomRef.remove().then(() => {
+          handlePlayerLeave(roomCode);
+          window.location.reload();
+        });
+      } else {
+        handlePlayerLeave(roomCode);
+        window.location.reload();
+      }
+    });
   };
 
   setupPlayerCleanup(roomCode);
