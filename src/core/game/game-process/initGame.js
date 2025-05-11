@@ -543,7 +543,7 @@ function logActionToFirebase(action) {
     .ref(`rooms/${state.getCurrentRoomCode()}/messages`);
   roomRef.push({
     playerId: state.getPlayerId(),
-    action,
+    action: `${state.getSavedPlayerName()} ${action}`,
     timestamp: Date.now(),
   });
 }
