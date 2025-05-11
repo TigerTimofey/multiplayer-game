@@ -31,7 +31,7 @@ export function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
                         text-shadow: 0 0 10px rgba(255,255,255,0.5)">
               ${winner.name} Won The Game!
               <div style="font-size: 0.65em; color: gold">
-                First to collect 75 coins in treasure box!
+                First to collect 25 coins in treasure box!
               </div>
             </div>
           `
