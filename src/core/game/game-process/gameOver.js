@@ -1,6 +1,4 @@
 export function showGameOver(eliminatedBy, playerStats, gameOverModal) {
-  document.querySelector("#game-content").classList.add("hidden");
-
   gameOverModal.classList.remove("hidden");
 
   const eliminatedByEl = document.querySelector("#eliminated-by");
