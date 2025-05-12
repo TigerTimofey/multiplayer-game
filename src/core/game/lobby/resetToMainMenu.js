@@ -5,7 +5,7 @@ export function resetToMainMenu() {
   leaveButton.textContent = "←";
 
   document.querySelector("#lobby-title").textContent =
-    "Welcome to Multiplayer Game";
+    "Welcome to Treasure Hunters Arena";
 
   state.setCurrentRoomCode(null);
 

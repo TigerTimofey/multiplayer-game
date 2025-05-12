@@ -273,7 +273,7 @@ export function initializeLobby() {
         elements.backButton.classList.add("hidden");
         elements.backButton.textContent = "←";
         elements.lobbyTitle.classList.remove("hidden");
-        elements.lobbyTitle.textContent = "Welcome to Multiplayer Game";
+        elements.lobbyTitle.textContent = "Welcome to Treasure Hunters Arena";
         elements.lobbyButtons.classList.remove("hidden");
         elements.initialSetup.classList.add("hidden");
         elements.roomCreation.classList.add("hidden");
@@ -358,7 +358,7 @@ export function initializeLobby() {
     jokeContent.classList.toggle("hidden");
 
     if (jokeContent.classList.contains("hidden")) {
-      lobbyTitle.textContent = "Welcome to Multiplayer Game";
+      lobbyTitle.textContent = "Welcome to Treasure Hunters Arena";
       lobbyTitle.classList.remove("hidden");
       toggleJoke.textContent = "Settings";
     } else {
