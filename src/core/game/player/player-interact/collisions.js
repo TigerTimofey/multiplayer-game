@@ -31,7 +31,6 @@ export function checkPlayerCollisions(
       const updates = {};
       const safeSpot = getRandomSafeSpot();
 
-      // Track kills in room stats and player stats
       const statsUpdates = {};
       const roomStatsRef = `rooms/${currentRoomCode}/stats`;
       const winnerStatsRef = `rooms/${currentRoomCode}/playerStats/${
@@ -45,7 +44,6 @@ export function checkPlayerCollisions(
         updates[`players/${playerId}/kills`] =
           (players[playerId].kills || 0) + 1;
 
-        // Update kill stats
         statsUpdates[`${roomStatsRef}/totalKills`] =
           firebase.database.ServerValue.increment(1);
         statsUpdates[`${winnerStatsRef}/totalKills`] =
@@ -63,7 +61,6 @@ export function checkPlayerCollisions(
           firebase.database.ServerValue.increment(1);
       }
 
-      // Update both player stats and room stats
       firebase
         .database()
         .ref()

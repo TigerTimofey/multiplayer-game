@@ -1,7 +1,7 @@
 import { isSolid } from "../../../../utils/helpers.js";
 import { attemptGrabCoin } from "../player-coin-logic/attemptGrabCoin.js";
 import { checkPlayerCollisions } from "./collisions.js";
-import { mapData } from "../../../constants/mapData.js";
+import { mapData, getRandomSafeSpot } from "../../../constants/mapData.js";
 
 export function handleArrowPress(
   xChange = 0,
@@ -37,13 +37,22 @@ export function handleArrowPress(
 
     const hazardKey = `${newX}x${newY}`;
     if (mapData.hazards[hazardKey]) {
+      const hitAudio = new Audio("./assets/audio/hit.mp3");
+      hitAudio.play();
+
+      const safeSpot = getRandomSafeSpot();
       playerRef.update({
-        isDefeated: true,
-        defeatedBy: {
-          name: "Hazard",
-          isHazard: true,
-          coins: mapData.hazards[hazardKey].coins,
-        },
+        x: safeSpot.x,
+        y: safeSpot.y,
+        coins: 0,
+      });
+
+      const messageRef = firebase
+        .database()
+        .ref(`rooms/${currentRoomCode}/messages`);
+      messageRef.push({
+        action: `${players[playerId].name} hit a hazard and lost all coins!`,
+        timestamp: Date.now(),
       });
       return;
     }
