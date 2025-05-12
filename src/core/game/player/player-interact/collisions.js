@@ -1,4 +1,5 @@
 import { showGameOver } from "../../game-process/gameOver.js";
+import { getRandomSafeSpot } from "../../../constants/mapData.js";
 import state from "../../../state.js";
 
 export function checkPlayerCollisions(
@@ -27,142 +28,61 @@ export function checkPlayerCollisions(
       const hitAudio = new Audio("./assets/audio/hit.mp3");
       hitAudio.play();
 
+      const updates = {};
+      const safeSpot = getRandomSafeSpot();
+
+      // Track kills in room stats and player stats
+      const statsUpdates = {};
+      const roomStatsRef = `rooms/${currentRoomCode}/stats`;
+      const winnerStatsRef = `rooms/${currentRoomCode}/playerStats/${
+        myCoins > otherPlayer.coins ? playerId : key
+      }`;
+
       if (myCoins > otherPlayer.coins) {
-        const updates = {};
+        updates[`players/${key}/x`] = safeSpot.x;
+        updates[`players/${key}/y`] = safeSpot.y;
+        updates[`players/${key}/coins`] = 0;
         updates[`players/${playerId}/kills`] =
           (players[playerId].kills || 0) + 1;
-        updates[`players/${key}/isDefeated`] = true;
-        updates[`players/${key}/defeatedBy`] = {
-          name: players[playerId].name,
-          coins: myCoins,
-          color: players[playerId].color,
-        };
 
-        firebase
-          .database()
-          .ref()
-          .update(updates)
-          .then(() => {
-            const messageRef = firebase
-              .database()
-              .ref(`rooms/${currentRoomCode}/messages`);
-            messageRef.push({
-              action: `${players[playerId].name} killed ${otherPlayer.name}`,
-              timestamp: Date.now(),
-            });
-
-            const roomStatsRef = firebase
-              .database()
-              .ref(`rooms/${currentRoomCode}/stats`);
-            roomStatsRef.transaction((stats) => {
-              if (!stats) {
-                return { totalCoins: 0, totalKills: 1 };
-              }
-              return { ...stats, totalKills: (stats.totalKills || 0) + 1 };
-            });
-
-            const playerStatsRef = firebase
-              .database()
-              .ref(`rooms/${currentRoomCode}/playerStats/${playerId}`);
-            playerStatsRef.transaction((stats) => {
-              if (!stats) {
-                return { totalCoins: 0, totalKills: 1 };
-              }
-              return { ...stats, totalKills: (stats.totalKills || 0) + 1 };
-            });
-
-            setTimeout(() => {
-              firebase.database().ref(`players/${key}`).remove();
-            }, 1000);
-          })
-          .catch((error) => console.error("Update failed:", error));
-      } else if (myCoins < otherPlayer.coins) {
-        const updates = {};
+        // Update kill stats
+        statsUpdates[`${roomStatsRef}/totalKills`] =
+          firebase.database.ServerValue.increment(1);
+        statsUpdates[`${winnerStatsRef}/totalKills`] =
+          firebase.database.ServerValue.increment(1);
+      } else {
+        updates[`players/${playerId}/x`] = safeSpot.x;
+        updates[`players/${playerId}/y`] = safeSpot.y;
+        updates[`players/${playerId}/coins`] = 0;
         updates[`players/${key}/kills`] = (otherPlayer.kills || 0) + 1;
 
-        firebase
-          .database()
-          .ref()
-          .update(updates)
-          .then(() => {
-            // Broadcast kill message
-            const messageRef = firebase
-              .database()
-              .ref(`rooms/${currentRoomCode}/messages`);
-            messageRef.push({
-              action: `${otherPlayer.name} killed ${players[playerId].name}`,
-              timestamp: Date.now(),
-            });
-
-            const playerStats = {
-              coins: players[playerId].coins,
-              joinTime: players[playerId].joinTime,
-              kills: players[playerId].kills || 0,
-              startTime: players[playerId].startTime,
-            };
-
-            if (gameOverModal) {
-              showGameOver(
-                {
-                  name: otherPlayer.name,
-                  coins: otherPlayer.coins,
-                  kills: (otherPlayer.kills || 0) + 1,
-                },
-                { ...playerStats, playerId },
-                gameOverModal
-              );
-            } else {
-              console.error("gameOverModal is not defined.");
-            }
-
-            const myElement = playerElements[playerId];
-            if (myElement) {
-              myElement.style.setProperty(
-                "--scatter-x",
-                Math.random() * 40 - 20 + "px"
-              );
-              myElement.style.setProperty(
-                "--scatter-y",
-                Math.random() * 40 - 20 + "px"
-              );
-              myElement.style.setProperty(
-                "--scatter-rotate",
-                Math.random() * 360 + "deg"
-              );
-              myElement.classList.add("eliminated");
-
-              for (let i = 0; i < 6; i++) {
-                const fragment = document.createElement("div");
-                fragment.className = "Character_sprite";
-                fragment.style.position = "absolute";
-                fragment.style.setProperty(
-                  "--scatter-x",
-                  Math.random() * 60 - 30 + "px"
-                );
-                fragment.style.setProperty(
-                  "--scatter-y",
-                  Math.random() * 60 - 30 + "px"
-                );
-                fragment.style.setProperty(
-                  "--scatter-rotate",
-                  Math.random() * 360 + "deg"
-                );
-                fragment.style.animation = "pixelScatter 0.8s forwards";
-                fragment.style.opacity = "0.7";
-                myElement.appendChild(fragment);
-              }
-            } else {
-              console.warn(
-                `Player element for playerId ${playerId} is missing.`
-              );
-            }
-
-            setTimeout(() => {
-              playerRef.remove();
-            }, 1000);
-          })
-          .catch((error) => console.error("Update failed:", error));
+        // Update kill stats
+        statsUpdates[`${roomStatsRef}/totalKills`] =
+          firebase.database.ServerValue.increment(1);
+        statsUpdates[`${winnerStatsRef}/totalKills`] =
+          firebase.database.ServerValue.increment(1);
       }
+
+      // Update both player stats and room stats
+      firebase
+        .database()
+        .ref()
+        .update({
+          ...updates,
+          ...statsUpdates,
+        });
+
+      const messageRef = firebase
+        .database()
+        .ref(`rooms/${currentRoomCode}/messages`);
+      const winner =
+        myCoins > otherPlayer.coins ? players[playerId] : otherPlayer;
+      const loser =
+        myCoins > otherPlayer.coins ? otherPlayer : players[playerId];
+      messageRef.push({
+        action: `${winner.name} defeated ${loser.name}! (+1 kill)`,
+        timestamp: Date.now(),
+      });
     }
   });
 }

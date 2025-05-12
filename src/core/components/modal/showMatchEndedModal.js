@@ -34,22 +34,19 @@ export function showMatchEndedModal(topKillsPlayer, topCoinsPlayer) {
               </div>
             </div>
           `
-              : ""
+              : `
+            <div class="stats-container">
+              <div class="stat-item">
+                <div class="stat-label">Top Kills</div>
+                <div class="stat-value">${topKillsPlayer.name} (${topKillsPlayer.kills})</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Top Coins</div>
+                <div class="stat-value">${topCoinsPlayer.name} (${topCoinsPlayer.coins})</div>
+              </div>
+            </div>
+          `
           }
-          <div class="stats-container">
-            <div class="stat-item">
-              <div class="stat-label">Top Kills</div>
-              <div class="stat-value">${topKillsPlayer.name} (${
-        topKillsPlayer.kills
-      })</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-label">Top Coins</div>
-              <div class="stat-value">${topCoinsPlayer.name} (${
-        topCoinsPlayer.coins
-      })</div>
-            </div>
-          </div>
           <button id="close-match-ended-modal">Go to lobby</button>
         </div>
       `;

@@ -120,9 +120,9 @@ export function initializeLobby() {
   <button data-mode="classic">Classic</button>
   <button data-mode="coolMode">Extra Coin</button>
   <button data-mode="survival">Hazard</button>
+
   `;
-  // Add on top for new mode UserActivation:
-  // <button data-mode="treasureHunt">Trea (in dev)</button>
+  // <button data-mode="treasureHunt">Treasure Hunt</button>
 
   document.querySelectorAll(".game-mode-select button").forEach((btn) => {
     btn.addEventListener("click", () => {

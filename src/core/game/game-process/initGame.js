@@ -74,28 +74,27 @@ export function initGame() {
       const roomData = roomSnapshot.val();
       const gameMode = GAME_MODES[roomData.gameMode];
 
-      if (gameMode.specialRules?.treasureBoxesEnabled) {
-        let playerIndex = 0;
-        Object.entries(players).forEach(([playerId, player]) => {
-          const boxPosition = mapData.getTreasureBoxPosition(playerIndex);
-          const boxElement = document.createElement("div");
-          boxElement.classList.add("TreasureBox", "grid-cell");
-          boxElement.innerHTML = `
-            <div class="TreasureBox_sprite grid-cell"></div>
-            <div class="TreasureBox_coins" style="color: ${player.color}">
-              <div>${player.name}</div>
-              <span class="coin-value">0/25</span>
-            </div>
-          `;
-          boxElement.style.transform = `translate3d(${16 * boxPosition.x}px, ${
-            16 * boxPosition.y - 4
-          }px, 0)`;
-          boxElement.setAttribute("data-player-id", playerId);
-          boxElement.style.borderColor = player.color;
-          domElements.gameContainer.appendChild(boxElement);
-          playerIndex++;
-        });
-      }
+      // Always show treasure boxes, regardless of game mode
+      let playerIndex = 0;
+      Object.entries(players).forEach(([playerId, player]) => {
+        const boxPosition = mapData.getTreasureBoxPosition(playerIndex);
+        const boxElement = document.createElement("div");
+        boxElement.classList.add("TreasureBox", "grid-cell");
+        boxElement.innerHTML = `
+          <div class="TreasureBox_sprite grid-cell"></div>
+          <div class="TreasureBox_coins" style="color: ${player.color}">
+            <div>${player.name}</div>
+            <span class="coin-value">0/25</span>
+          </div>
+        `;
+        boxElement.style.transform = `translate3d(${16 * boxPosition.x}px, ${
+          16 * boxPosition.y - 4
+        }px, 0)`;
+        boxElement.setAttribute("data-player-id", playerId);
+        boxElement.style.borderColor = player.color;
+        domElements.gameContainer.appendChild(boxElement);
+        playerIndex++;
+      });
     });
   });
 
