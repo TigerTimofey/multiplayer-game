@@ -117,10 +117,12 @@ export function initializeLobby() {
   });
 
   document.querySelector(".game-mode-select").innerHTML = `
-    <button data-mode="classic">Classic</button>
-    <button data-mode="coolMode">Extra Coin</button>
-    <button data-mode="survival">Hazard</button>
+  <button data-mode="classic">Classic</button>
+  <button data-mode="coolMode">Extra Coin</button>
+  <button data-mode="survival">Hazard</button>
   `;
+  // Add on top for new mode UserActivation:
+  // <button data-mode="treasureHunt">Trea (in dev)</button>
 
   document.querySelectorAll(".game-mode-select button").forEach((btn) => {
     btn.addEventListener("click", () => {
