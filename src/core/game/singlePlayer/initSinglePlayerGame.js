@@ -311,7 +311,7 @@ function isValidMove(x, y) {
   // Check map boundaries
   if (
     x < mapData.minX ||
-    x > mapData.maxX ||
+    x > mapData.maxX - 1 ||
     y < mapData.minY ||
     y > mapData.maxY - 1
   ) {
