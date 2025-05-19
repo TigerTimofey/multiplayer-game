@@ -675,8 +675,32 @@ import StateLocal from "./stateLocal.js";
           document.querySelector("#game-content").classList.remove("hidden");
           countdownOverlay.remove();
 
-          // Here is where you would initialize the game with player and bots
-          // initSinglePlayerGame(player, bots, gameSettings);
+          // Initialize the single player game with player and bots
+          import("./src/core/game/singlePlayer/initSinglePlayerGame.js")
+            .then((module) => {
+              const cleanupGame = module.initSinglePlayerGame(
+                player,
+                bots,
+                gameSettings
+              );
+
+              // Add event listener for the quit button
+              document
+                .getElementById("quit-button")
+                .addEventListener("click", () => {
+                  cleanupGame();
+                  document
+                    .querySelector("#game-content")
+                    .classList.add("hidden");
+                  document.querySelector("#lobby").classList.remove("hidden");
+                  document
+                    .getElementById("options-modal")
+                    .classList.add("hidden");
+                });
+            })
+            .catch((error) => {
+              console.error("Error loading single player game:", error);
+            });
         }, 1000);
       }
     }, 1000);
