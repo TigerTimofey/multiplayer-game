@@ -182,13 +182,8 @@ import StateLocal from "./stateLocal.js";
     // Show back button
     document.querySelector(".back-button").classList.remove("hidden");
 
-    // Try to load previous player info
-    const playerInfo = StateLocal.getPlayerInfo();
-
-    // Pre-fill name if available
-    if (playerInfo.name) {
-      document.getElementById("lobby-name").value = playerInfo.name;
-    }
+    // Clear any previous nickname in the input field
+    document.getElementById("lobby-name").value = "";
 
     // Populate color options if not already done
     const colorOptions = document.querySelector(".color-options");
@@ -200,11 +195,6 @@ import StateLocal from "./stateLocal.js";
         colorOption.style.backgroundColor = color;
         colorOption.dataset.color = color;
 
-        // Select this color if it matches saved color
-        if (color === playerInfo.color) {
-          colorOption.classList.add("selected");
-        }
-
         colorOption.addEventListener("click", () => {
           // Remove selected class from all options
           document.querySelectorAll(".color-option").forEach((opt) => {
@@ -215,6 +205,11 @@ import StateLocal from "./stateLocal.js";
         });
 
         colorOptions.appendChild(colorOption);
+      });
+    } else {
+      // Clear all selected colors
+      document.querySelectorAll(".color-option").forEach((opt) => {
+        opt.classList.remove("selected");
       });
     }
   });
