@@ -481,59 +481,219 @@ import StateLocal from "./stateLocal.js";
     // Store bots in the state
     StateLocal.storeBots(bots);
 
-    // Final validation and game start
-    console.log("Starting single player game with:", {
-      player: playerInfo,
-      bots: bots,
-      botCount: botCount,
-      difficulty: botDifficulty,
-      roundTime: gameSettings.roundTime,
-      settings: gameSettings,
-    });
+    // Hide time selection screen
+    document.getElementById("time-selection").classList.add("hidden");
 
-    // Here you would start the single player game
-    // For now, just log the information
+    // Display the single player lobby with bots
+    showSinglePlayerLobby(playerInfo, bots, gameSettings);
   });
 
-  // Function to generate bot data
-  function generateBots(count, difficulty, playerColor) {
-    const botNames = [
-      "Bot Alpha",
-      "Bot Beta",
-      "Bot Gamma",
-      "Bot Delta",
-      "Bot Epsilon",
-    ];
-    const availableColors = playerColors.filter(
-      (color) => color !== playerColor
-    );
-    const bots = [];
+  // Function to show single player lobby with bots
+  function showSinglePlayerLobby(player, bots, gameSettings) {
+    // Update the title
+    document.getElementById("lobby-title").textContent = "Single Player Lobby";
 
-    for (let i = 0; i < count; i++) {
-      // Rotate through available colors for bots
-      const botColor = availableColors[i % availableColors.length];
-
-      // Create a bot with a name based on its color
-      const colorName = botColor.charAt(0).toUpperCase() + botColor.slice(1);
-      const botName = `${colorName} ${botNames[i % botNames.length]}`;
-
-      bots.push({
-        name: botName,
-        color: botColor,
-        difficulty: difficulty,
-        coins: 0,
-        kills: 0,
-        isBot: true,
-      });
+    // Create or get the single player lobby container
+    let singleLobbyContainer = document.getElementById("sp-game-lobby");
+    if (!singleLobbyContainer) {
+      singleLobbyContainer = document.createElement("div");
+      singleLobbyContainer.id = "sp-game-lobby";
+      singleLobbyContainer.className = "game-lobby";
+      document
+        .getElementById("regular-content")
+        .appendChild(singleLobbyContainer);
     }
 
-    return bots;
+    // Clear any existing content
+    singleLobbyContainer.innerHTML = "";
+
+    // Create lobby header with game info
+    const lobbyHeader = document.createElement("div");
+    lobbyHeader.className = "lobby-header";
+    lobbyHeader.innerHTML = `
+      <div class="room-capacity">
+        Mode: ${gameSettings.gameMode || "Classic"} </br></br> 
+        Time: ${gameSettings.roundTime / 60} min </br></br>  
+        Difficulty: ${gameSettings.botDifficulty}
+      </div>
+    `;
+    singleLobbyContainer.appendChild(lobbyHeader);
+
+    // Create players list container
+    const playersContainer = document.createElement("div");
+    playersContainer.className = "lobby-players";
+
+    // Add the player list header
+    const playersListHeader = document.createElement("h3");
+    playersListHeader.textContent = "Players";
+    playersContainer.appendChild(playersListHeader);
+
+    // Create the player list
+    const playersList = document.createElement("div");
+    playersList.id = "sp-lobby-players-list";
+    playersContainer.appendChild(playersList);
+
+    // Add the human player (always set as ready)
+    const playerElement = createPlayerElement(player, true, true);
+    playersList.appendChild(playerElement);
+
+    // Add the bots (randomly set as ready/not ready for visual effect)
+    bots.forEach((bot, index) => {
+      // Stagger the "ready" status of bots to make it look more realistic
+      const isReady = Math.random() > 0.5;
+      const botElement = createPlayerElement(bot, false, isReady);
+
+      // Store the ready status in the bot object
+      bot.isReady = isReady;
+
+      // Add small delay to simulate bots joining
+      setTimeout(() => {
+        playersList.appendChild(botElement);
+
+        // After a random time, set bot to ready if not already
+        if (!isReady) {
+          setTimeout(() => {
+            bot.isReady = true;
+            botElement
+              .querySelector(".status-not-ready")
+              .classList.remove("status-not-ready");
+            botElement
+              .querySelector(".player-status-display")
+              .classList.add("status-ready");
+            botElement.querySelector(".player-status-display").textContent =
+              "Ready";
+
+            // Check if all bots are ready
+            checkAllReady();
+          }, 1000 + Math.random() * 5000);
+        }
+      }, 500 * index);
+    });
+
+    singleLobbyContainer.appendChild(playersContainer);
+
+    // Add start game button
+    const startButton = document.createElement("button");
+    startButton.id = "sp-start-game-btn";
+    startButton.className = "lobby-button";
+    startButton.textContent = "Start Game";
+    startButton.disabled = true; // Disabled until all bots are ready
+
+    startButton.addEventListener("click", () => {
+      // Start the single player game
+      startSinglePlayerGame(player, bots, gameSettings);
+    });
+
+    singleLobbyContainer.appendChild(startButton);
+
+    // Show the lobby
+    singleLobbyContainer.classList.remove("hidden");
+
+    // Function to check if all bots are ready
+    function checkAllReady() {
+      const allReady = bots.every((bot) => bot.isReady);
+
+      if (allReady) {
+        startButton.disabled = false;
+        startButton.textContent = "Start Game";
+        startButton.classList.add("all-ready");
+      }
+    }
+
+    // Check initially in case all bots are already ready
+    checkAllReady();
   }
 
-  // Handle back button - updated to include time selection step
+  // Helper function to create a player element for the lobby
+  function createPlayerElement(player, isHuman, isReady) {
+    const playerElement = document.createElement("div");
+    playerElement.className = "lobby-player";
+    playerElement.style.borderLeft = `4px solid ${player.color}`;
+
+    const playerName = document.createElement("div");
+    playerName.className = "player-name";
+
+    // Add a crown icon for the human player
+    playerName.innerHTML = `${isHuman ? "👑 " : ""}${player.name} ${
+      player.isBot ? "(Bot)" : ""
+    }`;
+
+    playerElement.appendChild(playerName);
+
+    // Add status indicator
+    const playerStatus = document.createElement("div");
+    playerStatus.className = `player-status-display ${
+      isReady ? "status-ready" : "status-not-ready"
+    }`;
+    playerStatus.textContent = isReady ? "Ready" : "Not Ready";
+
+    playerElement.appendChild(playerStatus);
+
+    // Add animation for just joined
+    playerElement.classList.add("player-joined");
+    setTimeout(() => {
+      playerElement.classList.remove("player-joined");
+    }, 500);
+
+    return playerElement;
+  }
+
+  // Function to start the single player game
+  function startSinglePlayerGame(player, bots, gameSettings) {
+    console.log("Starting game with:", { player, bots, gameSettings });
+
+    // Add transition effect
+    const lobby = document.getElementById("sp-game-lobby");
+    lobby.style.animation = "fadeOut 0.5s forwards";
+
+    // Simulate countdown
+    const countdownOverlay = document.createElement("div");
+    countdownOverlay.className = "countdown-overlay";
+    document.body.appendChild(countdownOverlay);
+
+    // Play start sound
+    const audio = new Audio("./assets/audio/gameStart.mp3");
+
+    let count = 3;
+    countdownOverlay.innerHTML = `<div class="countdown-number">${count}</div>`;
+
+    const interval = setInterval(() => {
+      count--;
+
+      if (count > 0) {
+        countdownOverlay.innerHTML = `<div class="countdown-number">${count}</div>`;
+      } else {
+        clearInterval(interval);
+        countdownOverlay.innerHTML = `<div class="countdown-number">GO!</div>`;
+
+        // Play game start sound
+        audio.play();
+
+        // After countdown, start the actual game
+        setTimeout(() => {
+          document.querySelector("#lobby").classList.add("hidden");
+          document.querySelector("#game-content").classList.remove("hidden");
+          countdownOverlay.remove();
+
+          // Here is where you would initialize the game with player and bots
+          // initSinglePlayerGame(player, bots, gameSettings);
+        }, 1000);
+      }
+    }, 1000);
+  }
+
+  // Update back button handler to include the single player lobby
   document.querySelector(".back-button").addEventListener("click", () => {
     // Check which screen is currently visible
     if (
+      document.getElementById("sp-game-lobby") &&
+      !document.getElementById("sp-game-lobby").classList.contains("hidden")
+    ) {
+      // If single player lobby is visible, go back to time selection
+      document.getElementById("sp-game-lobby").classList.add("hidden");
+      document.getElementById("time-selection").classList.remove("hidden");
+      document.getElementById("lobby-title").textContent = "Select Round Time";
+    } else if (
       !document.getElementById("time-selection").classList.contains("hidden")
     ) {
       // If time selection is visible, go back to difficulty selection
@@ -572,4 +732,39 @@ import StateLocal from "./stateLocal.js";
         "Welcome to Treasure Hunters Arena";
     }
   });
+
+  // Function to generate bot data
+  function generateBots(count, difficulty, playerColor) {
+    const botNames = [
+      "Bot Alpha",
+      "Bot Beta",
+      "Bot Gamma",
+      "Bot Delta",
+      "Bot Epsilon",
+    ];
+    const availableColors = playerColors.filter(
+      (color) => color !== playerColor
+    );
+    const bots = [];
+
+    for (let i = 0; i < count; i++) {
+      // Rotate through available colors for bots
+      const botColor = availableColors[i % availableColors.length];
+
+      // Create a bot with a name based on its color
+      const colorName = botColor.charAt(0).toUpperCase() + botColor.slice(1);
+      const botName = `${colorName} ${botNames[i % botNames.length]}`;
+
+      bots.push({
+        name: botName,
+        color: botColor,
+        difficulty: difficulty,
+        coins: 0,
+        kills: 0,
+        isBot: true,
+      });
+    }
+
+    return bots;
+  }
 })();

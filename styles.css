@@ -1167,6 +1167,7 @@ button {
   text-shadow: 2px 2px #000;
   position: relative;
   overflow: hidden;
+  margin-top: 10px;
 }
 
 .room-capacity::after {
@@ -2339,4 +2340,59 @@ button.player-status:hover {
 
 .TreasureBox.stealing .TreasureBox_stealing-progress {
   transform: scaleX(1);
+}
+
+/* Single player lobby animations */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+/* Animation for player joining */
+.player-joined {
+  animation: playerJoin 0.5s ease-out;
+}
+
+@keyframes playerJoin {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Styling for the 'all ready' start button */
+#sp-start-game-btn.all-ready {
+  background: linear-gradient(45deg, #2ed573, #7bed9f);
+  animation: pulse 2s infinite;
+  margin: 20px auto;
+  display: block;
+  text-align: center;
+}
+
+/* Center all lobby buttons */
+.lobby-button {
+  margin: 20px auto;
+  display: block;
+  text-align: center;
+}
+
+/* Extra styling for the single player start button */
+#sp-game-lobby {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#sp-game-lobby .lobby-button {
+  min-width: 200px;
 }
