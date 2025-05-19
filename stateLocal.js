@@ -14,6 +14,7 @@ const StateLocal = {
     botCount: 0,
     gameMode: "",
     roundTime: 0,
+    botDifficulty: "", // Add bot difficulty setting
   },
 
   // Store player information
@@ -29,10 +30,17 @@ const StateLocal = {
   },
 
   // Store game settings
-  setGameSettings(botCount, gameMode, roundTime) {
+  setGameSettings(botCount, gameMode, roundTime, botDifficulty = "") {
     this.gameSettings.botCount = botCount;
     this.gameSettings.gameMode = gameMode;
     this.gameSettings.roundTime = roundTime;
+    this.gameSettings.botDifficulty = botDifficulty;
+    return this.gameSettings;
+  },
+
+  // Set bot difficulty separately
+  setBotDifficulty(difficulty) {
+    this.gameSettings.botDifficulty = difficulty;
     return this.gameSettings;
   },
 
@@ -66,6 +74,7 @@ const StateLocal = {
       botCount: 0,
       gameMode: "",
       roundTime: 0,
+      botDifficulty: "",
     };
   },
 };

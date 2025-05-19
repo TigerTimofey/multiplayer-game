@@ -48,13 +48,26 @@
 
           <!-- Add bot selection for single player -->
           <div id="bot-selection" class="hidden">
-            <h3>Select Number of Bots</h3>
+            <!-- <h3>Number of bots</h3> -->
             <div class="player-select">
               <button data-bots="1">1 Bot</button>
               <button data-bots="2">2 Bots</button>
               <button data-bots="3">3 Bots</button>
             </div>
-            <button id="start-single-game" class="lobby-button">Start Game</button>
+        
+            <button id="start-single-game" class="lobby-button">Continue</button>
+          </div>
+
+          <!-- Add difficulty selection for single player -->
+          <div id="difficulty-selection" class="hidden">
+            <!-- <h3>Select Difficulty</h3> -->
+            <div class="player-select">
+              <button data-mode-bots="easy">Easy</button>
+              <button data-mode-bots="medium">Medium</button>
+              <button data-mode-bots="hard">Hard</button>
+            </div>
+            
+            <button id="start-difficulty-game" class="lobby-button">Continue</button>
           </div>
 
           <div class="lobby-buttons">

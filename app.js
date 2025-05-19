@@ -233,6 +233,48 @@ import StateLocal from "./stateLocal.js";
     document.getElementById("bot-selection").classList.add("hidden");
   });
 
+  // Helper function to show tooltips instead of alerts - modified to position tooltip correctly
+  function showTooltip(message, duration = 3000, targetElement = null) {
+    // Check if a tooltip already exists
+    let tooltip = document.querySelector(".tooltip");
+
+    // If not, create one
+    if (!tooltip) {
+      tooltip = document.createElement("div");
+      tooltip.className = "tooltip";
+      document.body.appendChild(tooltip);
+    }
+
+    // Set the message
+    tooltip.textContent = message;
+
+    // Position the tooltip based on target element or default to center
+    if (targetElement) {
+      const rect = targetElement.getBoundingClientRect();
+      tooltip.style.top = rect.top - 10 + "px"; // Position above the element
+      tooltip.style.left = rect.left + rect.width / 2 + "px";
+    } else {
+      tooltip.style.top = "50%";
+      tooltip.style.left = "50%";
+    }
+
+    // Make sure the tooltip is not being animated out
+    tooltip.classList.remove("fade-out");
+
+    // Show the tooltip (adding class triggers animation)
+    tooltip.style.display = "block";
+
+    // Add the fade-out class after duration
+    setTimeout(() => {
+      tooltip.classList.add("fade-out");
+
+      // After animation completes, hide tooltip
+      setTimeout(() => {
+        tooltip.style.display = "none";
+      }, 300); // Match the CSS animation duration
+    }, duration);
+  }
+
   // Handle the continue button in single player setup
   document.getElementById("continue-setup").addEventListener("click", () => {
     const playerName = document.getElementById("lobby-name").value.trim();
@@ -241,12 +283,12 @@ import StateLocal from "./stateLocal.js";
 
     // Validate inputs
     if (!playerName) {
-      alert("Please enter your name");
+      // showTooltip("Please enter your name");
       return;
     }
 
     if (!selectedColor) {
-      alert("Please select a color");
+      // showTooltip("Please select a color");
       return;
     }
 
@@ -264,17 +306,23 @@ import StateLocal from "./stateLocal.js";
       // Show the bot selection UI
       document.getElementById("bot-selection").classList.remove("hidden");
 
+      // Hide difficulty selection until bot count is selected
+      document.getElementById("difficulty-selection").classList.add("hidden");
+
+      // Show the start single game button which will now proceed to difficulty selection
+      document.getElementById("start-single-game").classList.remove("hidden");
+
       // Update the title
       document.getElementById("lobby-title").textContent = "Select Bots";
     }
   });
 
-  // Handle bot selection
+  // Handle bot selection - modified to match room creation flow
   document
     .querySelectorAll("#bot-selection .player-select button")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        // Remove selected class from all buttons
+        // Remove selected class from all buttons in bot selection
         document
           .querySelectorAll("#bot-selection .player-select button")
           .forEach((btn) => {
@@ -284,53 +332,134 @@ import StateLocal from "./stateLocal.js";
         // Add selected class to clicked button
         button.classList.add("selected");
 
-        // Store bot count in StateLocal
+        // Store bot count in StateLocal when a bot count is selected
         const botCount = parseInt(button.dataset.bots);
-        StateLocal.setGameSettings(botCount, "classic", 120); // Default values for gameMode and roundTime
+
+        // Preserve difficulty if it was already selected
+        const selectedDifficulty = document.querySelector(
+          "#difficulty-selection .player-select button.selected"
+        );
+        const difficulty = selectedDifficulty
+          ? selectedDifficulty.dataset.modeBots
+          : "";
+
+        StateLocal.setGameSettings(botCount, "classic", 120, difficulty);
       });
     });
 
-  // Handle start single player game button
+  // Handle the start single game button to proceed to difficulty selection
   document.getElementById("start-single-game").addEventListener("click", () => {
     const selectedBot = document.querySelector(
       "#bot-selection .player-select button.selected"
     );
 
     if (!selectedBot) {
-      alert("Please select number of bots");
+      // Position tooltip above the bot selection buttons
+      const playerSelectElement = document.querySelector(
+        "#bot-selection .player-select"
+      );
+      showTooltip("Please select number of bots", 3000, playerSelectElement);
       return;
     }
 
-    const botCount = parseInt(selectedBot.dataset.bots);
-    const playerInfo = StateLocal.getPlayerInfo();
-
-    console.log("Starting single player game with:", {
-      player: playerInfo,
-      bots: botCount,
-      settings: StateLocal.getGameSettings(),
-    });
-
-    // Here you would start the single player game
-    // For now, just log the information
-  });
-
-  // Handle back button
-  document.querySelector(".back-button").addEventListener("click", () => {
-    // Hide setup screens
-    document.getElementById("initial-setup").classList.add("hidden");
+    // Hide bot selection now
     document.getElementById("bot-selection").classList.add("hidden");
 
-    // Show main menu buttons
-    document.querySelector(".lobby-buttons").classList.remove("hidden");
+    // Show difficulty selection
+    document.getElementById("difficulty-selection").classList.remove("hidden");
 
-    // Show the settings button again
-    document.getElementById("toggle-joke").classList.remove("hidden");
+    // Update title
+    document.getElementById("lobby-title").textContent = "Select Difficulty";
+  });
 
-    // Hide back button
-    document.querySelector(".back-button").classList.add("hidden");
+  // Handle difficulty selection - simpler now that we're in a sequential flow
+  document
+    .querySelectorAll("#difficulty-selection .player-select button")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        // Remove selected class from all buttons in difficulty selection only
+        document
+          .querySelectorAll("#difficulty-selection .player-select button")
+          .forEach((btn) => {
+            btn.classList.remove("selected");
+          });
 
-    // Reset title
-    document.getElementById("lobby-title").textContent =
-      "Welcome to Treasure Hunters Arena";
+        // Add selected class to clicked button
+        button.classList.add("selected");
+
+        // Get bot count and update settings
+        const gameSettings = StateLocal.getGameSettings();
+        const difficulty = button.dataset.modeBots;
+        StateLocal.setBotDifficulty(difficulty);
+      });
+    });
+
+  // Handle the final start button after difficulty selection
+  document
+    .getElementById("start-difficulty-game")
+    .addEventListener("click", () => {
+      const selectedDifficulty = document.querySelector(
+        "#difficulty-selection .player-select button.selected"
+      );
+
+      if (!selectedDifficulty) {
+        // Position tooltip above the difficulty selection buttons
+        const difficultySelectElement = document.querySelector(
+          "#difficulty-selection .player-select"
+        );
+        showTooltip(
+          "Please select a difficulty level",
+          3000,
+          difficultySelectElement
+        );
+        return;
+      }
+
+      const difficulty = selectedDifficulty.dataset.modeBots;
+      const gameSettings = StateLocal.getGameSettings();
+
+      // Final validation and game start
+      console.log("Starting single player game with:", {
+        player: StateLocal.getPlayerInfo(),
+        bots: gameSettings.botCount,
+        difficulty: gameSettings.botDifficulty,
+        settings: gameSettings,
+      });
+
+      // Here you would start the single player game
+      // For now, just log the information
+    });
+
+  // Handle back button - updated for sequential flow
+  document.querySelector(".back-button").addEventListener("click", () => {
+    // Check which screen is currently visible
+    if (
+      !document
+        .getElementById("difficulty-selection")
+        .classList.contains("hidden")
+    ) {
+      // If difficulty selection is visible, go back to bot selection
+      document.getElementById("difficulty-selection").classList.add("hidden");
+      document.getElementById("bot-selection").classList.remove("hidden");
+      document.getElementById("lobby-title").textContent = "Select Bots";
+    } else if (
+      !document.getElementById("bot-selection").classList.contains("hidden")
+    ) {
+      // If bot selection is visible, go back to initial setup
+      document.getElementById("bot-selection").classList.add("hidden");
+      document.getElementById("initial-setup").classList.remove("hidden");
+      document.getElementById("lobby-title").textContent =
+        "Single Player Setup";
+    } else {
+      // Otherwise, go back to main menu
+      document.getElementById("initial-setup").classList.add("hidden");
+      document.getElementById("bot-selection").classList.add("hidden");
+      document.getElementById("difficulty-selection").classList.add("hidden");
+      document.querySelector(".lobby-buttons").classList.remove("hidden");
+      document.getElementById("toggle-joke").classList.remove("hidden");
+      document.querySelector(".back-button").classList.add("hidden");
+      document.getElementById("lobby-title").textContent =
+        "Welcome to Treasure Hunters Arena";
+    }
   });
 })();

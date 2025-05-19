@@ -1304,6 +1304,11 @@ button.player-status:active {
   text-align: center;
   font-weight: bold;
 }
+#difficulty-selection h3 {
+  color: white;
+  text-align: center;
+  font-weight: bold;
+}
 
 #start-game-btn {
   width: 100%;
