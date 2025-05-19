@@ -1299,6 +1299,11 @@ button.player-status:active {
   text-align: center;
   font-weight: bold;
 }
+#bot-selection h3 {
+  color: white;
+  text-align: center;
+  font-weight: bold;
+}
 
 #start-game-btn {
   width: 100%;

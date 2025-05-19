@@ -46,9 +46,21 @@
             </div>
           </div>
 
+          <!-- Add bot selection for single player -->
+          <div id="bot-selection" class="hidden">
+            <h3>Select Number of Bots</h3>
+            <div class="player-select">
+              <button data-bots="1">1 Bot</button>
+              <button data-bots="2">2 Bots</button>
+              <button data-bots="3">3 Bots</button>
+            </div>
+            <button id="start-single-game" class="lobby-button">Start Game</button>
+          </div>
+
           <div class="lobby-buttons">
             <button id="create-room" class="lobby-button">Create</button>
             <button id="join-room" class="lobby-button">Join</button>
+            <button id="single-player" class="lobby-button">Single</button>
           </div>
           <!-- Add this new container -->
           <div id="room-info" class="hidden">
@@ -287,6 +299,8 @@
     </script>
 
     <script src="./KeyPressListener.js"></script>
+    <script src="./stateLocal.js" type="module"></script>
     <script src="./app.js" type="module"></script>
   </body>
 </html>
+
