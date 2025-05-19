@@ -283,6 +283,17 @@ function moveBotBasedOnDifficulty(bot, gameState) {
       handleSinglePlayerCollisions(gameState.player, bot, gameState);
     }
 
+    // Check for collisions with other bots
+    gameState.bots.forEach((otherBot) => {
+      if (
+        bot.id !== otherBot.id &&
+        bot.x === otherBot.x &&
+        bot.y === otherBot.y
+      ) {
+        handleBotVsBotCollision(bot, otherBot, gameState);
+      }
+    });
+
     // Update scoreboard
     updateScoreboard(gameState);
   }
@@ -496,4 +507,64 @@ function endGame(gameState) {
     gameOverModal.classList.add("hidden");
     window.location.reload(); // Reload the page to restart the game
   });
+}
+
+/**
+ * Handle collisions between two bots
+ */
+function handleBotVsBotCollision(bot1, bot2, gameState) {
+  // Play hit sound
+  const hitAudio = new Audio("./assets/audio/hit.mp3");
+  hitAudio.play();
+
+  // Determine which bot has more coins and is the winner
+  const winner = bot1.coins > bot2.coins ? bot1 : bot2;
+  const loser = bot1.coins > bot2.coins ? bot2 : bot1;
+
+  // Reset loser's position and coins
+  const safeSpot = getRandomSafeSpot();
+  loser.x = safeSpot.x;
+  loser.y = safeSpot.y;
+  loser.coins = 0;
+
+  // Update winner's kills
+  winner.kills++;
+
+  // Update loser's position in the DOM
+  updateElementPosition(loser.element, loser);
+
+  // Show a message
+  showGameMessage(`${winner.name} defeated ${loser.name}!`);
+}
+
+/**
+ * Show a temporary game message
+ */
+function showGameMessage(message) {
+  let messageElement = document.querySelector(".message");
+
+  if (!messageElement) {
+    messageElement = document.createElement("div");
+    messageElement.className = "message";
+    document.body.appendChild(messageElement);
+  }
+
+  messageElement.style.fontSize = "16px";
+  messageElement.style.padding = "12px 20px";
+  messageElement.style.fontWeight = "bold";
+  messageElement.style.textShadow = "1px 1px 2px black";
+  messageElement.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.5)";
+  messageElement.style.background = "rgba(0, 0, 0, 0.8)";
+  messageElement.style.borderRadius = "8px";
+  messageElement.style.border = "2px solid #ffd700";
+
+  messageElement.style.top = "70px";
+
+  messageElement.textContent = message;
+  messageElement.style.display = "block";
+
+  // Remove the message after 3 seconds
+  setTimeout(() => {
+    messageElement.style.display = "none";
+  }, 3000);
 }
