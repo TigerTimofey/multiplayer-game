@@ -469,12 +469,24 @@ import StateLocal from "./stateLocal.js";
     }
 
     const gameSettings = StateLocal.getGameSettings();
+    const playerInfo = StateLocal.getPlayerInfo();
+
+    // Generate bot data
+    const botCount = gameSettings.botCount;
+    const botDifficulty = gameSettings.botDifficulty;
+
+    // Generate bots with different colors
+    const bots = generateBots(botCount, botDifficulty, playerInfo.color);
+
+    // Store bots in the state
+    StateLocal.storeBots(bots);
 
     // Final validation and game start
     console.log("Starting single player game with:", {
-      player: StateLocal.getPlayerInfo(),
-      bots: gameSettings.botCount,
-      difficulty: gameSettings.botDifficulty,
+      player: playerInfo,
+      bots: bots,
+      botCount: botCount,
+      difficulty: botDifficulty,
       roundTime: gameSettings.roundTime,
       settings: gameSettings,
     });
@@ -482,6 +494,41 @@ import StateLocal from "./stateLocal.js";
     // Here you would start the single player game
     // For now, just log the information
   });
+
+  // Function to generate bot data
+  function generateBots(count, difficulty, playerColor) {
+    const botNames = [
+      "Bot Alpha",
+      "Bot Beta",
+      "Bot Gamma",
+      "Bot Delta",
+      "Bot Epsilon",
+    ];
+    const availableColors = playerColors.filter(
+      (color) => color !== playerColor
+    );
+    const bots = [];
+
+    for (let i = 0; i < count; i++) {
+      // Rotate through available colors for bots
+      const botColor = availableColors[i % availableColors.length];
+
+      // Create a bot with a name based on its color
+      const colorName = botColor.charAt(0).toUpperCase() + botColor.slice(1);
+      const botName = `${colorName} ${botNames[i % botNames.length]}`;
+
+      bots.push({
+        name: botName,
+        color: botColor,
+        difficulty: difficulty,
+        coins: 0,
+        kills: 0,
+        isBot: true,
+      });
+    }
+
+    return bots;
+  }
 
   // Handle back button - updated to include time selection step
   document.querySelector(".back-button").addEventListener("click", () => {

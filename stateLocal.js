@@ -14,8 +14,11 @@ const StateLocal = {
     botCount: 0,
     gameMode: "",
     roundTime: 0,
-    botDifficulty: "", // Add bot difficulty setting
+    botDifficulty: "",
   },
+
+  // Bot data
+  bots: [],
 
   // Store player information
   setPlayerInfo(name, color) {
@@ -36,6 +39,17 @@ const StateLocal = {
     this.gameSettings.roundTime = roundTime;
     this.gameSettings.botDifficulty = botDifficulty;
     return this.gameSettings;
+  },
+
+  // Store generated bots
+  storeBots(bots) {
+    this.bots = bots;
+    return this.bots;
+  },
+
+  // Get bot data
+  getBots() {
+    return this.bots;
   },
 
   // Set bot difficulty separately
@@ -76,6 +90,8 @@ const StateLocal = {
       roundTime: 0,
       botDifficulty: "",
     };
+
+    this.bots = [];
   },
 };
 
