@@ -347,6 +347,12 @@ function checkCoinCollection(entity, gameState) {
     const coin = gameState.coins[coinKey];
     entity.coins += coin.value;
 
+    // Update coin display on character
+    const coinsDisplay = entity.element.querySelector(".Character_coins");
+    if (coinsDisplay) {
+      coinsDisplay.textContent = ` ${entity.coins}`;
+    }
+
     // Play coin sound
     const coinAudio = new Audio("./assets/audio/getCoin.mp3");
     coinAudio.volume = 0.5;
