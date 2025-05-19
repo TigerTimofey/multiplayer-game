@@ -150,39 +150,38 @@ export function initializeLobby() {
       const selectedMode = document.querySelector(
         ".game-mode-select button.selected"
       );
-      if (!selectedPlayers || !selectedMode) {
-        showTooltip(btn, "Please select players and game mode first");
-        return;
-      }
-
-      const maxPlayers = parseInt(selectedPlayers.dataset.players);
       const roundTime = parseInt(btn.dataset.time);
-      const gameMode = selectedMode.dataset.mode;
-      const roomCode = generateRoomCode();
-      const roomRef = firebase.database().ref(`rooms/${roomCode}`);
 
-      roomRef
-        .set({
-          maxPlayers,
-          roundTime,
-          gameMode,
-          currentPlayers: 1,
-          isOpen: true,
-          created: Date.now(),
-          hostId: state.getPlayerId(),
-          players: {
-            [state.getPlayerId()]: {
-              isHost: true,
-              joined: Date.now(),
-              name: state.getSavedPlayerName(),
-              color: state.getSavedPlayerColor(),
-              isReady: false,
+      // Only proceed with room creation if all selections are made
+      if (selectedPlayers && selectedMode) {
+        const maxPlayers = parseInt(selectedPlayers.dataset.players);
+        const gameMode = selectedMode.dataset.mode;
+        const roomCode = generateRoomCode();
+        const roomRef = firebase.database().ref(`rooms/${roomCode}`);
+
+        roomRef
+          .set({
+            maxPlayers,
+            roundTime,
+            gameMode,
+            currentPlayers: 1,
+            isOpen: true,
+            created: Date.now(),
+            hostId: state.getPlayerId(),
+            players: {
+              [state.getPlayerId()]: {
+                isHost: true,
+                joined: Date.now(),
+                name: state.getSavedPlayerName(),
+                color: state.getSavedPlayerColor(),
+                isReady: false,
+              },
             },
-          },
-        })
-        .then(() => {
-          showGameLobby(roomCode);
-        });
+          })
+          .then(() => {
+            showGameLobby(roomCode);
+          });
+      }
     });
   });
 

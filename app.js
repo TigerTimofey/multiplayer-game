@@ -389,7 +389,7 @@ import StateLocal from "./stateLocal.js";
       });
     });
 
-  // Handle the final start button after difficulty selection
+  // Handle the final start button after difficulty selection - now continues to time selection
   document
     .getElementById("start-difficulty-game")
     .addEventListener("click", () => {
@@ -410,25 +410,92 @@ import StateLocal from "./stateLocal.js";
         return;
       }
 
+      // Store the selected difficulty
       const difficulty = selectedDifficulty.dataset.modeBots;
-      const gameSettings = StateLocal.getGameSettings();
+      StateLocal.setBotDifficulty(difficulty);
 
-      // Final validation and game start
-      console.log("Starting single player game with:", {
-        player: StateLocal.getPlayerInfo(),
-        bots: gameSettings.botCount,
-        difficulty: gameSettings.botDifficulty,
-        settings: gameSettings,
-      });
+      // Hide difficulty selection
+      document.getElementById("difficulty-selection").classList.add("hidden");
 
-      // Here you would start the single player game
-      // For now, just log the information
+      // Show time selection
+      document.getElementById("time-selection").classList.remove("hidden");
+
+      // Update title
+      document.getElementById("lobby-title").textContent = "Select Round Time";
     });
 
-  // Handle back button - updated for sequential flow
+  // Handle time selection buttons
+  document
+    .querySelectorAll("#time-selection .time-select button")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        // Remove selected class from all buttons
+        document
+          .querySelectorAll("#time-selection .time-select button")
+          .forEach((btn) => {
+            btn.classList.remove("selected");
+          });
+
+        // Add selected class to clicked button
+        button.classList.add("selected");
+
+        // Store the selected time in game settings
+        const roundTime = parseInt(button.dataset.time);
+        const gameSettings = StateLocal.getGameSettings();
+
+        // Update just the roundTime property, preserving other settings
+        StateLocal.setGameSettings(
+          gameSettings.botCount,
+          gameSettings.gameMode,
+          roundTime,
+          gameSettings.botDifficulty
+        );
+      });
+    });
+
+  // Handle the final start button after time selection
+  document.getElementById("start-game-final").addEventListener("click", () => {
+    const selectedTime = document.querySelector(
+      "#time-selection .time-select button.selected"
+    );
+
+    if (!selectedTime) {
+      // Position tooltip above the time selection buttons
+      const timeSelectElement = document.querySelector(
+        "#time-selection .time-select"
+      );
+      showTooltip("Please select a round time", 3000, timeSelectElement);
+      return;
+    }
+
+    const gameSettings = StateLocal.getGameSettings();
+
+    // Final validation and game start
+    console.log("Starting single player game with:", {
+      player: StateLocal.getPlayerInfo(),
+      bots: gameSettings.botCount,
+      difficulty: gameSettings.botDifficulty,
+      roundTime: gameSettings.roundTime,
+      settings: gameSettings,
+    });
+
+    // Here you would start the single player game
+    // For now, just log the information
+  });
+
+  // Handle back button - updated to include time selection step
   document.querySelector(".back-button").addEventListener("click", () => {
     // Check which screen is currently visible
     if (
+      !document.getElementById("time-selection").classList.contains("hidden")
+    ) {
+      // If time selection is visible, go back to difficulty selection
+      document.getElementById("time-selection").classList.add("hidden");
+      document
+        .getElementById("difficulty-selection")
+        .classList.remove("hidden");
+      document.getElementById("lobby-title").textContent = "Select Difficulty";
+    } else if (
       !document
         .getElementById("difficulty-selection")
         .classList.contains("hidden")
@@ -450,6 +517,7 @@ import StateLocal from "./stateLocal.js";
       document.getElementById("initial-setup").classList.add("hidden");
       document.getElementById("bot-selection").classList.add("hidden");
       document.getElementById("difficulty-selection").classList.add("hidden");
+      document.getElementById("time-selection").classList.add("hidden");
       document.querySelector(".lobby-buttons").classList.remove("hidden");
       document.getElementById("toggle-joke").classList.remove("hidden");
       document.querySelector(".back-button").classList.add("hidden");
