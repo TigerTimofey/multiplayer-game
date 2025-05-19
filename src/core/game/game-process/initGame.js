@@ -416,7 +416,7 @@ export function initGame() {
     delete state.getCoinElements()[keyToRemove];
   });
 
-  // placeCoin();
+  placeCoin();
   initPowers();
 
   const optionsButton = document.getElementById("options-button");
