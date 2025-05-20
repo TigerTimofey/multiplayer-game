@@ -8,7 +8,27 @@ export function handleSinglePlayerCollisions(player, bot, gameState) {
   const hitAudio = new Audio("./assets/audio/hit.mp3");
   hitAudio.play();
 
-  // Determine who has more coins
+  // If player has shield active, they always win regardless of coins
+  if (player.shield) {
+    // Player automatically wins with shield
+    const safeSpot = getRandomSafeSpot();
+    bot.x = safeSpot.x;
+    bot.y = safeSpot.y;
+    bot.coins = 0;
+    player.kills++;
+
+    // Update bot position without affecting the shadow
+    bot.element.style.transform = `translate3d(${16 * bot.x}px, ${
+      16 * bot.y - 4
+    }px, 0)`;
+    bot.element.setAttribute("data-direction", bot.direction);
+
+    // Show message
+    showGameMessage(`${player.name}'s shield protected them from ${bot.name}!`);
+    return;
+  }
+
+  // Determine who has more coins if no shield
   if (player.coins > bot.coins) {
     // Player wins the collision
     const safeSpot = getRandomSafeSpot();
@@ -23,7 +43,7 @@ export function handleSinglePlayerCollisions(player, bot, gameState) {
     }px, 0)`;
 
     // Show message
-    showGameMessage(`${player.name} defeated ${bot.name}! (+1 kill)`);
+    showGameMessage(`${player.name} defeated ${bot.name}!`);
   } else {
     // Bot wins the collision
     const safeSpot = getRandomSafeSpot();

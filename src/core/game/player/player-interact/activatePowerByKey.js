@@ -4,6 +4,21 @@ import { POWERS } from "../../../constants/powers.js";
 
 let activePowers = {};
 
+// Updated function to display consistent messages with smaller styling at the top
+function showGameMessage(message) {
+  let messageElement = document.querySelector(".message");
+
+  if (!messageElement) {
+    messageElement = document.createElement("div");
+    messageElement.className = "message";
+    document.body.appendChild(messageElement);
+  }
+  // Remove the message after 3 seconds
+  setTimeout(() => {
+    messageElement.style.display = "none";
+  }, 3000);
+}
+
 export function activatePowerByKey(power) {
   const button = document.querySelector(`[data-power="${power}"]`);
   const cost = parseInt(button.dataset.cost);
@@ -44,6 +59,11 @@ export function activatePowerByKey(power) {
             .ref(`players/${state.getPlayerId()}/effects`)
             .remove();
         }, POWERS[power].duration);
+        showGameMessage(
+          `${
+            state.getPlayers()[state.getPlayerId()].name
+          } activated Speed Boost!`
+        );
         break;
       case "shield":
         const shieldAudio = new Audio("./assets/audio/super-power/shield.mp3");
@@ -84,6 +104,9 @@ export function activatePowerByKey(power) {
             .ref(`players/${state.getPlayerId()}/effects`)
             .remove();
         }, POWERS[power].duration);
+        showGameMessage(
+          `${state.getPlayers()[state.getPlayerId()].name} activated Shield!`
+        );
         break;
       case "teleport":
         const teleportAudio = new Audio(
@@ -97,6 +120,9 @@ export function activatePowerByKey(power) {
           x: randomSpot.x,
           y: randomSpot.y,
         });
+        showGameMessage(
+          `${state.getPlayers()[state.getPlayerId()].name} teleported!`
+        );
         break;
       case "grow":
         const giantAudio = new Audio("./assets/audio/super-power/giant.mp3");
@@ -114,6 +140,9 @@ export function activatePowerByKey(power) {
         }px, ${
           16 * state.getPlayers()[state.getPlayerId()].y - 4
         }px, 0) scale(2)`;
+        showGameMessage(
+          `${state.getPlayers()[state.getPlayerId()].name} grew in size!`
+        );
         break;
       case "ultimate":
         const ultimateAudio = new Audio(
@@ -200,6 +229,11 @@ export function activatePowerByKey(power) {
 
         const element = state.getPlayerElements()[state.getPlayerId()];
         element.classList.add("dragon");
+        showGameMessage(
+          `${
+            state.getPlayers()[state.getPlayerId()].name
+          } activated Ultimate Power!`
+        );
         break;
       case "invisibility":
         const invisibilityPlay = new Audio(
@@ -227,6 +261,9 @@ export function activatePowerByKey(power) {
             .ref(`players/${state.getPlayerId()}/effects`)
             .update({ invisible: null });
         }, POWERS[power].duration);
+        showGameMessage(
+          `${state.getPlayers()[state.getPlayerId()].name} became invisible!`
+        );
         break;
       case "doubleCoins":
         const doubleCoinsAudio = new Audio(
@@ -244,6 +281,11 @@ export function activatePowerByKey(power) {
             doubleCoins: false,
           });
         }, POWERS[power].duration);
+        showGameMessage(
+          `${
+            state.getPlayers()[state.getPlayerId()].name
+          } activated Double Coins!`
+        );
         break;
     }
 

@@ -791,4 +791,49 @@ import StateLocal from "./stateLocal.js";
 
     return bots;
   }
+
+  // This function should be called when initializing single player game
+  function setupSinglePlayerPowers() {
+    // Mark the body with a special class for single player mode
+    document.body.classList.add("single-player-active");
+
+    // Update power costs to match single player values
+    const speedButton = document.querySelector('[data-power="speed"]');
+    const shieldButton = document.querySelector('[data-power="shield"]');
+    const teleportButton = document.querySelector('[data-power="teleport"]');
+
+    if (speedButton) {
+      speedButton.dataset.cost = "3";
+      speedButton.querySelector(".cost").textContent = "3 coins";
+    }
+
+    if (shieldButton) {
+      shieldButton.dataset.cost = "5";
+      shieldButton.querySelector(".cost").textContent = "5 coins";
+    }
+
+    if (teleportButton) {
+      teleportButton.dataset.cost = "4";
+      teleportButton.querySelector(".cost").textContent = "4 coins";
+    }
+  }
+
+  // This function should be called when leaving single player mode
+  function resetPowersDisplay() {
+    document.body.classList.remove("single-player-active");
+
+    // Reset power costs to their original values from POWERS constant
+    const buttons = document.querySelectorAll(".power-button");
+    buttons.forEach((button) => {
+      const power = button.dataset.power;
+      if (POWERS[power]) {
+        button.dataset.cost = POWERS[power].cost;
+        button.querySelector(
+          ".cost"
+        ).textContent = `${POWERS[power].cost} coins`;
+      }
+    });
+  }
+
+  // ...existing code...
 })();

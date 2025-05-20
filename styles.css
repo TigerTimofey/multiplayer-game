@@ -1928,12 +1928,7 @@ button.player-status:hover {
 }
 
 .Character.shield {
-  z-index: 5;
-}
-
-.Character.shield .Character_sprite {
-  position: relative;
-  z-index: 2;
+  z-index: 5; /* Ensures shielded characters appear above other elements */
 }
 
 .Character.shield::before {
@@ -1944,12 +1939,19 @@ button.player-status:hover {
   width: 36px;
   height: 36px;
   border-radius: 50%;
+  /* Shield visual effect - a glowing blue circle around the character */
   background: rgba(0, 136, 255, 0.3);
   box-shadow: 0 0 15px rgba(0, 136, 255, 0.5), 0 0 30px rgba(0, 136, 255, 0.3);
   animation: shieldPulse 1.5s infinite alternate;
   pointer-events: none;
-  z-index: 4;
+  z-index: 1; /* Important: This places the shield visual between sprite and shadow */
 }
+
+/* The following is intentionally not included to avoid changing shadow position during shield effect:
+.Character.shield .Character_shadow {
+  // No styles should be applied to the shadow to keep its original position
+} 
+*/
 
 @keyframes shieldPulse {
   0% {
@@ -2006,22 +2008,32 @@ button.player-status:hover {
 
 .message {
   position: fixed;
-  top: 70px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.7);
   color: white;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
   font-weight: bold;
   font-family: "Press Start 2P", cursive;
   text-align: center;
   z-index: 200;
-  border: 2px solid #ffd700;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  text-shadow: 1px 1px 2px black;
+  border: 1px solid #ffd700;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  text-shadow: 0.5px 0.5px 1px black;
   animation: fadeInOut 3s ease-in-out;
+  width: 250px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Position for single player mode */
+body.single-player-active .message {
+  top: 70px; /* Move message down in single player mode */
 }
 
 @keyframes fadeInOut {
@@ -2399,4 +2411,9 @@ button.player-status:hover {
 
 #sp-game-lobby .lobby-button {
   min-width: 200px;
+}
+
+/* Hide specific powers in single player mode */
+.single-player-active .singleplayer-hidden {
+  display: none;
 }

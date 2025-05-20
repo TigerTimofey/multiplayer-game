@@ -77,7 +77,7 @@ export function checkPlayerCollisions(
       const loser =
         myCoins > otherPlayer.coins ? otherPlayer : players[playerId];
       messageRef.push({
-        action: `${winner.name} defeated ${loser.name}! (+1 kill)`,
+        action: `${winner.name} defeated ${loser.name}!`,
         timestamp: Date.now(),
       });
     }

@@ -4,11 +4,15 @@ import {
   updatePlayerCoins,
 } from "../player/playerElements.js";
 import { mapData, getRandomSafeSpot } from "../../constants/mapData.js";
+import { POWERS } from "../../constants/powers.js";
 
 /**
  * Initialize the single player game with player and bots
  */
 export function initSinglePlayerGame(player, bots, gameSettings) {
+  // Add single-player-active class to body to hide certain powers
+  document.body.classList.add("single-player-active");
+
   // Create game state object
   const gameState = {
     player: {
@@ -19,6 +23,23 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
       coins: 0,
       kills: 0,
       element: null,
+      // Added powers-related properties
+      speed: 1,
+      shield: false,
+      powers: {
+        speed: {
+          active: false,
+          cooldown: false,
+        },
+        shield: {
+          active: false,
+          cooldown: false,
+        },
+        teleport: {
+          active: false,
+          cooldown: false,
+        },
+      },
     },
     bots: bots.map((bot, index) => ({
       ...bot,
@@ -98,6 +119,17 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
     )
   );
 
+  // Add power controls
+  keyboardListeners.push(
+    new KeyPressListener("KeyW", () => activatePower("speed", gameState))
+  );
+  keyboardListeners.push(
+    new KeyPressListener("KeyE", () => activatePower("shield", gameState))
+  );
+  keyboardListeners.push(
+    new KeyPressListener("KeyR", () => activatePower("teleport", gameState))
+  );
+
   // Set up game timer
   const timerDisplay = document.getElementById("timer-display");
   gameState.timerInterval = setInterval(() => {
@@ -132,6 +164,8 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
   return () => {
     keyboardListeners.forEach((listener) => listener.unbind());
     clearInterval(gameState.timerInterval);
+    // Remove single-player mode class when game ends
+    document.body.classList.remove("single-player-active");
   };
 }
 
@@ -507,6 +541,130 @@ function endGame(gameState) {
     gameOverModal.classList.add("hidden");
     window.location.reload(); // Reload the page to restart the game
   });
+}
+
+/**
+ * Activate player power
+ */
+function activatePower(power, gameState) {
+  const button = document.querySelector(`[data-power="${power}"]`);
+  const cost = parseInt(button.dataset.cost);
+  const player = gameState.player;
+
+  // Check if player has enough coins and power is not on cooldown
+  if (player.coins >= cost && !player.powers[power].cooldown) {
+    // Deduct coins
+    player.coins -= cost;
+    updateScoreboard(gameState);
+
+    // Update power status
+    player.powers[power].active = true;
+    player.powers[power].cooldown = true;
+
+    // Update UI
+    button.classList.add("active");
+    const cooldown = button.querySelector(".cooldown");
+    if (cooldown) {
+      cooldown.style.setProperty("--progress", "100%");
+    }
+
+    // Process power activation
+    switch (power) {
+      case "speed":
+        // Play speed sound
+        const speedAudio = new Audio("./assets/audio/super-power/speed.mp3");
+        speedAudio.volume = 0.5;
+        speedAudio.play();
+
+        // Apply speed effect
+        player.speed = 2;
+        player.element.classList.add("speed-boost");
+
+        // Set timeout to end the effect
+        setTimeout(() => {
+          player.speed = 1;
+          player.powers[power].active = false;
+          player.element.classList.remove("speed-boost");
+          button.classList.remove("active");
+
+          // Start cooldown animation
+          startCooldownAnimation(power, button, gameState);
+        }, POWERS[power].duration);
+        break;
+
+      case "shield":
+        // Play shield sound
+        const shieldAudio = new Audio("./assets/audio/super-power/shield.mp3");
+        shieldAudio.volume = 0.5;
+        shieldAudio.play();
+
+        // Apply shield effect
+        player.shield = true;
+        player.element.classList.add("shield");
+
+        // Don't change the position/shadow when adding shield
+
+        // Set timeout to end the effect
+        setTimeout(() => {
+          player.shield = false;
+          player.powers[power].active = false;
+          player.element.classList.remove("shield");
+          button.classList.remove("active");
+
+          // Start cooldown animation
+          startCooldownAnimation(power, button, gameState);
+        }, POWERS[power].duration);
+        break;
+
+      case "teleport":
+        // Play teleport sound
+        const teleportAudio = new Audio(
+          "./assets/audio/super-power/teleport.mp3"
+        );
+        teleportAudio.volume = 0.5;
+        teleportAudio.play();
+
+        // Get a random safe spot and teleport player
+        const safeSpot = getRandomSafeSpot();
+        player.x = safeSpot.x;
+        player.y = safeSpot.y;
+        updateElementPosition(player.element, player);
+        button.classList.remove("active");
+
+        // Start cooldown animation
+        startCooldownAnimation(power, button, gameState);
+        break;
+    }
+  }
+}
+
+/**
+ * Start cooldown animation for a power
+ */
+function startCooldownAnimation(power, button, gameState) {
+  const cooldown = button.querySelector(".cooldown");
+  const cooldownTime = POWERS[power].cooldown;
+  const startTime = Date.now();
+
+  const updateCooldown = () => {
+    const elapsedTime = Date.now() - startTime;
+    const remainingPercentage = Math.max(
+      0,
+      100 - (elapsedTime / cooldownTime) * 100
+    );
+
+    if (cooldown) {
+      cooldown.style.setProperty("--progress", `${remainingPercentage}%`);
+    }
+
+    if (remainingPercentage > 0) {
+      requestAnimationFrame(updateCooldown);
+    } else {
+      gameState.player.powers[power].cooldown = false;
+    }
+  };
+
+  updateCooldown();
 }
 
 /**
