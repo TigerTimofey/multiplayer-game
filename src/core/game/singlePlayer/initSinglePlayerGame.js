@@ -176,34 +176,63 @@ function handlePlayerMovement(xChange, yChange, gameState) {
   if (gameState.gameOver) return;
 
   const player = gameState.player;
-  const newX = player.x + xChange;
-  const newY = player.y + yChange;
 
-  // Check for wall collisions using mapData boundaries and blockedSpaces
-  if (isValidMove(newX, newY)) {
-    // Update direction for sprite facing
-    player.direction =
-      xChange > 0 ? "right" : xChange < 0 ? "left" : player.direction;
+  // Apply speed modifier to movement if speed power is active
+  const speedMultiplier = player.speed || 1;
+  const adjustedXChange = xChange * speedMultiplier;
+  const adjustedYChange = yChange * speedMultiplier;
 
-    // Update position
-    player.x = newX;
-    player.y = newY;
+  // When speed is active, we need to process each step of movement separately
+  // to ensure collision detection works properly for each grid cell crossed
+  let remainingXChange = adjustedXChange;
+  let remainingYChange = adjustedYChange;
 
-    // Update player element position
-    updateElementPosition(player.element, player);
+  // Process movement in steps of 1 grid cell at a time
+  while (Math.abs(remainingXChange) > 0 || Math.abs(remainingYChange) > 0) {
+    // Calculate the next step
+    const stepX = remainingXChange > 0 ? 1 : remainingXChange < 0 ? -1 : 0;
+    const stepY = remainingYChange > 0 ? 1 : remainingYChange < 0 ? -1 : 0;
 
-    // Check for coin collection
-    checkCoinCollection(player, gameState);
+    // Calculate new position for this step
+    const newX = player.x + stepX;
+    const newY = player.y + stepY;
 
-    // Check for collisions with bots
-    gameState.bots.forEach((bot) => {
-      if (player.x === bot.x && player.y === bot.y) {
-        handleSinglePlayerCollisions(player, bot, gameState);
+    // Check if this step is valid
+    if (isValidMove(newX, newY)) {
+      // Update direction for sprite facing if moving horizontally
+      if (stepX !== 0) {
+        player.direction = stepX > 0 ? "right" : "left";
       }
-    });
 
-    // Update scoreboard
-    updateScoreboard(gameState);
+      // Update position
+      player.x = newX;
+      player.y = newY;
+
+      // Update visual position
+      updateElementPosition(player.element, player);
+
+      // Check for coin collection
+      checkCoinCollection(player, gameState);
+
+      // Check for collisions with bots
+      gameState.bots.forEach((bot) => {
+        if (player.x === bot.x && player.y === bot.y) {
+          handleSinglePlayerCollisions(player, bot, gameState);
+        }
+      });
+
+      // Update scoreboard
+      updateScoreboard(gameState);
+
+      // Subtract the step from remaining change
+      remainingXChange -= stepX;
+      remainingYChange -= stepY;
+    } else {
+      // If this step is invalid, stop movement in this direction
+      remainingXChange = 0;
+      remainingYChange = 0;
+      break;
+    }
   }
 }
 
@@ -555,6 +584,14 @@ function activatePower(power, gameState) {
   if (player.coins >= cost && !player.powers[power].cooldown) {
     // Deduct coins
     player.coins -= cost;
+
+    // Update coin display on player character
+    const coinsDisplay = player.element.querySelector(".Character_coins");
+    if (coinsDisplay) {
+      coinsDisplay.textContent = ` ${player.coins}`;
+    }
+
+    // Update scoreboard immediately to reflect the new coin count
     updateScoreboard(gameState);
 
     // Update power status
@@ -577,7 +614,7 @@ function activatePower(power, gameState) {
         speedAudio.play();
 
         // Apply speed effect
-        player.speed = 2;
+        player.speed = 2; // This now affects actual movement speed
         player.element.classList.add("speed-boost");
 
         // Set timeout to end the effect
