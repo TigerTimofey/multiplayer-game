@@ -549,17 +549,6 @@ function showGameMessage(message) {
     document.body.appendChild(messageElement);
   }
 
-  messageElement.style.fontSize = "16px";
-  messageElement.style.padding = "12px 20px";
-  messageElement.style.fontWeight = "bold";
-  messageElement.style.textShadow = "1px 1px 2px black";
-  messageElement.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.5)";
-  messageElement.style.background = "rgba(0, 0, 0, 0.8)";
-  messageElement.style.borderRadius = "8px";
-  messageElement.style.border = "2px solid #ffd700";
-
-  messageElement.style.top = "70px";
-
   messageElement.textContent = message;
   messageElement.style.display = "block";
 
