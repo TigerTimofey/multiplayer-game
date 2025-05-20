@@ -14,7 +14,7 @@ export function handleSinglePlayerCollisions(player, bot, gameState) {
     const safeSpot = getRandomSafeSpot();
     bot.x = safeSpot.x;
     bot.y = safeSpot.y;
-    bot.coins = 0;
+    bot.coins = 0; // Reset bot coins immediately
     player.kills++;
 
     // Update bot position without affecting the shadow
@@ -22,6 +22,12 @@ export function handleSinglePlayerCollisions(player, bot, gameState) {
       16 * bot.y - 4
     }px, 0)`;
     bot.element.setAttribute("data-direction", bot.direction);
+
+    // Update coins display on bot character
+    const botCoinsDisplay = bot.element.querySelector(".Character_coins");
+    if (botCoinsDisplay) {
+      botCoinsDisplay.textContent = ` 0`; // Update visual display immediately
+    }
 
     // Show message
     showGameMessage(`${player.name}'s shield protected them from ${bot.name}!`);
@@ -34,13 +40,19 @@ export function handleSinglePlayerCollisions(player, bot, gameState) {
     const safeSpot = getRandomSafeSpot();
     bot.x = safeSpot.x;
     bot.y = safeSpot.y;
-    bot.coins = 0;
+    bot.coins = 0; // Reset bot coins immediately
     player.kills++;
 
     // Update bot position
     bot.element.style.transform = `translate3d(${16 * bot.x}px, ${
       16 * bot.y - 4
     }px, 0)`;
+
+    // Update coins display on bot character
+    const botCoinsDisplay = bot.element.querySelector(".Character_coins");
+    if (botCoinsDisplay) {
+      botCoinsDisplay.textContent = ` 0`; // Update visual display immediately
+    }
 
     // Show message
     showGameMessage(`${player.name} defeated ${bot.name}!`);
@@ -49,7 +61,7 @@ export function handleSinglePlayerCollisions(player, bot, gameState) {
     const safeSpot = getRandomSafeSpot();
     player.x = safeSpot.x;
     player.y = safeSpot.y;
-    player.coins = 0;
+    player.coins = 0; // Reset player coins immediately
     bot.kills++;
 
     // Update player position
@@ -57,8 +69,19 @@ export function handleSinglePlayerCollisions(player, bot, gameState) {
       16 * player.y - 4
     }px, 0)`;
 
+    // Update coins display on player character
+    const playerCoinsDisplay = player.element.querySelector(".Character_coins");
+    if (playerCoinsDisplay) {
+      playerCoinsDisplay.textContent = ` 0`; // Update visual display immediately
+    }
+
     // Show message
     showGameMessage(`${bot.name} defeated ${player.name}!`);
+  }
+
+  // Update scoreboard after collision to reflect new coin values
+  if (gameState && typeof gameState.updateScoreboard === "function") {
+    gameState.updateScoreboard();
   }
 }
 

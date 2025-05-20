@@ -683,7 +683,7 @@ function handleBotVsBotCollision(bot1, bot2, gameState) {
   const safeSpot = getRandomSafeSpot();
   loser.x = safeSpot.x;
   loser.y = safeSpot.y;
-  loser.coins = 0;
+  loser.coins = 0; // Reset loser coins immediately
 
   // Update winner's kills
   winner.kills++;
@@ -691,8 +691,17 @@ function handleBotVsBotCollision(bot1, bot2, gameState) {
   // Update loser's position in the DOM
   updateElementPosition(loser.element, loser);
 
+  // Update coins display on loser character
+  const loserCoinsDisplay = loser.element.querySelector(".Character_coins");
+  if (loserCoinsDisplay) {
+    loserCoinsDisplay.textContent = ` 0`; // Update visual display immediately
+  }
+
   // Show a message
   showGameMessage(`${winner.name} defeated ${loser.name}!`);
+
+  // Update scoreboard immediately
+  updateScoreboard(gameState);
 }
 
 /**
