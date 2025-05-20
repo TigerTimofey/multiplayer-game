@@ -556,13 +556,18 @@ function endGame(gameState) {
   gameState.gameOver = true;
   clearInterval(gameState.timerInterval);
 
-  // Determine winner
-  let winner = gameState.player;
+  // Determine winner by coins
+  let coinWinner = gameState.player;
+  let killsWinner = gameState.player;
   let allEntities = [gameState.player, ...gameState.bots];
 
+  // Find players with most coins and kills
   allEntities.forEach((entity) => {
-    if (entity.coins > winner.coins) {
-      winner = entity;
+    if (entity.coins > coinWinner.coins) {
+      coinWinner = entity;
+    }
+    if (entity.kills > killsWinner.kills) {
+      killsWinner = entity;
     }
   });
 
@@ -570,11 +575,28 @@ function endGame(gameState) {
   const gameOverModal = document.getElementById("game-over-modal");
   const eliminatedByText = document.getElementById("eliminated-by");
 
-  if (winner === gameState.player) {
-    eliminatedByText.textContent = "You win! You collected the most coins.";
+  // Create message showing both coin winner and kill winner
+  let gameOverText = "";
+
+  // Add coins winner info
+  if (coinWinner === gameState.player) {
+    gameOverText += `You collected the most coins: ${coinWinner.coins}!`;
   } else {
-    eliminatedByText.textContent = `${winner.name} wins with ${winner.coins} coins!`;
+    gameOverText += `${coinWinner.name} collected the most coins: ${coinWinner.coins}!`;
   }
+
+  // Add kills winner info
+  if (killsWinner === gameState.player) {
+    gameOverText += `\nYou got the most kills: ${killsWinner.kills}!`;
+  } else {
+    gameOverText += `\n${killsWinner.name} got the most kills: ${killsWinner.kills}!`;
+  }
+
+  // Set the game over text
+  eliminatedByText.textContent = gameOverText;
+
+  // Make line breaks work in the text
+  eliminatedByText.style.whiteSpace = "pre-line";
 
   gameOverModal.classList.remove("hidden");
 

@@ -1060,9 +1060,7 @@ button {
 }
 
 .lobby-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: 1fr;
   margin: 0;
 }
 
@@ -1570,6 +1568,7 @@ button.player-status:active {
   padding: 0.8em 1.5em;
   position: relative;
   transition: all 0.2s;
+  width: 240px;
 }
 
 .lobby-button:hover {
