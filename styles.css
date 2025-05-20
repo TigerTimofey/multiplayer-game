@@ -480,6 +480,9 @@ button {
   font-weight: bold;
   margin: 4px 0;
 }
+.power-name {
+  text-align: center;
+}
 
 .power-button .cost {
   font-size: 14px;

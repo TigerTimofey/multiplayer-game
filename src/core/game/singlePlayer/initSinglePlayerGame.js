@@ -13,6 +13,19 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
   // Add single-player-active class to body to hide certain powers
   document.body.classList.add("single-player-active");
 
+  // Update shield power to Ultra Power for single player mode
+  const shieldButton = document.querySelector('[data-power="shield"]');
+  if (shieldButton) {
+    const nameElement = shieldButton.querySelector(".power-name");
+    const costElement = shieldButton.querySelector(".cost");
+
+    if (nameElement) nameElement.textContent = "Strength";
+    if (costElement) costElement.textContent = "10 coins";
+
+    // Update the data-cost attribute
+    shieldButton.setAttribute("data-cost", "10");
+  }
+
   // Create game state object
   const gameState = {
     player: {
@@ -640,6 +653,9 @@ function activatePower(power, gameState) {
         player.element.classList.add("shield");
 
         // Don't change the position/shadow when adding shield
+
+        // // Show single player message with "Ultra Power" instead of "Shield"
+        // showGameMessage(`${player.name} activated Ultra Power!`);
 
         // Set timeout to end the effect
         setTimeout(() => {

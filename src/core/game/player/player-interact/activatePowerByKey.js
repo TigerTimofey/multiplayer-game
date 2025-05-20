@@ -13,6 +13,10 @@ function showGameMessage(message) {
     messageElement.className = "message";
     document.body.appendChild(messageElement);
   }
+
+  messageElement.textContent = message;
+  messageElement.style.display = "none";
+
   // Remove the message after 3 seconds
   setTimeout(() => {
     messageElement.style.display = "none";
