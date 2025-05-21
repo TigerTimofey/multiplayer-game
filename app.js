@@ -246,7 +246,7 @@ import StateLocal from "./stateLocal.js";
     // Position the tooltip based on target element or default to center
     if (targetElement) {
       const rect = targetElement.getBoundingClientRect();
-      tooltip.style.top = rect.top - 10 + "px"; // Position above the element
+      tooltip.style.top = rect.top - 10 + "px";
       tooltip.style.left = rect.left + rect.width / 2 + "px";
     } else {
       tooltip.style.top = "50%";
@@ -341,7 +341,7 @@ import StateLocal from "./stateLocal.js";
       });
     });
 
-  // Handle the start single game button to proceed to difficulty selection
+  // Handle the start single game button to proceed to bot customization
   document.getElementById("start-single-game").addEventListener("click", () => {
     const selectedBot = document.querySelector(
       "#bot-selection .player-select button.selected"
@@ -359,36 +359,234 @@ import StateLocal from "./stateLocal.js";
     // Hide bot selection now
     document.getElementById("bot-selection").classList.add("hidden");
 
-    // Show difficulty selection
-    document.getElementById("difficulty-selection").classList.remove("hidden");
+    // Show bot customization screen
+    document.getElementById("bot-customization").classList.remove("hidden");
 
     // Update title
-    document.getElementById("lobby-title").textContent = "Select Difficulty";
+    document.getElementById("lobby-title").textContent = "Customize Bots";
+
+    // Generate bot customization slots
+    const botCount = parseInt(selectedBot.dataset.bots);
+    const playerColor = StateLocal.getPlayerInfo().color;
+    createBotCustomizationSlots(botCount, playerColor);
   });
 
-  // Handle difficulty selection - simpler now that we're in a sequential flow
-  document
-    .querySelectorAll("#difficulty-selection .player-select button")
-    .forEach((button) => {
-      button.addEventListener("click", () => {
-        // Remove selected class from all buttons in difficulty selection only
-        document
-          .querySelectorAll("#difficulty-selection .player-select button")
-          .forEach((btn) => {
-            btn.classList.remove("selected");
+  // Create bot customization slots with simplified options
+  function createBotCustomizationSlots(botCount, playerColor) {
+    const botCustomizationContainer =
+      document.getElementById("bot-custom-slots");
+    botCustomizationContainer.innerHTML = "";
+
+    const availableColors = playerColors.filter(
+      (color) => color !== playerColor
+    );
+    const defaultBotNames = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"];
+
+    // Create a customization slot for each bot
+    for (let i = 0; i < botCount; i++) {
+      const botColorDefault = availableColors[i % availableColors.length];
+      const colorName =
+        botColorDefault.charAt(0).toUpperCase() + botColorDefault.slice(1);
+      const botNameDefault = `${colorName} ${
+        defaultBotNames[i % defaultBotNames.length]
+      }`;
+
+      // Create a bot customization slot
+      const botSlot = document.createElement("div");
+      botSlot.className = "bot-custom-slot";
+      botSlot.dataset.botIndex = i;
+
+      // Add name input field
+      const nameContainer = document.createElement("div");
+      nameContainer.className = "bot-custom-field";
+
+      const nameLabel = document.createElement("label");
+      nameLabel.textContent = "Bot Name:";
+      nameContainer.appendChild(nameLabel);
+
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "bot-name-input";
+      nameInput.value = botNameDefault;
+      nameInput.maxLength = 20;
+      nameContainer.appendChild(nameInput);
+
+      botSlot.appendChild(nameContainer);
+
+      // Add color selection
+      const colorContainer = document.createElement("div");
+      colorContainer.className = "bot-custom-field";
+
+      const colorLabel = document.createElement("label");
+      colorLabel.textContent = "Choose Color:";
+      colorContainer.appendChild(colorLabel);
+
+      const colorOptions = document.createElement("div");
+      colorOptions.className = "bot-color-options";
+
+      // Add color options
+      availableColors.forEach((color) => {
+        const colorOption = document.createElement("div");
+        colorOption.className = "color-option";
+        colorOption.style.backgroundColor = color;
+        colorOption.dataset.color = color;
+
+        if (color === botColorDefault) {
+          colorOption.classList.add("selected");
+        }
+
+        colorOption.addEventListener("click", () => {
+          // Remove selected from all colors in this slot
+          colorOptions.querySelectorAll(".color-option").forEach((opt) => {
+            opt.classList.remove("selected");
           });
 
-        // Add selected class to clicked button
-        button.classList.add("selected");
+          // Add selected class to clicked color
+          colorOption.classList.add("selected");
 
-        // Get bot count and update settings
-        const gameSettings = StateLocal.getGameSettings();
-        const difficulty = button.dataset.modeBots;
-        StateLocal.setBotDifficulty(difficulty);
+          // Update bot name to include new color if using default name pattern
+          const currentName = nameInput.value;
+          if (currentName.includes(colorName)) {
+            const selectedColorName =
+              color.charAt(0).toUpperCase() + color.slice(1);
+            nameInput.value = currentName.replace(colorName, selectedColorName);
+          }
+        });
+
+        colorOptions.appendChild(colorOption);
       });
+
+      colorContainer.appendChild(colorOptions);
+      botSlot.appendChild(colorContainer);
+
+      // Add starting coins input
+      const coinsContainer = document.createElement("div");
+      coinsContainer.className = "bot-custom-field";
+
+      const coinsLabel = document.createElement("label");
+      coinsLabel.textContent = "Starting Coins:";
+      coinsContainer.appendChild(coinsLabel);
+
+      const coinsInput = document.createElement("input");
+      coinsInput.type = "number";
+      coinsInput.className = "bot-coins-input";
+      coinsInput.min = "0";
+      coinsInput.max = "99";
+      coinsInput.value = "0";
+      coinsContainer.appendChild(coinsInput);
+
+      botSlot.appendChild(coinsContainer);
+
+      // Add the completed bot slot to the container
+      botCustomizationContainer.appendChild(botSlot);
+    }
+  }
+
+  // Handle the continue button from bot customization to difficulty selection
+  document
+    .getElementById("continue-bot-custom")
+    .addEventListener("click", () => {
+      const botSlots = document.querySelectorAll(".bot-custom-slot");
+      const customizedBots = [];
+
+      // Collect bot data from each slot
+      botSlots.forEach((slot) => {
+        const nameInput = slot.querySelector(".bot-name-input");
+        const botName =
+          nameInput.value.trim() || `Bot ${slot.dataset.botIndex + 1}`;
+        const colorOption = slot.querySelector(".color-option.selected");
+        const coinsInput = slot.querySelector(".bot-coins-input");
+        const startingCoins = parseInt(coinsInput.value) || 0;
+
+        if (!colorOption) return;
+
+        // Create bot object with customized properties
+        customizedBots.push({
+          name: botName,
+          color: colorOption.dataset.color,
+          coins: startingCoins,
+          kills: 0,
+          isBot: true,
+        });
+      });
+
+      // Save customized bots
+      StateLocal.storeBots(customizedBots);
+
+      // Hide bot customization
+      document.getElementById("bot-customization").classList.add("hidden");
+
+      // Show difficulty selection (following the original flow)
+      document
+        .getElementById("difficulty-selection")
+        .classList.remove("hidden");
+
+      // Update title
+      document.getElementById("lobby-title").textContent = "Select Difficulty";
     });
 
-  // Handle the final start button after difficulty selection - now continues to time selection
+  // Update back button handler to navigate correctly
+  document.querySelector(".back-button").addEventListener("click", () => {
+    // Always make sure the title is visible when navigating back
+    document.getElementById("lobby-title").classList.remove("hidden");
+
+    // Check which screen is currently visible
+    if (
+      document.getElementById("sp-game-lobby") &&
+      !document.getElementById("sp-game-lobby").classList.contains("hidden")
+    ) {
+      // If single player lobby is visible, go back to time selection
+      document.getElementById("sp-game-lobby").classList.add("hidden");
+      document.getElementById("time-selection").classList.remove("hidden");
+      document.getElementById("lobby-title").textContent = "Select Round Time";
+    } else if (
+      !document.getElementById("time-selection").classList.contains("hidden")
+    ) {
+      // If time selection is visible, go back to difficulty selection
+      document.getElementById("time-selection").classList.add("hidden");
+      document
+        .getElementById("difficulty-selection")
+        .classList.remove("hidden");
+      document.getElementById("lobby-title").textContent = "Select Difficulty";
+    } else if (
+      !document
+        .getElementById("difficulty-selection")
+        .classList.contains("hidden")
+    ) {
+      // If difficulty selection is visible, go back to bot customization
+      document.getElementById("difficulty-selection").classList.add("hidden");
+      document.getElementById("bot-customization").classList.remove("hidden");
+      document.getElementById("lobby-title").textContent = "Customize Bots";
+    } else if (
+      !document.getElementById("bot-customization").classList.contains("hidden")
+    ) {
+      // If bot customization is visible, go back to bot selection
+      document.getElementById("bot-customization").classList.add("hidden");
+      document.getElementById("bot-selection").classList.remove("hidden");
+      document.getElementById("lobby-title").textContent = "Select Bots";
+    } else if (
+      !document.getElementById("bot-selection").classList.contains("hidden")
+    ) {
+      // If bot selection is visible, go back to initial setup
+      document.getElementById("bot-selection").classList.add("hidden");
+      document.getElementById("initial-setup").classList.remove("hidden");
+      document.getElementById("lobby-title").textContent = "Character name";
+    } else {
+      // Otherwise, go back to main menu
+      document.getElementById("initial-setup").classList.add("hidden");
+      document.getElementById("bot-selection").classList.add("hidden");
+      document.getElementById("bot-customization").classList.add("hidden");
+      document.getElementById("difficulty-selection").classList.add("hidden");
+      document.getElementById("time-selection").classList.add("hidden");
+      document.querySelector(".lobby-buttons").classList.remove("hidden");
+      document.getElementById("toggle-joke").classList.remove("hidden");
+      document.querySelector(".back-button").classList.add("hidden");
+      document.getElementById("lobby-title").textContent =
+        "Welcome to Treasure Hunters Arena";
+    }
+  });
+
+  // Modify the difficulty selection handler to apply to all bots
   document
     .getElementById("start-difficulty-game")
     .addEventListener("click", () => {
@@ -413,6 +611,15 @@ import StateLocal from "./stateLocal.js";
       const difficulty = selectedDifficulty.dataset.modeBots;
       StateLocal.setBotDifficulty(difficulty);
 
+      // Apply the selected difficulty to all bots
+      const bots = StateLocal.getBots();
+      if (bots && bots.length > 0) {
+        bots.forEach((bot) => {
+          bot.difficulty = difficulty;
+        });
+        StateLocal.storeBots(bots);
+      }
+
       // Hide difficulty selection
       document.getElementById("difficulty-selection").classList.add("hidden");
 
@@ -423,71 +630,7 @@ import StateLocal from "./stateLocal.js";
       document.getElementById("lobby-title").textContent = "Select Round Time";
     });
 
-  // Handle time selection buttons
-  document
-    .querySelectorAll("#time-selection .time-select button")
-    .forEach((button) => {
-      button.addEventListener("click", () => {
-        // Remove selected class from all buttons
-        document
-          .querySelectorAll("#time-selection .time-select button")
-          .forEach((btn) => {
-            btn.classList.remove("selected");
-          });
-
-        // Add selected class to clicked button
-        button.classList.add("selected");
-
-        // Store the selected time in game settings
-        const roundTime = parseInt(button.dataset.time);
-        const gameSettings = StateLocal.getGameSettings();
-
-        // Update just the roundTime property, preserving other settings
-        StateLocal.setGameSettings(
-          gameSettings.botCount,
-          gameSettings.gameMode,
-          roundTime,
-          gameSettings.botDifficulty
-        );
-      });
-    });
-
-  // Handle the final start button after time selection
-  document.getElementById("start-game-final").addEventListener("click", () => {
-    const selectedTime = document.querySelector(
-      "#time-selection .time-select button.selected"
-    );
-
-    if (!selectedTime) {
-      // Position tooltip above the time selection buttons
-      const timeSelectElement = document.querySelector(
-        "#time-selection .time-select"
-      );
-      showTooltip("Please select a round time", 3000, timeSelectElement);
-      return;
-    }
-
-    const gameSettings = StateLocal.getGameSettings();
-    const playerInfo = StateLocal.getPlayerInfo();
-
-    // Generate bot data
-    const botCount = gameSettings.botCount;
-    const botDifficulty = gameSettings.botDifficulty;
-
-    // Generate bots with different colors
-    const bots = generateBots(botCount, botDifficulty, playerInfo.color);
-
-    // Store bots in the state
-    StateLocal.storeBots(bots);
-
-    // Hide time selection screen
-    document.getElementById("time-selection").classList.add("hidden");
-
-    // Display the single player lobby with bots
-    showSinglePlayerLobby(playerInfo, bots, gameSettings);
-  });
-
-  // Function to show single player lobby with bots
+  // Update single player lobby display to show individual bot difficulties
   function showSinglePlayerLobby(player, bots, gameSettings) {
     // Update the title (keep the element but hide it for now)
     document.getElementById("lobby-title").textContent = "Game Lobby";
@@ -613,10 +756,28 @@ import StateLocal from "./stateLocal.js";
     const playerName = document.createElement("div");
     playerName.className = "player-name";
 
-    // Add a crown icon for the human player
-    playerName.innerHTML = `${isHuman ? "👑 " : ""}${player.name} ${
-      player.isBot ? "(Bot)" : ""
-    }`;
+    // Add a crown icon for the human player and display bot name with color
+    let displayName;
+    if (isHuman) {
+      displayName = `👑 ${player.name}`;
+    } else {
+      // For bots, ensure the color name is part of the displayed name
+      const colorName =
+        player.color.charAt(0).toUpperCase() + player.color.slice(1);
+      if (!player.name.includes(colorName)) {
+        displayName = `${colorName} ${player.name}`;
+      } else {
+        displayName = player.name;
+      }
+      displayName += " (Bot)";
+
+      // Add coins display if bot has starting coins
+      if (player.coins > 0) {
+        displayName += ` <span class="bot-starting-coins">💰 ${player.coins}</span>`;
+      }
+    }
+
+    playerName.innerHTML = displayName;
 
     playerElement.appendChild(playerName);
 
@@ -837,5 +998,41 @@ import StateLocal from "./stateLocal.js";
     });
   }
 
-  // ...existing code...
+  // Modify the final start button (in the time selection screen) to properly show the lobby
+  document.getElementById("start-game-final").addEventListener("click", () => {
+    const selectedTime = document.querySelector(
+      "#time-selection .time-select button.selected"
+    );
+
+    if (!selectedTime) {
+      // Position tooltip above the time selection buttons
+      const timeSelectElement = document.querySelector(
+        "#time-selection .time-select"
+      );
+      showTooltip("Please select a round time", 3000, timeSelectElement);
+      return;
+    }
+
+    const gameSettings = StateLocal.getGameSettings();
+    const playerInfo = StateLocal.getPlayerInfo();
+
+    // Get customized bots from storage
+    const bots = StateLocal.getBots();
+
+    // Store game round time in settings
+    const roundTime = parseInt(selectedTime.dataset.time);
+    gameSettings.roundTime = roundTime;
+    StateLocal.setGameSettings(
+      bots.length,
+      gameSettings.gameMode,
+      roundTime,
+      gameSettings.botDifficulty
+    );
+
+    // Hide time selection screen
+    document.getElementById("time-selection").classList.add("hidden");
+
+    // Display the single player lobby with customized bots
+    showSinglePlayerLobby(playerInfo, bots, gameSettings);
+  });
 })();

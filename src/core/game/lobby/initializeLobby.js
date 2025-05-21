@@ -122,7 +122,6 @@ export function initializeLobby() {
   <button data-mode="survival">Hazard</button>
 
   `;
-  // <button data-mode="treasureHunt">Treasure Hunt</button>
 
   document.querySelectorAll(".game-mode-select button").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -152,7 +151,6 @@ export function initializeLobby() {
       );
       const roundTime = parseInt(btn.dataset.time);
 
-      // Only proceed with room creation if all selections are made
       if (selectedPlayers && selectedMode) {
         const maxPlayers = parseInt(selectedPlayers.dataset.players);
         const gameMode = selectedMode.dataset.mode;

@@ -74,7 +74,6 @@ export function initGame() {
       const roomData = roomSnapshot.val();
       const gameMode = GAME_MODES[roomData.gameMode];
 
-      // Always show treasure boxes, regardless of game mode
       let playerIndex = 0;
       Object.entries(players).forEach(([playerId, player]) => {
         const boxPosition = mapData.getTreasureBoxPosition(playerIndex);

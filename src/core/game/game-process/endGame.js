@@ -48,7 +48,6 @@ export function endGame() {
         showMatchEndedModal(topKillsPlayer, topCoinsPlayer);
       });
     } else if (gameMode.specialRules?.winCondition === "treasure") {
-      // Check for treasure box victory condition
       const players = roomData.players || {};
       Object.entries(players).forEach(([playerId, player]) => {
         if (player.storedCoins >= 25) {

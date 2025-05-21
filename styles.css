@@ -281,7 +281,7 @@ button {
   border-radius: 15px;
   text-align: center;
   border: 2px solid #ff6b6b;
-  box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 0 20px rgba(0, 107, 107, 0.3);
   transform: translateY(20px);
   animation: modalSlideUp 0.5s ease-out forwards;
   max-width: 400px;
@@ -1930,7 +1930,7 @@ button.player-status:hover {
 }
 
 .Character.shield {
-  z-index: 5; /* Ensures shielded characters appear above other elements */
+  z-index: 5;
 }
 
 .Character.shield::before {
@@ -1941,19 +1941,12 @@ button.player-status:hover {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  /* Shield visual effect - a glowing blue circle around the character */
   background: rgba(0, 136, 255, 0.3);
   box-shadow: 0 0 15px rgba(0, 136, 255, 0.5), 0 0 30px rgba(0, 136, 255, 0.3);
   animation: shieldPulse 1.5s infinite alternate;
   pointer-events: none;
-  z-index: 1; /* Important: This places the shield visual between sprite and shadow */
+  z-index: 1;
 }
-
-/* The following is intentionally not included to avoid changing shadow position during shield effect:
-.Character.shield .Character_shadow {
-  // No styles should be applied to the shadow to keep its original position
-} 
-*/
 
 @keyframes shieldPulse {
   0% {
@@ -2360,7 +2353,6 @@ body.single-player-active .message {
   transform: scaleX(1);
 }
 
-/* Single player lobby animations */
 @keyframes fadeOut {
   from {
     opacity: 1;
@@ -2372,7 +2364,6 @@ body.single-player-active .message {
   }
 }
 
-/* Animation for player joining */
 .player-joined {
   animation: playerJoin 0.5s ease-out;
 }
@@ -2388,7 +2379,6 @@ body.single-player-active .message {
   }
 }
 
-/* Styling for the 'all ready' start button */
 #sp-start-game-btn.all-ready {
   background: linear-gradient(45deg, #2ed573, #7bed9f);
   animation: pulse 2s infinite;
@@ -2398,14 +2388,12 @@ body.single-player-active .message {
   text-align: center;
 }
 
-/* Center all lobby buttons */
 .lobby-button {
   margin: 20px auto;
   display: block;
   text-align: center;
 }
 
-/* Extra styling for the single player start button */
 #sp-game-lobby {
   display: flex;
   flex-direction: column;
@@ -2416,7 +2404,100 @@ body.single-player-active .message {
   min-width: 200px;
 }
 
-/* Hide specific powers in single player mode */
 .single-player-active .singleplayer-hidden {
   display: none;
+}
+
+#bot-customization {
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  text-align: center;
+}
+
+.bot-custom-slot {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid #463a66;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s;
+}
+
+.bot-custom-slot:hover {
+  border-color: #8d7eb5;
+}
+
+.bot-custom-field {
+  margin-bottom: 10px;
+}
+
+.bot-custom-field label {
+  display: block;
+  color: white;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.bot-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 5px;
+}
+
+.bot-name-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #463a66;
+  color: white;
+  padding: 8px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  height: auto;
+  transition: all 0.3s ease;
+}
+
+.bot-name-input:focus {
+  border-color: #ffd700;
+  outline: none;
+}
+
+.bot-coins-input {
+  width: 60px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #463a66;
+  color: white;
+  padding: 8px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  height: auto;
+}
+
+.bot-coins-input:focus {
+  border-color: #ffd700;
+  outline: none;
+}
+
+.bot-starting-coins {
+  color: #ffd700;
+  font-weight: bold;
+  margin-left: 5px;
+  display: inline-block;
+  animation: coinPulse 2s infinite alternate;
+}
+
+@keyframes coinPulse {
+  from {
+    transform: scale(1);
+    text-shadow: 0 0 2px rgba(255, 215, 0, 0.5);
+  }
+  to {
+    transform: scale(1.05);
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+  }
 }

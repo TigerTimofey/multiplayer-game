@@ -4,7 +4,6 @@ import { POWERS } from "../../../constants/powers.js";
 
 let activePowers = {};
 
-// Updated function to display consistent messages with smaller styling at the top
 function showGameMessage(message) {
   let messageElement = document.querySelector(".message");
 
@@ -17,7 +16,6 @@ function showGameMessage(message) {
   messageElement.textContent = message;
   messageElement.style.display = "none";
 
-  // Remove the message after 3 seconds
   setTimeout(() => {
     messageElement.style.display = "none";
   }, 3000);

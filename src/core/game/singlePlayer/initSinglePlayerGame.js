@@ -9,7 +9,6 @@ import { POWERS } from "../../constants/powers.js";
 export function initSinglePlayerGame(player, bots, gameSettings) {
   document.body.classList.add("single-player-active");
 
-  // Setup options button functionality
   const setOptionsGameState = setupOptionsButton();
 
   const shieldButton = document.querySelector('[data-power="shield"]');
@@ -52,6 +51,8 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
     bots: bots.map((bot, index) => {
       const botProps = getBotProperties(bot.difficulty);
 
+      const startingCoins = bot.coins || 0;
+
       return {
         ...bot,
         x: getRandomSafeSpot().x,
@@ -64,6 +65,7 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
         playerChaseChance: botProps.playerChaseChance,
         intelligenceLevel: botProps.intelligenceLevel,
         id: `bot-${index}`,
+        coins: startingCoins,
       };
     }),
     coins: {},
@@ -89,6 +91,11 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
   gameState.player.element = playerElement;
 
   gameState.bots.forEach((bot) => {
+    const colorName = bot.color.charAt(0).toUpperCase() + bot.color.slice(1);
+    if (!bot.name.includes(colorName)) {
+      bot.name = `${colorName} ${bot.name}`;
+    }
+
     const botElement = createPlayerElement(
       bot.name,
       bot.x,
@@ -100,6 +107,13 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
 
     gameState.gameContainer.appendChild(botElement);
     bot.element = botElement;
+
+    if (bot.coins > 0) {
+      const coinsDisplay = botElement.querySelector(".Character_coins");
+      if (coinsDisplay) {
+        coinsDisplay.textContent = ` ${bot.coins}`;
+      }
+    }
   });
 
   for (let i = 0; i < 10; i++) {
@@ -164,16 +178,12 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
 
   updateScoreboard(gameState);
 
-  // Pass gameState to options functionality
   setOptionsGameState(gameState);
 
-  // Return cleanup function
   return () => {
     keyboardListeners.forEach((listener) => listener.unbind());
     clearInterval(gameState.timerInterval);
-    // Remove single-player mode class when game ends
     document.body.classList.remove("single-player-active");
-    // Remove event listeners for options
     cleanupOptionsButton();
   };
 }
@@ -188,52 +198,41 @@ function setupOptionsButton() {
   const restartButton = document.getElementById("restart-button-modal");
   const quitButton = document.getElementById("quit-button");
 
-  // Store game state reference for the functions below
   let gameStateRef = null;
 
-  // Show options modal when clicking options button
   optionsButton.addEventListener("click", () => {
     showOptionsModal();
   });
 
-  // Hide options modal when clicking continue
   continueButton.addEventListener("click", () => {
     hideOptionsModal();
     showGameMessage("Game continued");
   });
 
-  // Restart game (teleport to center) when clicking restart
   restartButton.addEventListener("click", () => {
     hideOptionsModal();
     if (gameStateRef && gameStateRef.player) {
-      // Teleport player to the center of the map
       gameStateRef.player.x = Math.floor((mapData.maxX + mapData.minX) / 2);
       gameStateRef.player.y = Math.floor((mapData.maxY + mapData.minY) / 2);
 
-      // Reset player coins to 0
       gameStateRef.player.coins = 0;
 
-      // Update coin display on character
       const coinsDisplay =
         gameStateRef.player.element.querySelector(".Character_coins");
       if (coinsDisplay) {
         coinsDisplay.textContent = ` 0`;
       }
 
-      // Update player position visually
       updateElementPosition(gameStateRef.player.element, gameStateRef.player);
 
-      // Update scoreboard to reflect coin reset
       updateScoreboard(gameStateRef);
 
       showGameMessage("Game restarted");
     }
   });
 
-  // Quit game (reload page) when clicking quit
   quitButton.addEventListener("click", () => {
     hideOptionsModal();
-    // Simple page reload to quit the game completely
     window.location.reload();
   });
 
@@ -251,7 +250,6 @@ function setupOptionsButton() {
     optionsModal.classList.add("hidden");
   }
 
-  // Return a function to set the gameState reference
   return function setGameState(gameState) {
     gameStateRef = gameState;
   };
@@ -266,7 +264,6 @@ function cleanupOptionsButton() {
   const restartButton = document.getElementById("restart-button-modal");
   const quitButton = document.getElementById("quit-button");
 
-  // Clean up event listeners
   if (optionsButton) optionsButton.onclick = null;
   if (continueButton) continueButton.onclick = null;
   if (restartButton) restartButton.onclick = null;
@@ -877,7 +874,6 @@ function showGameMessage(message) {
   messageElement.textContent = message;
   messageElement.style.display = "block";
 
-  // Remove the message after 3 seconds
   setTimeout(() => {
     messageElement.style.display = "none";
   }, 3000);

@@ -22,22 +22,18 @@ export function createPlayerElement(
     16 * y - 4
   }px, 0)`;
 
-  // Create and append sprite element
   const spriteElement = document.createElement("div");
   spriteElement.classList.add("Character_sprite", "grid-cell");
   characterElement.appendChild(spriteElement);
 
-  // Create and append shadow element
   const shadowElement = document.createElement("div");
   shadowElement.classList.add("Character_shadow", "grid-cell");
   characterElement.appendChild(shadowElement);
 
-  // Create and append name container
   const nameElement = document.createElement("div");
   nameElement.classList.add("Character_name-container");
   nameElement.textContent = name;
 
-  // Create coins counter
   const coins = document.createElement("span");
   coins.classList.add("Character_coins");
   coins.textContent = " 0";
@@ -45,7 +41,6 @@ export function createPlayerElement(
 
   characterElement.appendChild(nameElement);
 
-  // Add the arrow indicator for the player character
   if (isYou) {
     const arrow = document.createElement("div");
     arrow.classList.add("Character_you-arrow");

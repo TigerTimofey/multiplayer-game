@@ -9,7 +9,6 @@ const StateLocal = {
     kills: 0,
   },
 
-  // Game settings
   gameSettings: {
     botCount: 0,
     gameMode: "",
@@ -17,22 +16,18 @@ const StateLocal = {
     botDifficulty: "",
   },
 
-  // Bot data
   bots: [],
 
-  // Store player information
   setPlayerInfo(name, color) {
     this.playerData.name = name;
     this.playerData.color = color;
 
-    // Store in localStorage for persistence
     localStorage.setItem("playerName", name);
     localStorage.setItem("playerColor", color);
 
     return this.playerData;
   },
 
-  // Store game settings
   setGameSettings(botCount, gameMode, roundTime, botDifficulty = "") {
     this.gameSettings.botCount = botCount;
     this.gameSettings.gameMode = gameMode;
@@ -41,26 +36,21 @@ const StateLocal = {
     return this.gameSettings;
   },
 
-  // Store generated bots
   storeBots(bots) {
     this.bots = bots;
     return this.bots;
   },
 
-  // Get bot data
   getBots() {
     return this.bots;
   },
 
-  // Set bot difficulty separately
   setBotDifficulty(difficulty) {
     this.gameSettings.botDifficulty = difficulty;
     return this.gameSettings;
   },
 
-  // Get player data
   getPlayerInfo() {
-    // Try to load from localStorage first
     const savedName = localStorage.getItem("playerName");
     const savedColor = localStorage.getItem("playerColor");
 
@@ -70,12 +60,10 @@ const StateLocal = {
     return this.playerData;
   },
 
-  // Get game settings
   getGameSettings() {
     return this.gameSettings;
   },
 
-  // Reset all state
   resetState() {
     this.playerData = {
       name: "",
@@ -95,5 +83,4 @@ const StateLocal = {
   },
 };
 
-// Export the state manager
 export default StateLocal;

@@ -54,7 +54,6 @@ export function checkPlayerCollisions(
         updates[`players/${playerId}/coins`] = 0;
         updates[`players/${key}/kills`] = (otherPlayer.kills || 0) + 1;
 
-        // Update kill stats
         statsUpdates[`${roomStatsRef}/totalKills`] =
           firebase.database.ServerValue.increment(1);
         statsUpdates[`${winnerStatsRef}/totalKills`] =
