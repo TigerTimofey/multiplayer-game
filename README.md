@@ -26,6 +26,10 @@ A real-time multiplayer browser game where players compete to collect coins, bat
 - **Classic Mode**: Traditional coin collection and combat
 - **Extra Coin Mode**: Start with bonus coins and faster movement
 - **Hazard Mode**: Avoid dangerous hazards while collecting coins
+- **Single Player Mode**: Play against AI bots with adjustable difficulty levels
+  - Easy: Slower bots with simple AI that randomly collect coins
+  - Medium: Balanced bots that target coins and occasionally chase the player
+  - Hard: Fast and strategic bots that actively pursue coins and challenge the player
 
 ### Power-ups
 

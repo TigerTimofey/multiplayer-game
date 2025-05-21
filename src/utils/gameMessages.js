@@ -3,7 +3,6 @@
  * @param {string} message - The message to display
  */
 export function showGameMessage(message) {
-  // Remove any existing message-multi elements to avoid conflicts
   const oldMultiMessages = document.querySelectorAll(".message");
   oldMultiMessages.forEach((el) => el.remove());
 
@@ -15,7 +14,6 @@ export function showGameMessage(message) {
     document.body.appendChild(messageElement);
   }
 
-  // Remove the message after 3 seconds
   setTimeout(() => {
     messageElement.style.display = "none";
   }, 3000);

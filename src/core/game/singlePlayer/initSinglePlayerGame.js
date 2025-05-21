@@ -6,14 +6,9 @@ import {
 import { mapData, getRandomSafeSpot } from "../../constants/mapData.js";
 import { POWERS } from "../../constants/powers.js";
 
-/**
- * Initialize the single player game with player and bots
- */
 export function initSinglePlayerGame(player, bots, gameSettings) {
-  // Add single-player-active class to body to hide certain powers
   document.body.classList.add("single-player-active");
 
-  // Update shield power to Ultra Power for single player mode
   const shieldButton = document.querySelector('[data-power="shield"]');
   if (shieldButton) {
     const nameElement = shieldButton.querySelector(".power-name");
@@ -22,21 +17,18 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
     if (nameElement) nameElement.textContent = "Strength";
     if (costElement) costElement.textContent = "10 coins";
 
-    // Update the data-cost attribute
     shieldButton.setAttribute("data-cost", "10");
   }
 
-  // Create game state object
   const gameState = {
     player: {
       ...player,
-      x: mapData.minX + 4, // Starting position
+      x: mapData.minX + 4,
       y: mapData.minY + 2,
       direction: "right",
       coins: 0,
       kills: 0,
       element: null,
-      // Added powers-related properties
       speed: 1,
       shield: false,
       powers: {
@@ -54,16 +46,23 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
         },
       },
     },
-    bots: bots.map((bot, index) => ({
-      ...bot,
-      x: getRandomSafeSpot().x,
-      y: getRandomSafeSpot().y,
-      direction: "right",
-      element: null,
-      lastMove: Date.now(),
-      moveInterval: getBotMoveInterval(bot.difficulty),
-      id: `bot-${index}`,
-    })),
+    bots: bots.map((bot, index) => {
+      const botProps = getBotProperties(bot.difficulty);
+
+      return {
+        ...bot,
+        x: getRandomSafeSpot().x,
+        y: getRandomSafeSpot().y,
+        direction: "right",
+        element: null,
+        lastMove: Date.now(),
+        moveInterval: botProps.moveInterval,
+        coinPriority: botProps.coinPriority,
+        playerChaseChance: botProps.playerChaseChance,
+        intelligenceLevel: botProps.intelligenceLevel,
+        id: `bot-${index}`,
+      };
+    }),
     coins: {},
     gameOver: false,
     gameTime: gameSettings.roundTime,
@@ -72,10 +71,8 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
     scoreBoard: document.querySelector("#players-list"),
   };
 
-  // Clear the game container first
   gameState.gameContainer.innerHTML = "";
 
-  // Initialize player element
   const playerElement = createPlayerElement(
     gameState.player.name,
     gameState.player.x,
@@ -88,7 +85,6 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
   gameState.gameContainer.appendChild(playerElement);
   gameState.player.element = playerElement;
 
-  // Initialize bot elements
   gameState.bots.forEach((bot) => {
     const botElement = createPlayerElement(
       bot.name,
@@ -103,12 +99,10 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
     bot.element = botElement;
   });
 
-  // Place initial coins
   for (let i = 0; i < 10; i++) {
     placeCoin(gameState);
   }
 
-  // Set up player movement controls using KeyPressListener from global scope
   const keyboardListeners = [];
 
   keyboardListeners.push(
@@ -132,7 +126,6 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
     )
   );
 
-  // Add power controls
   keyboardListeners.push(
     new KeyPressListener("KeyW", () => activatePower("speed", gameState))
   );
@@ -143,19 +136,16 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
     new KeyPressListener("KeyR", () => activatePower("teleport", gameState))
   );
 
-  // Set up game timer
   const timerDisplay = document.getElementById("timer-display");
   gameState.timerInterval = setInterval(() => {
     gameState.gameTime--;
 
-    // Update time display
     const minutes = Math.floor(gameState.gameTime / 60);
     const seconds = gameState.gameTime % 60;
     timerDisplay.textContent = `${minutes}:${seconds
       .toString()
       .padStart(2, "0")}`;
 
-    // Handle bot movement
     gameState.bots.forEach((bot) => {
       const now = Date.now();
       if (now - bot.lastMove > bot.moveInterval) {
@@ -164,84 +154,63 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
       }
     });
 
-    // Check for game over condition
     if (gameState.gameTime <= 0) {
       endGame(gameState);
     }
   }, 1000);
 
-  // Update scoreboard initially
   updateScoreboard(gameState);
 
-  // Return cleanup function
   return () => {
     keyboardListeners.forEach((listener) => listener.unbind());
     clearInterval(gameState.timerInterval);
-    // Remove single-player mode class when game ends
+
     document.body.classList.remove("single-player-active");
   };
 }
 
-/**
- * Handle player movement
- */
 function handlePlayerMovement(xChange, yChange, gameState) {
   if (gameState.gameOver) return;
 
   const player = gameState.player;
 
-  // Apply speed modifier to movement if speed power is active
   const speedMultiplier = player.speed || 1;
   const adjustedXChange = xChange * speedMultiplier;
   const adjustedYChange = yChange * speedMultiplier;
 
-  // When speed is active, we need to process each step of movement separately
-  // to ensure collision detection works properly for each grid cell crossed
   let remainingXChange = adjustedXChange;
   let remainingYChange = adjustedYChange;
 
-  // Process movement in steps of 1 grid cell at a time
   while (Math.abs(remainingXChange) > 0 || Math.abs(remainingYChange) > 0) {
-    // Calculate the next step
     const stepX = remainingXChange > 0 ? 1 : remainingXChange < 0 ? -1 : 0;
     const stepY = remainingYChange > 0 ? 1 : remainingYChange < 0 ? -1 : 0;
 
-    // Calculate new position for this step
     const newX = player.x + stepX;
     const newY = player.y + stepY;
 
-    // Check if this step is valid
     if (isValidMove(newX, newY)) {
-      // Update direction for sprite facing if moving horizontally
       if (stepX !== 0) {
         player.direction = stepX > 0 ? "right" : "left";
       }
 
-      // Update position
       player.x = newX;
       player.y = newY;
 
-      // Update visual position
       updateElementPosition(player.element, player);
 
-      // Check for coin collection
       checkCoinCollection(player, gameState);
 
-      // Check for collisions with bots
       gameState.bots.forEach((bot) => {
         if (player.x === bot.x && player.y === bot.y) {
           handleSinglePlayerCollisions(player, bot, gameState);
         }
       });
 
-      // Update scoreboard
       updateScoreboard(gameState);
 
-      // Subtract the step from remaining change
       remainingXChange -= stepX;
       remainingYChange -= stepY;
     } else {
-      // If this step is invalid, stop movement in this direction
       remainingXChange = 0;
       remainingYChange = 0;
       break;
@@ -249,9 +218,48 @@ function handlePlayerMovement(xChange, yChange, gameState) {
   }
 }
 
-/**
- * Move bot based on difficulty level
- */
+function getBotProperties(difficulty) {
+  switch (difficulty) {
+    case "easy":
+      return {
+        moveInterval: 1700,
+        coinPriority: 0.4,
+        playerChaseChance: 0.1,
+        intelligenceLevel: "low",
+        description: "Slow and mostly random movement. Rarely chases players.",
+      };
+
+    case "medium":
+      return {
+        moveInterval: 1200,
+        coinPriority: 0.7,
+        playerChaseChance: 0.3,
+        intelligenceLevel: "medium",
+        description:
+          "Balanced speed with improved coin targeting. Sometimes chases players.",
+      };
+
+    case "hard":
+      return {
+        moveInterval: 50,
+        coinPriority: 0.9,
+        playerChaseChance: 0.9,
+        intelligenceLevel: "high",
+        description:
+          "Fast movement with smart targeting. Aggressively pursues coins and players.",
+      };
+
+    default:
+      return {
+        moveInterval: 1000,
+        coinPriority: 0.5,
+        playerChaseChance: 0.2,
+        intelligenceLevel: "medium",
+        description: "Default balanced behavior",
+      };
+  }
+}
+
 function moveBotBasedOnDifficulty(bot, gameState) {
   if (gameState.gameOver) return;
 
@@ -260,61 +268,7 @@ function moveBotBasedOnDifficulty(bot, gameState) {
 
   switch (bot.difficulty) {
     case "easy":
-      // Random movement
-      const randomDir = Math.floor(Math.random() * 4);
-      if (randomDir === 0) xChange = 1;
-      else if (randomDir === 1) xChange = -1;
-      else if (randomDir === 2) yChange = 1;
-      else yChange = -1;
-      break;
-
-    case "medium":
-      // Semi-intelligent movement - prioritize coins, then occasional move toward player
-      const nearestCoin = findNearestCoin(bot, gameState);
-      const shouldChasePlayer = Math.random() < 0.3; // 30% chance to chase player instead of coin
-
-      if (nearestCoin && !shouldChasePlayer) {
-        // Move toward coin
-        const coinDiffX = nearestCoin.x - bot.x;
-        const coinDiffY = nearestCoin.y - bot.y;
-
-        if (Math.abs(coinDiffX) > Math.abs(coinDiffY)) {
-          xChange = coinDiffX > 0 ? 1 : -1;
-        } else {
-          yChange = coinDiffY > 0 ? 1 : -1;
-        }
-      } else {
-        // Move toward player occasionally
-        const playerDiffX = gameState.player.x - bot.x;
-        const playerDiffY = gameState.player.y - bot.y;
-
-        if (Math.abs(playerDiffX) > Math.abs(playerDiffY)) {
-          xChange = playerDiffX > 0 ? 1 : -1;
-        } else {
-          yChange = playerDiffY > 0 ? 1 : -1;
-        }
-      }
-      break;
-
-    case "hard":
-      // Smart movement - target player if bot has more coins, otherwise target coins
-      // Also consider if player has significantly more coins, then chase
-
-      const botHasMoreCoins = bot.coins > gameState.player.coins;
-      const playerHasManyMoreCoins = gameState.player.coins - bot.coins > 5;
-
-      if (botHasMoreCoins || playerHasManyMoreCoins) {
-        // Chase player
-        const playerDiffX = gameState.player.x - bot.x;
-        const playerDiffY = gameState.player.y - bot.y;
-
-        if (Math.abs(playerDiffX) > Math.abs(playerDiffY)) {
-          xChange = playerDiffX > 0 ? 1 : -1;
-        } else {
-          yChange = playerDiffY > 0 ? 1 : -1;
-        }
-      } else {
-        // Target nearest coin
+      if (Math.random() < bot.coinPriority) {
         const nearestCoin = findNearestCoin(bot, gameState);
         if (nearestCoin) {
           const coinDiffX = nearestCoin.x - bot.x;
@@ -326,7 +280,134 @@ function moveBotBasedOnDifficulty(bot, gameState) {
             yChange = coinDiffY > 0 ? 1 : -1;
           }
         } else {
-          // Random movement if no coins
+          const randomDir = Math.floor(Math.random() * 4);
+          if (randomDir === 0) xChange = 1;
+          else if (randomDir === 1) xChange = -1;
+          else if (randomDir === 2) yChange = 1;
+          else yChange = -1;
+        }
+      } else {
+        const randomDir = Math.floor(Math.random() * 4);
+        if (randomDir === 0) xChange = 1;
+        else if (randomDir === 1) xChange = -1;
+        else if (randomDir === 2) yChange = 1;
+        else yChange = -1;
+      }
+      break;
+
+    case "medium":
+      const nearestCoin = findNearestCoin(bot, gameState);
+      const shouldChasePlayer = Math.random() < bot.playerChaseChance;
+
+      if (nearestCoin && !shouldChasePlayer) {
+        const coinDiffX = nearestCoin.x - bot.x;
+        const coinDiffY = nearestCoin.y - bot.y;
+
+        if (Math.abs(coinDiffX) > Math.abs(coinDiffY)) {
+          xChange = coinDiffX > 0 ? 1 : -1;
+        } else {
+          yChange = coinDiffY > 0 ? 1 : -1;
+        }
+      } else {
+        const playerDiffX = gameState.player.x - bot.x;
+        const playerDiffY = gameState.player.y - bot.y;
+
+        if (Math.abs(playerDiffX) > Math.abs(playerDiffY)) {
+          xChange = playerDiffX > 0 ? 1 : -1;
+        } else {
+          yChange = playerDiffY > 0 ? 1 : -1;
+        }
+      }
+      break;
+
+    case "hard":
+      const botHasMoreCoins = bot.coins > gameState.player.coins;
+      const playerHasManyMoreCoins = gameState.player.coins - bot.coins > 5;
+      const coinIsNearby = findNearestCoin(bot, gameState, 5);
+
+      if (
+        (botHasMoreCoins && Math.random() < bot.playerChaseChance) ||
+        playerHasManyMoreCoins
+      ) {
+        const playerDiffX = gameState.player.x - bot.x;
+        const playerDiffY = gameState.player.y - bot.y;
+
+        if (Math.abs(playerDiffX) > Math.abs(playerDiffY)) {
+          xChange = playerDiffX > 0 ? 1 : -1;
+          if (!isValidMove(bot.x + xChange, bot.y)) {
+            xChange = 0;
+            yChange = playerDiffY > 0 ? 1 : -1;
+          }
+        } else {
+          yChange = playerDiffY > 0 ? 1 : -1;
+          if (!isValidMove(bot.x, bot.y + yChange)) {
+            yChange = 0;
+            xChange = playerDiffX > 0 ? 1 : -1;
+          }
+        }
+      } else if (coinIsNearby) {
+        const coinDiffX = coinIsNearby.x - bot.x;
+        const coinDiffY = coinIsNearby.y - bot.y;
+
+        if (Math.abs(coinDiffX) > Math.abs(coinDiffY)) {
+          xChange = coinDiffX > 0 ? 1 : -1;
+          if (!isValidMove(bot.x + xChange, bot.y)) {
+            xChange = 0;
+            yChange = coinDiffY > 0 ? 1 : -1;
+          }
+        } else {
+          yChange = coinDiffY > 0 ? 1 : -1;
+          if (!isValidMove(bot.x, bot.y + yChange)) {
+            yChange = 0;
+            xChange = coinDiffX > 0 ? 1 : -1;
+          }
+        }
+      } else {
+        const potentialDirections = [
+          { x: 1, y: 0 },
+          { x: -1, y: 0 },
+          { x: 0, y: 1 },
+          { x: 0, y: -1 },
+        ];
+
+        let bestDirection = null;
+        let bestScore = -Infinity;
+
+        for (const dir of potentialDirections) {
+          if (isValidMove(bot.x + dir.x, bot.y + dir.y)) {
+            let score = Math.random() * 0.2;
+
+            Object.values(gameState.coins).forEach((coin) => {
+              const currentDist =
+                Math.abs(bot.x - coin.x) + Math.abs(bot.y - coin.y);
+              const newDist =
+                Math.abs(bot.x + dir.x - coin.x) +
+                Math.abs(bot.y + dir.y - coin.y);
+              if (newDist < currentDist) {
+                score += 1;
+              }
+            });
+
+            if (botHasMoreCoins) {
+              const playerDist =
+                Math.abs(bot.x + dir.x - gameState.player.x) +
+                Math.abs(bot.y + dir.y - gameState.player.y);
+              if (playerDist < 3) {
+                score -= 2;
+              }
+            }
+
+            if (score > bestScore) {
+              bestScore = score;
+              bestDirection = dir;
+            }
+          }
+        }
+
+        if (bestDirection) {
+          xChange = bestDirection.x;
+          yChange = bestDirection.y;
+        } else {
           const randomDir = Math.floor(Math.random() * 4);
           if (randomDir === 0) xChange = 1;
           else if (randomDir === 1) xChange = -1;
@@ -337,10 +418,8 @@ function moveBotBasedOnDifficulty(bot, gameState) {
       break;
   }
 
-  // Update bot direction
   bot.direction = xChange > 0 ? "right" : xChange < 0 ? "left" : bot.direction;
 
-  // Check if the move is valid
   const newX = bot.x + xChange;
   const newY = bot.y + yChange;
 
@@ -348,18 +427,14 @@ function moveBotBasedOnDifficulty(bot, gameState) {
     bot.x = newX;
     bot.y = newY;
 
-    // Update bot element
     updateElementPosition(bot.element, bot);
 
-    // Check for coin collection
     checkCoinCollection(bot, gameState);
 
-    // Check for collision with player
     if (bot.x === gameState.player.x && bot.y === gameState.player.y) {
       handleSinglePlayerCollisions(gameState.player, bot, gameState);
     }
 
-    // Check for collisions with other bots
     gameState.bots.forEach((otherBot) => {
       if (
         bot.id !== otherBot.id &&
@@ -370,32 +445,11 @@ function moveBotBasedOnDifficulty(bot, gameState) {
       }
     });
 
-    // Update scoreboard
     updateScoreboard(gameState);
   }
 }
 
-/**
- * Get bot move interval based on difficulty
- */
-function getBotMoveInterval(difficulty) {
-  switch (difficulty) {
-    case "easy":
-      return 1200; // Slow movement
-    case "medium":
-      return 800; // Medium movement
-    case "hard":
-      return 500; // Fast movement
-    default:
-      return 1000;
-  }
-}
-
-/**
- * Check if a move is valid using mapData boundaries and blockedSpaces
- */
 function isValidMove(x, y) {
-  // Check map boundaries
   if (
     x < mapData.minX ||
     x > mapData.maxX - 1 ||
@@ -405,7 +459,6 @@ function isValidMove(x, y) {
     return false;
   }
 
-  // Check blocked spaces
   const key = `${x}x${y}`;
   if (mapData.blockedSpaces[key]) {
     return false;
@@ -414,9 +467,6 @@ function isValidMove(x, y) {
   return true;
 }
 
-/**
- * Update HTML element position based on game coordinates
- */
 function updateElementPosition(element, entity) {
   element.style.transform = `translate3d(${16 * entity.x}px, ${
     16 * entity.y - 4
@@ -424,49 +474,36 @@ function updateElementPosition(element, entity) {
   element.setAttribute("data-direction", entity.direction);
 }
 
-/**
- * Check if entity collected a coin
- */
 function checkCoinCollection(entity, gameState) {
   const coinKey = `${entity.x}x${entity.y}`;
   if (gameState.coins[coinKey]) {
-    // Collect the coin
     const coin = gameState.coins[coinKey];
     entity.coins += coin.value;
 
-    // Update coin display on character
     const coinsDisplay = entity.element.querySelector(".Character_coins");
     if (coinsDisplay) {
       coinsDisplay.textContent = ` ${entity.coins}`;
     }
 
-    // Play coin sound
     const coinAudio = new Audio("./assets/audio/getCoin.mp3");
     coinAudio.volume = 0.5;
     coinAudio.play();
 
-    // Remove the coin from the game
     coin.element.remove();
     delete gameState.coins[coinKey];
 
-    // Place a new coin
     placeCoin(gameState);
   }
 }
 
-/**
- * Place a new coin in the game
- */
 function placeCoin(gameState) {
   const safeSpot = getRandomSafeSpot();
   const coinKey = `${safeSpot.x}x${safeSpot.y}`;
 
-  // Don't place a coin if there's already one there
   if (gameState.coins[coinKey]) {
     return placeCoin(gameState);
   }
 
-  // Create coin element
   const coinElement = document.createElement("div");
   coinElement.classList.add("Coin", "grid-cell");
 
@@ -483,10 +520,8 @@ function placeCoin(gameState) {
     16 * safeSpot.y - 4
   }px, 0)`;
 
-  // Add coin to game container
   gameState.gameContainer.appendChild(coinElement);
 
-  // Add coin to game state
   gameState.coins[coinKey] = {
     x: safeSpot.x,
     y: safeSpot.y,
@@ -495,16 +530,13 @@ function placeCoin(gameState) {
   };
 }
 
-/**
- * Find the nearest coin to an entity
- */
-function findNearestCoin(entity, gameState) {
+function findNearestCoin(entity, gameState, maxDistance = Infinity) {
   let nearestCoin = null;
   let nearestDistance = Infinity;
 
   Object.values(gameState.coins).forEach((coin) => {
     const distance = Math.abs(entity.x - coin.x) + Math.abs(entity.y - coin.y);
-    if (distance < nearestDistance) {
+    if (distance < nearestDistance && distance <= maxDistance) {
       nearestDistance = distance;
       nearestCoin = coin;
     }
@@ -526,7 +558,6 @@ function updateScoreboard(gameState) {
     </div>
   `;
 
-  // Add player score
   const playerScore = document.createElement("div");
   playerScore.className = "player-score you";
   playerScore.innerHTML = `
@@ -536,7 +567,6 @@ function updateScoreboard(gameState) {
   `;
   scoreboardElement.appendChild(playerScore);
 
-  // Add bot scores
   gameState.bots.forEach((bot) => {
     const botScore = document.createElement("div");
     botScore.className = "player-score";
@@ -549,19 +579,14 @@ function updateScoreboard(gameState) {
   });
 }
 
-/**
- * End the game and show results
- */
 function endGame(gameState) {
   gameState.gameOver = true;
   clearInterval(gameState.timerInterval);
 
-  // Determine winner by coins
   let coinWinner = gameState.player;
   let killsWinner = gameState.player;
   let allEntities = [gameState.player, ...gameState.bots];
 
-  // Find players with most coins and kills
   allEntities.forEach((entity) => {
     if (entity.coins > coinWinner.coins) {
       coinWinner = entity;
@@ -571,151 +596,117 @@ function endGame(gameState) {
     }
   });
 
-  // Show game over modal
   const gameOverModal = document.getElementById("game-over-modal");
   const eliminatedByText = document.getElementById("eliminated-by");
 
-  // Create message showing both coin winner and kill winner
   let gameOverText = "";
 
-  // Add coins winner info
   if (coinWinner === gameState.player) {
     gameOverText += `You collected the most coins: ${coinWinner.coins}!`;
   } else {
     gameOverText += `${coinWinner.name} collected the most coins: ${coinWinner.coins}!`;
   }
 
-  // Add kills winner info
   if (killsWinner === gameState.player) {
     gameOverText += `\nYou got the most kills: ${killsWinner.kills}!`;
   } else {
     gameOverText += `\n${killsWinner.name} got the most kills: ${killsWinner.kills}!`;
   }
 
-  // Set the game over text
   eliminatedByText.textContent = gameOverText;
 
-  // Make line breaks work in the text
   eliminatedByText.style.whiteSpace = "pre-line";
 
   gameOverModal.classList.remove("hidden");
 
-  // Add event listener for restart button
-  document.getElementById("restart-button").addEventListener("click", () => {
+  const restartButton = document.getElementById("restart-button");
+  restartButton.textContent = "To Lobby";
+  restartButton.addEventListener("click", () => {
     gameOverModal.classList.add("hidden");
-    window.location.reload(); // Reload the page to restart the game
+    window.location.reload();
   });
 }
 
-/**
- * Activate player power
- */
 function activatePower(power, gameState) {
   const button = document.querySelector(`[data-power="${power}"]`);
   const cost = parseInt(button.dataset.cost);
   const player = gameState.player;
 
-  // Check if player has enough coins and power is not on cooldown
   if (player.coins >= cost && !player.powers[power].cooldown) {
-    // Deduct coins
     player.coins -= cost;
 
-    // Update coin display on player character
     const coinsDisplay = player.element.querySelector(".Character_coins");
     if (coinsDisplay) {
       coinsDisplay.textContent = ` ${player.coins}`;
     }
 
-    // Update scoreboard immediately to reflect the new coin count
     updateScoreboard(gameState);
 
-    // Update power status
     player.powers[power].active = true;
     player.powers[power].cooldown = true;
 
-    // Update UI
     button.classList.add("active");
     const cooldown = button.querySelector(".cooldown");
     if (cooldown) {
       cooldown.style.setProperty("--progress", "100%");
     }
 
-    // Process power activation
     switch (power) {
       case "speed":
-        // Play speed sound
         const speedAudio = new Audio("./assets/audio/super-power/speed.mp3");
         speedAudio.volume = 0.5;
         speedAudio.play();
 
-        // Apply speed effect
-        player.speed = 2; // This now affects actual movement speed
+        player.speed = 2;
         player.element.classList.add("speed-boost");
 
-        // Set timeout to end the effect
         setTimeout(() => {
           player.speed = 1;
           player.powers[power].active = false;
           player.element.classList.remove("speed-boost");
           button.classList.remove("active");
 
-          // Start cooldown animation
           startCooldownAnimation(power, button, gameState);
         }, POWERS[power].duration);
         break;
 
       case "shield":
-        // Play shield sound
         const shieldAudio = new Audio("./assets/audio/super-power/shield.mp3");
         shieldAudio.volume = 0.5;
         shieldAudio.play();
 
-        // Apply shield effect
         player.shield = true;
         player.element.classList.add("shield");
 
-        // Don't change the position/shadow when adding shield
-
-        // // Show single player message with "Ultra Power" instead of "Shield"
-        // showGameMessage(`${player.name} activated Ultra Power!`);
-
-        // Set timeout to end the effect
         setTimeout(() => {
           player.shield = false;
           player.powers[power].active = false;
           player.element.classList.remove("shield");
           button.classList.remove("active");
 
-          // Start cooldown animation
           startCooldownAnimation(power, button, gameState);
         }, POWERS[power].duration);
         break;
 
       case "teleport":
-        // Play teleport sound
         const teleportAudio = new Audio(
           "./assets/audio/super-power/teleport.mp3"
         );
         teleportAudio.volume = 0.5;
         teleportAudio.play();
 
-        // Get a random safe spot and teleport player
         const safeSpot = getRandomSafeSpot();
         player.x = safeSpot.x;
         player.y = safeSpot.y;
         updateElementPosition(player.element, player);
         button.classList.remove("active");
 
-        // Start cooldown animation
         startCooldownAnimation(power, button, gameState);
         break;
     }
   }
 }
 
-/**
- * Start cooldown animation for a power
- */
 function startCooldownAnimation(power, button, gameState) {
   const cooldown = button.querySelector(".cooldown");
   const cooldownTime = POWERS[power].cooldown;
@@ -742,46 +733,32 @@ function startCooldownAnimation(power, button, gameState) {
   updateCooldown();
 }
 
-/**
- * Handle collisions between two bots
- */
 function handleBotVsBotCollision(bot1, bot2, gameState) {
-  // Play hit sound
   const hitAudio = new Audio("./assets/audio/hit.mp3");
   hitAudio.play();
 
-  // Determine which bot has more coins and is the winner
   const winner = bot1.coins > bot2.coins ? bot1 : bot2;
   const loser = bot1.coins > bot2.coins ? bot2 : bot1;
 
-  // Reset loser's position and coins
   const safeSpot = getRandomSafeSpot();
   loser.x = safeSpot.x;
   loser.y = safeSpot.y;
-  loser.coins = 0; // Reset loser coins immediately
+  loser.coins = 0;
 
-  // Update winner's kills
   winner.kills++;
 
-  // Update loser's position in the DOM
   updateElementPosition(loser.element, loser);
 
-  // Update coins display on loser character
   const loserCoinsDisplay = loser.element.querySelector(".Character_coins");
   if (loserCoinsDisplay) {
-    loserCoinsDisplay.textContent = ` 0`; // Update visual display immediately
+    loserCoinsDisplay.textContent = ` 0`;
   }
 
-  // Show a message
   showGameMessage(`${winner.name} defeated ${loser.name}!`);
 
-  // Update scoreboard immediately
   updateScoreboard(gameState);
 }
 
-/**
- * Show a temporary game message
- */
 function showGameMessage(message) {
   let messageElement = document.querySelector(".message");
 
@@ -794,7 +771,6 @@ function showGameMessage(message) {
   messageElement.textContent = message;
   messageElement.style.display = "block";
 
-  // Remove the message after 3 seconds
   setTimeout(() => {
     messageElement.style.display = "none";
   }, 3000);

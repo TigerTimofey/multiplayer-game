@@ -1565,7 +1565,7 @@ button.player-status:active {
   border: 3px solid #8d7eb5;
   color: #fff;
   text-shadow: 2px 2px #2a2a3f;
-  padding: 0.8em 1.5em;
+  padding: 10px;
   position: relative;
   transition: all 0.2s;
   width: 240px;
@@ -2393,6 +2393,7 @@ body.single-player-active .message {
   background: linear-gradient(45deg, #2ed573, #7bed9f);
   animation: pulse 2s infinite;
   margin: 20px auto;
+  padding: 10px;
   display: block;
   text-align: center;
 }
