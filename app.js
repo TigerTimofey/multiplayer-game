@@ -177,7 +177,7 @@ import StateLocal from "./stateLocal.js";
     document.getElementById("initial-setup").classList.remove("hidden");
 
     // Update the title
-    document.getElementById("lobby-title").textContent = "Single Player Setup";
+    document.getElementById("lobby-title").textContent = "Character name";
 
     // Show back button
     document.querySelector(".back-button").classList.remove("hidden");
@@ -270,7 +270,7 @@ import StateLocal from "./stateLocal.js";
     }, duration);
   }
 
-  // Handle the continue button in single player setup
+  // Handle the continue button in Character name
   document.getElementById("continue-setup").addEventListener("click", () => {
     const playerName = document.getElementById("lobby-name").value.trim();
     const selectedColor = document.querySelector(".color-option.selected")
@@ -292,8 +292,7 @@ import StateLocal from "./stateLocal.js";
 
     // Only show bot selection if we came from single player
     if (
-      document.getElementById("lobby-title").textContent ===
-      "Single Player Setup"
+      document.getElementById("lobby-title").textContent === "Character name"
     ) {
       // Hide the initial setup form
       document.getElementById("initial-setup").classList.add("hidden");
@@ -490,8 +489,9 @@ import StateLocal from "./stateLocal.js";
 
   // Function to show single player lobby with bots
   function showSinglePlayerLobby(player, bots, gameSettings) {
-    // Update the title
-    document.getElementById("lobby-title").textContent = "Single Player Lobby";
+    // Update the title (keep the element but hide it for now)
+    document.getElementById("lobby-title").textContent = "Game Lobby";
+    document.getElementById("lobby-title").classList.add("hidden");
 
     // Create or get the single player lobby container
     let singleLobbyContainer = document.getElementById("sp-game-lobby");
@@ -708,6 +708,9 @@ import StateLocal from "./stateLocal.js";
 
   // Update back button handler to include the single player lobby
   document.querySelector(".back-button").addEventListener("click", () => {
+    // Always make sure the title is visible when navigating back
+    document.getElementById("lobby-title").classList.remove("hidden");
+
     // Check which screen is currently visible
     if (
       document.getElementById("sp-game-lobby") &&
@@ -741,8 +744,7 @@ import StateLocal from "./stateLocal.js";
       // If bot selection is visible, go back to initial setup
       document.getElementById("bot-selection").classList.add("hidden");
       document.getElementById("initial-setup").classList.remove("hidden");
-      document.getElementById("lobby-title").textContent =
-        "Single Player Setup";
+      document.getElementById("lobby-title").textContent = "Character name";
     } else {
       // Otherwise, go back to main menu
       document.getElementById("initial-setup").classList.add("hidden");
