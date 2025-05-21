@@ -459,7 +459,7 @@ import StateLocal from "./stateLocal.js";
       colorContainer.appendChild(colorOptions);
       botSlot.appendChild(colorContainer);
 
-      // Add starting coins input
+      // Add starting coins input with proper constraints
       const coinsContainer = document.createElement("div");
       coinsContainer.className = "bot-custom-field";
 
@@ -473,23 +473,39 @@ import StateLocal from "./stateLocal.js";
       coinsInput.min = "0";
       coinsInput.max = "99";
       coinsInput.value = "0";
-      coinsContainer.appendChild(coinsInput);
 
+      coinsInput.addEventListener("input", () => {
+        coinsInput.value = coinsInput.value.replace(/[^0-9]/g, "");
+
+        if (coinsInput.value.length > 2) {
+          coinsInput.value = coinsInput.value.slice(0, 2);
+        }
+
+        const numValue = parseInt(coinsInput.value) || 0;
+        if (numValue > 99) {
+          coinsInput.value = "99";
+        }
+      });
+
+      coinsInput.addEventListener("blur", () => {
+        if (coinsInput.value === "") {
+          coinsInput.value = "0";
+        }
+      });
+
+      coinsContainer.appendChild(coinsInput);
       botSlot.appendChild(coinsContainer);
 
-      // Add the completed bot slot to the container
       botCustomizationContainer.appendChild(botSlot);
     }
   }
 
-  // Handle the continue button from bot customization to difficulty selection
   document
     .getElementById("continue-bot-custom")
     .addEventListener("click", () => {
       const botSlots = document.querySelectorAll(".bot-custom-slot");
       const customizedBots = [];
 
-      // Collect bot data from each slot
       botSlots.forEach((slot) => {
         const nameInput = slot.querySelector(".bot-name-input");
         const botName =
@@ -500,7 +516,6 @@ import StateLocal from "./stateLocal.js";
 
         if (!colorOption) return;
 
-        // Create bot object with customized properties
         customizedBots.push({
           name: botName,
           color: colorOption.dataset.color,
@@ -510,39 +525,30 @@ import StateLocal from "./stateLocal.js";
         });
       });
 
-      // Save customized bots
       StateLocal.storeBots(customizedBots);
 
-      // Hide bot customization
       document.getElementById("bot-customization").classList.add("hidden");
 
-      // Show difficulty selection (following the original flow)
       document
         .getElementById("difficulty-selection")
         .classList.remove("hidden");
 
-      // Update title
       document.getElementById("lobby-title").textContent = "Select Difficulty";
     });
 
-  // Update back button handler to navigate correctly
   document.querySelector(".back-button").addEventListener("click", () => {
-    // Always make sure the title is visible when navigating back
     document.getElementById("lobby-title").classList.remove("hidden");
 
-    // Check which screen is currently visible
     if (
       document.getElementById("sp-game-lobby") &&
       !document.getElementById("sp-game-lobby").classList.contains("hidden")
     ) {
-      // If single player lobby is visible, go back to time selection
       document.getElementById("sp-game-lobby").classList.add("hidden");
       document.getElementById("time-selection").classList.remove("hidden");
       document.getElementById("lobby-title").textContent = "Select Round Time";
     } else if (
       !document.getElementById("time-selection").classList.contains("hidden")
     ) {
-      // If time selection is visible, go back to difficulty selection
       document.getElementById("time-selection").classList.add("hidden");
       document
         .getElementById("difficulty-selection")
@@ -553,26 +559,22 @@ import StateLocal from "./stateLocal.js";
         .getElementById("difficulty-selection")
         .classList.contains("hidden")
     ) {
-      // If difficulty selection is visible, go back to bot customization
       document.getElementById("difficulty-selection").classList.add("hidden");
       document.getElementById("bot-customization").classList.remove("hidden");
       document.getElementById("lobby-title").textContent = "Customize Bots";
     } else if (
       !document.getElementById("bot-customization").classList.contains("hidden")
     ) {
-      // If bot customization is visible, go back to bot selection
       document.getElementById("bot-customization").classList.add("hidden");
       document.getElementById("bot-selection").classList.remove("hidden");
       document.getElementById("lobby-title").textContent = "Select Bots";
     } else if (
       !document.getElementById("bot-selection").classList.contains("hidden")
     ) {
-      // If bot selection is visible, go back to initial setup
       document.getElementById("bot-selection").classList.add("hidden");
       document.getElementById("initial-setup").classList.remove("hidden");
       document.getElementById("lobby-title").textContent = "Character name";
     } else {
-      // Otherwise, go back to main menu
       document.getElementById("initial-setup").classList.add("hidden");
       document.getElementById("bot-selection").classList.add("hidden");
       document.getElementById("bot-customization").classList.add("hidden");
@@ -586,7 +588,6 @@ import StateLocal from "./stateLocal.js";
     }
   });
 
-  // Modify the difficulty selection handler to apply to all bots
   document
     .getElementById("start-difficulty-game")
     .addEventListener("click", () => {
@@ -595,7 +596,6 @@ import StateLocal from "./stateLocal.js";
       );
 
       if (!selectedDifficulty) {
-        // Position tooltip above the difficulty selection buttons
         const difficultySelectElement = document.querySelector(
           "#difficulty-selection .player-select"
         );
@@ -607,11 +607,9 @@ import StateLocal from "./stateLocal.js";
         return;
       }
 
-      // Store the selected difficulty
       const difficulty = selectedDifficulty.dataset.modeBots;
       StateLocal.setBotDifficulty(difficulty);
 
-      // Apply the selected difficulty to all bots
       const bots = StateLocal.getBots();
       if (bots && bots.length > 0) {
         bots.forEach((bot) => {
@@ -620,23 +618,17 @@ import StateLocal from "./stateLocal.js";
         StateLocal.storeBots(bots);
       }
 
-      // Hide difficulty selection
       document.getElementById("difficulty-selection").classList.add("hidden");
 
-      // Show time selection
       document.getElementById("time-selection").classList.remove("hidden");
 
-      // Update title
       document.getElementById("lobby-title").textContent = "Select Round Time";
     });
 
-  // Update single player lobby display to show individual bot difficulties
   function showSinglePlayerLobby(player, bots, gameSettings) {
-    // Update the title (keep the element but hide it for now)
     document.getElementById("lobby-title").textContent = "Game Lobby";
     document.getElementById("lobby-title").classList.add("hidden");
 
-    // Create or get the single player lobby container
     let singleLobbyContainer = document.getElementById("sp-game-lobby");
     if (!singleLobbyContainer) {
       singleLobbyContainer = document.createElement("div");
@@ -647,10 +639,8 @@ import StateLocal from "./stateLocal.js";
         .appendChild(singleLobbyContainer);
     }
 
-    // Clear any existing content
     singleLobbyContainer.innerHTML = "";
 
-    // Create lobby header with game info
     const lobbyHeader = document.createElement("div");
     lobbyHeader.className = "lobby-header";
     lobbyHeader.innerHTML = `
@@ -662,38 +652,29 @@ import StateLocal from "./stateLocal.js";
     `;
     singleLobbyContainer.appendChild(lobbyHeader);
 
-    // Create players list container
     const playersContainer = document.createElement("div");
     playersContainer.className = "lobby-players";
 
-    // Add the player list header
     const playersListHeader = document.createElement("h3");
     playersListHeader.textContent = "Players";
     playersContainer.appendChild(playersListHeader);
 
-    // Create the player list
     const playersList = document.createElement("div");
     playersList.id = "sp-lobby-players-list";
     playersContainer.appendChild(playersList);
 
-    // Add the human player (always set as ready)
     const playerElement = createPlayerElement(player, true, true);
     playersList.appendChild(playerElement);
 
-    // Add the bots (randomly set as ready/not ready for visual effect)
     bots.forEach((bot, index) => {
-      // Stagger the "ready" status of bots to make it look more realistic
       const isReady = Math.random() > 0.5;
       const botElement = createPlayerElement(bot, false, isReady);
 
-      // Store the ready status in the bot object
       bot.isReady = isReady;
 
-      // Add small delay to simulate bots joining
       setTimeout(() => {
         playersList.appendChild(botElement);
 
-        // After a random time, set bot to ready if not already
         if (!isReady) {
           setTimeout(() => {
             bot.isReady = true;
@@ -706,7 +687,6 @@ import StateLocal from "./stateLocal.js";
             botElement.querySelector(".player-status-display").textContent =
               "Ready";
 
-            // Check if all bots are ready
             checkAllReady();
           }, 1000 + Math.random() * 5000);
         }
@@ -715,24 +695,20 @@ import StateLocal from "./stateLocal.js";
 
     singleLobbyContainer.appendChild(playersContainer);
 
-    // Add start game button
     const startButton = document.createElement("button");
     startButton.id = "sp-start-game-btn";
     startButton.className = "lobby-button";
     startButton.textContent = "Start Game";
-    startButton.disabled = true; // Disabled until all bots are ready
+    startButton.disabled = true;
 
     startButton.addEventListener("click", () => {
-      // Start the single player game
       startSinglePlayerGame(player, bots, gameSettings);
     });
 
     singleLobbyContainer.appendChild(startButton);
 
-    // Show the lobby
     singleLobbyContainer.classList.remove("hidden");
 
-    // Function to check if all bots are ready
     function checkAllReady() {
       const allReady = bots.every((bot) => bot.isReady);
 
@@ -743,11 +719,9 @@ import StateLocal from "./stateLocal.js";
       }
     }
 
-    // Check initially in case all bots are already ready
     checkAllReady();
   }
 
-  // Helper function to create a player element for the lobby
   function createPlayerElement(player, isHuman, isReady) {
     const playerElement = document.createElement("div");
     playerElement.className = "lobby-player";
@@ -756,12 +730,10 @@ import StateLocal from "./stateLocal.js";
     const playerName = document.createElement("div");
     playerName.className = "player-name";
 
-    // Add a crown icon for the human player and display bot name with color
     let displayName;
     if (isHuman) {
       displayName = `👑 ${player.name}`;
     } else {
-      // For bots, ensure the color name is part of the displayed name
       const colorName =
         player.color.charAt(0).toUpperCase() + player.color.slice(1);
       if (!player.name.includes(colorName)) {
@@ -771,7 +743,6 @@ import StateLocal from "./stateLocal.js";
       }
       displayName += " (Bot)";
 
-      // Add coins display if bot has starting coins
       if (player.coins > 0) {
         displayName += ` <span class="bot-starting-coins">💰 ${player.coins}</span>`;
       }
@@ -781,7 +752,6 @@ import StateLocal from "./stateLocal.js";
 
     playerElement.appendChild(playerName);
 
-    // Add status indicator
     const playerStatus = document.createElement("div");
     playerStatus.className = `player-status-display ${
       isReady ? "status-ready" : "status-not-ready"
@@ -790,7 +760,6 @@ import StateLocal from "./stateLocal.js";
 
     playerElement.appendChild(playerStatus);
 
-    // Add animation for just joined
     playerElement.classList.add("player-joined");
     setTimeout(() => {
       playerElement.classList.remove("player-joined");
@@ -799,20 +768,16 @@ import StateLocal from "./stateLocal.js";
     return playerElement;
   }
 
-  // Function to start the single player game
   function startSinglePlayerGame(player, bots, gameSettings) {
     console.log("Starting game with:", { player, bots, gameSettings });
 
-    // Add transition effect
     const lobby = document.getElementById("sp-game-lobby");
     lobby.style.animation = "fadeOut 0.5s forwards";
 
-    // Simulate countdown
     const countdownOverlay = document.createElement("div");
     countdownOverlay.className = "countdown-overlay";
     document.body.appendChild(countdownOverlay);
 
-    // Play start sound
     const audio = new Audio("./assets/audio/gameStart.mp3");
 
     let count = 3;
@@ -827,16 +792,13 @@ import StateLocal from "./stateLocal.js";
         clearInterval(interval);
         countdownOverlay.innerHTML = `<div class="countdown-number">GO!</div>`;
 
-        // Play game start sound
         audio.play();
 
-        // After countdown, start the actual game
         setTimeout(() => {
           document.querySelector("#lobby").classList.add("hidden");
           document.querySelector("#game-content").classList.remove("hidden");
           countdownOverlay.remove();
 
-          // Initialize the single player game with player and bots
           import("./src/core/game/singlePlayer/initSinglePlayerGame.js")
             .then((module) => {
               const cleanupGame = module.initSinglePlayerGame(
@@ -845,7 +807,6 @@ import StateLocal from "./stateLocal.js";
                 gameSettings
               );
 
-              // Add event listener for the quit button
               document
                 .getElementById("quit-button")
                 .addEventListener("click", () => {
@@ -867,24 +828,19 @@ import StateLocal from "./stateLocal.js";
     }, 1000);
   }
 
-  // Update back button handler to include the single player lobby
   document.querySelector(".back-button").addEventListener("click", () => {
-    // Always make sure the title is visible when navigating back
     document.getElementById("lobby-title").classList.remove("hidden");
 
-    // Check which screen is currently visible
     if (
       document.getElementById("sp-game-lobby") &&
       !document.getElementById("sp-game-lobby").classList.contains("hidden")
     ) {
-      // If single player lobby is visible, go back to time selection
       document.getElementById("sp-game-lobby").classList.add("hidden");
       document.getElementById("time-selection").classList.remove("hidden");
       document.getElementById("lobby-title").textContent = "Select Round Time";
     } else if (
       !document.getElementById("time-selection").classList.contains("hidden")
     ) {
-      // If time selection is visible, go back to difficulty selection
       document.getElementById("time-selection").classList.add("hidden");
       document
         .getElementById("difficulty-selection")
@@ -895,19 +851,16 @@ import StateLocal from "./stateLocal.js";
         .getElementById("difficulty-selection")
         .classList.contains("hidden")
     ) {
-      // If difficulty selection is visible, go back to bot selection
       document.getElementById("difficulty-selection").classList.add("hidden");
       document.getElementById("bot-selection").classList.remove("hidden");
       document.getElementById("lobby-title").textContent = "Select Bots";
     } else if (
       !document.getElementById("bot-selection").classList.contains("hidden")
     ) {
-      // If bot selection is visible, go back to initial setup
       document.getElementById("bot-selection").classList.add("hidden");
       document.getElementById("initial-setup").classList.remove("hidden");
       document.getElementById("lobby-title").textContent = "Character name";
     } else {
-      // Otherwise, go back to main menu
       document.getElementById("initial-setup").classList.add("hidden");
       document.getElementById("bot-selection").classList.add("hidden");
       document.getElementById("difficulty-selection").classList.add("hidden");
@@ -920,7 +873,6 @@ import StateLocal from "./stateLocal.js";
     }
   });
 
-  // Function to generate bot data
   function generateBots(count, difficulty, playerColor) {
     const botNames = [
       "Bot Alpha",
@@ -935,10 +887,8 @@ import StateLocal from "./stateLocal.js";
     const bots = [];
 
     for (let i = 0; i < count; i++) {
-      // Rotate through available colors for bots
       const botColor = availableColors[i % availableColors.length];
 
-      // Create a bot with a name based on its color
       const colorName = botColor.charAt(0).toUpperCase() + botColor.slice(1);
       const botName = `${colorName} ${botNames[i % botNames.length]}`;
 
@@ -955,12 +905,9 @@ import StateLocal from "./stateLocal.js";
     return bots;
   }
 
-  // This function should be called when initializing single player game
   function setupSinglePlayerPowers() {
-    // Mark the body with a special class for single player mode
     document.body.classList.add("single-player-active");
 
-    // Update power costs to match single player values
     const speedButton = document.querySelector('[data-power="speed"]');
     const shieldButton = document.querySelector('[data-power="shield"]');
     const teleportButton = document.querySelector('[data-power="teleport"]');
@@ -981,11 +928,9 @@ import StateLocal from "./stateLocal.js";
     }
   }
 
-  // This function should be called when leaving single player mode
   function resetPowersDisplay() {
     document.body.classList.remove("single-player-active");
 
-    // Reset power costs to their original values from POWERS constant
     const buttons = document.querySelectorAll(".power-button");
     buttons.forEach((button) => {
       const power = button.dataset.power;
@@ -998,14 +943,12 @@ import StateLocal from "./stateLocal.js";
     });
   }
 
-  // Modify the final start button (in the time selection screen) to properly show the lobby
   document.getElementById("start-game-final").addEventListener("click", () => {
     const selectedTime = document.querySelector(
       "#time-selection .time-select button.selected"
     );
 
     if (!selectedTime) {
-      // Position tooltip above the time selection buttons
       const timeSelectElement = document.querySelector(
         "#time-selection .time-select"
       );
@@ -1016,10 +959,8 @@ import StateLocal from "./stateLocal.js";
     const gameSettings = StateLocal.getGameSettings();
     const playerInfo = StateLocal.getPlayerInfo();
 
-    // Get customized bots from storage
     const bots = StateLocal.getBots();
 
-    // Store game round time in settings
     const roundTime = parseInt(selectedTime.dataset.time);
     gameSettings.roundTime = roundTime;
     StateLocal.setGameSettings(
@@ -1029,10 +970,8 @@ import StateLocal from "./stateLocal.js";
       gameSettings.botDifficulty
     );
 
-    // Hide time selection screen
     document.getElementById("time-selection").classList.add("hidden");
 
-    // Display the single player lobby with customized bots
     showSinglePlayerLobby(playerInfo, bots, gameSettings);
   });
 })();

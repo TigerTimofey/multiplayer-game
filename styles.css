@@ -2476,28 +2476,19 @@ body.single-player-active .message {
   border-radius: 5px;
   font-size: 14px;
   height: auto;
+  transition: all 0.3s ease;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
 }
 
 .bot-coins-input:focus {
   border-color: #ffd700;
   outline: none;
+  box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
 }
 
-.bot-starting-coins {
-  color: #ffd700;
-  font-weight: bold;
-  margin-left: 5px;
-  display: inline-block;
-  animation: coinPulse 2s infinite alternate;
-}
-
-@keyframes coinPulse {
-  from {
-    transform: scale(1);
-    text-shadow: 0 0 2px rgba(255, 215, 0, 0.5);
-  }
-  to {
-    transform: scale(1.05);
-    text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
-  }
+.bot-coins-input::-webkit-inner-spin-button,
+.bot-coins-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
