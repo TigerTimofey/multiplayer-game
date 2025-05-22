@@ -6,7 +6,6 @@ import state from "./src/core/state.js";
 import { initializeLobby } from "./src/core/game/lobby/initializeLobby.js";
 import { cleanupPlayer } from "./src/core/game/lobby/cleanupPlayer.js";
 
-// Import the state manager
 import StateLocal from "./stateLocal.js";
 
 (function () {
@@ -165,27 +164,19 @@ import StateLocal from "./stateLocal.js";
       }
     });
 
-  // Handle Single Player button click
   document.getElementById("single-player").addEventListener("click", () => {
-    // Hide the main menu buttons
     document.querySelector(".lobby-buttons").classList.add("hidden");
 
-    // Hide the settings button
     document.getElementById("toggle-joke").classList.add("hidden");
 
-    // Show the initial setup for name and color
     document.getElementById("initial-setup").classList.remove("hidden");
 
-    // Update the title
     document.getElementById("lobby-title").textContent = "Character name";
 
-    // Show back button
     document.querySelector(".back-button").classList.remove("hidden");
 
-    // Clear any previous nickname in the input field
     document.getElementById("lobby-name").value = "";
 
-    // Populate color options if not already done
     const colorOptions = document.querySelector(".color-options");
     if (colorOptions.children.length === 0) {
       const colors = ["red", "blue", "green", "yellow", "purple", "orange"];
@@ -196,30 +187,25 @@ import StateLocal from "./stateLocal.js";
         colorOption.dataset.color = color;
 
         colorOption.addEventListener("click", () => {
-          // Remove selected class from all options
           document.querySelectorAll(".color-option").forEach((opt) => {
             opt.classList.remove("selected");
           });
-          // Add selected class to clicked option
           colorOption.classList.add("selected");
         });
 
         colorOptions.appendChild(colorOption);
       });
     } else {
-      // Clear all selected colors
       document.querySelectorAll(".color-option").forEach((opt) => {
         opt.classList.remove("selected");
       });
     }
   });
 
-  // Make sure bot selection is hidden initially
   document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("bot-selection").classList.add("hidden");
   });
 
-  // Hide bot selection when other buttons are clicked
   document.getElementById("create-room").addEventListener("click", () => {
     document.getElementById("bot-selection").classList.add("hidden");
   });
@@ -228,22 +214,17 @@ import StateLocal from "./stateLocal.js";
     document.getElementById("bot-selection").classList.add("hidden");
   });
 
-  // Helper function to show tooltips instead of alerts - modified to position tooltip correctly
   function showTooltip(message, duration = 3000, targetElement = null) {
-    // Check if a tooltip already exists
     let tooltip = document.querySelector(".tooltip");
 
-    // If not, create one
     if (!tooltip) {
       tooltip = document.createElement("div");
       tooltip.className = "tooltip";
       document.body.appendChild(tooltip);
     }
 
-    // Set the message
     tooltip.textContent = message;
 
-    // Position the tooltip based on target element or default to center
     if (targetElement) {
       const rect = targetElement.getBoundingClientRect();
       tooltip.style.top = rect.top - 10 + "px";
@@ -253,83 +234,63 @@ import StateLocal from "./stateLocal.js";
       tooltip.style.left = "50%";
     }
 
-    // Make sure the tooltip is not being animated out
     tooltip.classList.remove("fade-out");
 
-    // Show the tooltip (adding class triggers animation)
     tooltip.style.display = "block";
 
-    // Add the fade-out class after duration
     setTimeout(() => {
       tooltip.classList.add("fade-out");
 
-      // After animation completes, hide tooltip
       setTimeout(() => {
         tooltip.style.display = "none";
-      }, 300); // Match the CSS animation duration
+      }, 300);
     }, duration);
   }
 
-  // Handle the continue button in Character name
   document.getElementById("continue-setup").addEventListener("click", () => {
     const playerName = document.getElementById("lobby-name").value.trim();
     const selectedColor = document.querySelector(".color-option.selected")
       ?.dataset.color;
 
-    // Validate inputs
     if (!playerName) {
-      // showTooltip("Please enter your name");
       return;
     }
 
     if (!selectedColor) {
-      // showTooltip("Please select a color");
       return;
     }
 
-    // Save player information
     StateLocal.setPlayerInfo(playerName, selectedColor);
 
-    // Only show bot selection if we came from single player
     if (
       document.getElementById("lobby-title").textContent === "Character name"
     ) {
-      // Hide the initial setup form
       document.getElementById("initial-setup").classList.add("hidden");
 
-      // Show the bot selection UI
       document.getElementById("bot-selection").classList.remove("hidden");
 
-      // Hide difficulty selection until bot count is selected
       document.getElementById("difficulty-selection").classList.add("hidden");
 
-      // Show the start single game button which will now proceed to difficulty selection
       document.getElementById("start-single-game").classList.remove("hidden");
 
-      // Update the title
       document.getElementById("lobby-title").textContent = "Select Bots";
     }
   });
 
-  // Handle bot selection - modified to match room creation flow
   document
     .querySelectorAll("#bot-selection .player-select button")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        // Remove selected class from all buttons in bot selection
         document
           .querySelectorAll("#bot-selection .player-select button")
           .forEach((btn) => {
             btn.classList.remove("selected");
           });
 
-        // Add selected class to clicked button
         button.classList.add("selected");
 
-        // Store bot count in StateLocal when a bot count is selected
         const botCount = parseInt(button.dataset.bots);
 
-        // Preserve difficulty if it was already selected
         const selectedDifficulty = document.querySelector(
           "#difficulty-selection .player-select button.selected"
         );
@@ -341,14 +302,12 @@ import StateLocal from "./stateLocal.js";
       });
     });
 
-  // Handle the start single game button to proceed to bot customization
   document.getElementById("start-single-game").addEventListener("click", () => {
     const selectedBot = document.querySelector(
       "#bot-selection .player-select button.selected"
     );
 
     if (!selectedBot) {
-      // Position tooltip above the bot selection buttons
       const playerSelectElement = document.querySelector(
         "#bot-selection .player-select"
       );
@@ -356,22 +315,17 @@ import StateLocal from "./stateLocal.js";
       return;
     }
 
-    // Hide bot selection now
     document.getElementById("bot-selection").classList.add("hidden");
 
-    // Show bot customization screen
     document.getElementById("bot-customization").classList.remove("hidden");
 
-    // Update title
     document.getElementById("lobby-title").textContent = "Customize Bots";
 
-    // Generate bot customization slots
     const botCount = parseInt(selectedBot.dataset.bots);
     const playerColor = StateLocal.getPlayerInfo().color;
     createBotCustomizationSlots(botCount, playerColor);
   });
 
-  // Create bot customization slots with simplified options
   function createBotCustomizationSlots(botCount, playerColor) {
     const botCustomizationContainer =
       document.getElementById("bot-custom-slots");
@@ -382,7 +336,6 @@ import StateLocal from "./stateLocal.js";
     );
     const defaultBotNames = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon"];
 
-    // Create a customization slot for each bot
     for (let i = 0; i < botCount; i++) {
       const botColorDefault = availableColors[i % availableColors.length];
       const colorName =
@@ -391,12 +344,10 @@ import StateLocal from "./stateLocal.js";
         defaultBotNames[i % defaultBotNames.length]
       }`;
 
-      // Create a bot customization slot
       const botSlot = document.createElement("div");
       botSlot.className = "bot-custom-slot";
       botSlot.dataset.botIndex = i;
 
-      // Add name input field
       const nameContainer = document.createElement("div");
       nameContainer.className = "bot-custom-field";
 
@@ -413,7 +364,6 @@ import StateLocal from "./stateLocal.js";
 
       botSlot.appendChild(nameContainer);
 
-      // Add color selection
       const colorContainer = document.createElement("div");
       colorContainer.className = "bot-custom-field";
 
@@ -424,7 +374,6 @@ import StateLocal from "./stateLocal.js";
       const colorOptions = document.createElement("div");
       colorOptions.className = "bot-color-options";
 
-      // Add color options
       availableColors.forEach((color) => {
         const colorOption = document.createElement("div");
         colorOption.className = "color-option";
@@ -436,15 +385,12 @@ import StateLocal from "./stateLocal.js";
         }
 
         colorOption.addEventListener("click", () => {
-          // Remove selected from all colors in this slot
           colorOptions.querySelectorAll(".color-option").forEach((opt) => {
             opt.classList.remove("selected");
           });
 
-          // Add selected class to clicked color
           colorOption.classList.add("selected");
 
-          // Update bot name to include new color if using default name pattern
           const currentName = nameInput.value;
           if (currentName.includes(colorName)) {
             const selectedColorName =
@@ -459,7 +405,6 @@ import StateLocal from "./stateLocal.js";
       colorContainer.appendChild(colorOptions);
       botSlot.appendChild(colorContainer);
 
-      // Add starting coins input with proper constraints
       const coinsContainer = document.createElement("div");
       coinsContainer.className = "bot-custom-field";
 
@@ -872,76 +817,6 @@ import StateLocal from "./stateLocal.js";
         "Welcome to Treasure Hunters Arena";
     }
   });
-
-  function generateBots(count, difficulty, playerColor) {
-    const botNames = [
-      "Bot Alpha",
-      "Bot Beta",
-      "Bot Gamma",
-      "Bot Delta",
-      "Bot Epsilon",
-    ];
-    const availableColors = playerColors.filter(
-      (color) => color !== playerColor
-    );
-    const bots = [];
-
-    for (let i = 0; i < count; i++) {
-      const botColor = availableColors[i % availableColors.length];
-
-      const colorName = botColor.charAt(0).toUpperCase() + botColor.slice(1);
-      const botName = `${colorName} ${botNames[i % botNames.length]}`;
-
-      bots.push({
-        name: botName,
-        color: botColor,
-        difficulty: difficulty,
-        coins: 0,
-        kills: 0,
-        isBot: true,
-      });
-    }
-
-    return bots;
-  }
-
-  function setupSinglePlayerPowers() {
-    document.body.classList.add("single-player-active");
-
-    const speedButton = document.querySelector('[data-power="speed"]');
-    const shieldButton = document.querySelector('[data-power="shield"]');
-    const teleportButton = document.querySelector('[data-power="teleport"]');
-
-    if (speedButton) {
-      speedButton.dataset.cost = "3";
-      speedButton.querySelector(".cost").textContent = "3 coins";
-    }
-
-    if (shieldButton) {
-      shieldButton.dataset.cost = "5";
-      shieldButton.querySelector(".cost").textContent = "5 coins";
-    }
-
-    if (teleportButton) {
-      teleportButton.dataset.cost = "4";
-      teleportButton.querySelector(".cost").textContent = "4 coins";
-    }
-  }
-
-  function resetPowersDisplay() {
-    document.body.classList.remove("single-player-active");
-
-    const buttons = document.querySelectorAll(".power-button");
-    buttons.forEach((button) => {
-      const power = button.dataset.power;
-      if (POWERS[power]) {
-        button.dataset.cost = POWERS[power].cost;
-        button.querySelector(
-          ".cost"
-        ).textContent = `${POWERS[power].cost} coins`;
-      }
-    });
-  }
 
   document.getElementById("start-game-final").addEventListener("click", () => {
     const selectedTime = document.querySelector(
