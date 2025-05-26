@@ -326,7 +326,7 @@ function getBotProperties(difficulty) {
   switch (difficulty) {
     case "easy":
       return {
-        moveInterval: 1700,
+        moveInterval: 1200,
         coinPriority: 0.4,
         playerChaseChance: 0.1,
         intelligenceLevel: "low",
@@ -335,7 +335,7 @@ function getBotProperties(difficulty) {
 
     case "medium":
       return {
-        moveInterval: 1200,
+        moveInterval: 600,
         coinPriority: 0.7,
         playerChaseChance: 0.3,
         intelligenceLevel: "medium",
@@ -345,7 +345,7 @@ function getBotProperties(difficulty) {
 
     case "hard":
       return {
-        moveInterval: 50,
+        moveInterval: 1,
         coinPriority: 0.9,
         playerChaseChance: 0.9,
         intelligenceLevel: "high",
@@ -355,7 +355,7 @@ function getBotProperties(difficulty) {
 
     default:
       return {
-        moveInterval: 1000,
+        moveInterval: 800,
         coinPriority: 0.5,
         playerChaseChance: 0.2,
         intelligenceLevel: "medium",
@@ -367,34 +367,56 @@ function getBotProperties(difficulty) {
 function moveBotBasedOnDifficulty(bot, gameState) {
   if (gameState.gameOver) return;
 
-  // Check if bot can use power and has enough coins
-  if (bot.canUsePower && bot.coins >= 10 && Math.random() < 0.5) {
-    const audio = new Audio("./assets/audio/super-power/shield.mp3");
-    audio.volume = 0.5;
-    audio.play();
+  if (bot.canUsePower && bot.coins >= 10) {
+    const distanceToPlayer =
+      Math.abs(bot.x - gameState.player.x) +
+      Math.abs(bot.y - gameState.player.y);
 
-    bot.shield = true;
-    bot.element.classList.add("shield");
+    let shouldActivateShield = false;
 
-    // Show message that bot activated strength
-    showGameMessage(`${bot.name} activated Strength!`);
-
-    // Reduce bot coins
-    bot.coins -= 10;
-    const coinsDisplay = bot.element.querySelector(".Character_coins");
-    if (coinsDisplay) {
-      coinsDisplay.textContent = ` ${bot.coins}`;
+    if (distanceToPlayer <= 3) {
+      if (gameState.player.coins > bot.coins) {
+        shouldActivateShield = Math.random() < 0.8;
+      } else {
+        shouldActivateShield = Math.random() < 0.4;
+      }
+    } else {
+      shouldActivateShield = Math.random() < 0.1;
     }
 
-    // Remove shield after duration
-    setTimeout(() => {
-      bot.shield = false;
-      bot.element.classList.remove("shield");
-    }, 7000);
+    if (shouldActivateShield && !bot.shield) {
+      const audio = new Audio("./assets/audio/super-power/shield.mp3");
+      audio.volume = 0.5;
+      audio.play();
+
+      bot.shield = true;
+      bot.element.classList.add("shield");
+
+      showGameMessage(`${bot.name} activated Strength!`);
+
+      bot.coins -= 10;
+      const coinsDisplay = bot.element.querySelector(".Character_coins");
+      if (coinsDisplay) {
+        coinsDisplay.textContent = ` ${bot.coins}`;
+      }
+
+      setTimeout(() => {
+        bot.shield = false;
+        bot.element.classList.remove("shield");
+      }, 7000);
+    }
   }
 
   let xChange = 0;
   let yChange = 0;
+
+  const botHasMoreCoins = bot.coins > gameState.player.coins;
+  const botHasShield = bot.shield;
+  const safeToAttack = botHasMoreCoins || botHasShield;
+
+  const playerDiffX = gameState.player.x - bot.x;
+  const playerDiffY = gameState.player.y - bot.y;
+  const distanceToPlayer = Math.abs(playerDiffX) + Math.abs(playerDiffY);
 
   switch (bot.difficulty) {
     case "easy":
@@ -417,19 +439,35 @@ function moveBotBasedOnDifficulty(bot, gameState) {
           else yChange = -1;
         }
       } else {
-        const randomDir = Math.floor(Math.random() * 4);
-        if (randomDir === 0) xChange = 1;
-        else if (randomDir === 1) xChange = -1;
-        else if (randomDir === 2) yChange = 1;
-        else yChange = -1;
+        if (safeToAttack && Math.random() < bot.playerChaseChance) {
+          if (Math.abs(playerDiffX) > Math.abs(playerDiffY)) {
+            xChange = playerDiffX > 0 ? 1 : -1;
+          } else {
+            yChange = playerDiffY > 0 ? 1 : -1;
+          }
+        } else {
+          const randomDir = Math.floor(Math.random() * 4);
+          if (randomDir === 0) xChange = 1;
+          else if (randomDir === 1) xChange = -1;
+          else if (randomDir === 2) yChange = 1;
+          else yChange = -1;
+        }
       }
       break;
 
     case "medium":
       const nearestCoin = findNearestCoin(bot, gameState);
-      const shouldChasePlayer = Math.random() < bot.playerChaseChance;
 
-      if (nearestCoin && !shouldChasePlayer) {
+      if (distanceToPlayer <= 3 && !safeToAttack) {
+        if (Math.abs(playerDiffX) > Math.abs(playerDiffY)) {
+          xChange = playerDiffX > 0 ? -1 : 1;
+        } else {
+          yChange = playerDiffY > 0 ? -1 : 1;
+        }
+      } else if (
+        nearestCoin &&
+        (!safeToAttack || Math.random() > bot.playerChaseChance)
+      ) {
         const coinDiffX = nearestCoin.x - bot.x;
         const coinDiffY = nearestCoin.y - bot.y;
 
@@ -438,30 +476,32 @@ function moveBotBasedOnDifficulty(bot, gameState) {
         } else {
           yChange = coinDiffY > 0 ? 1 : -1;
         }
-      } else {
-        const playerDiffX = gameState.player.x - bot.x;
-        const playerDiffY = gameState.player.y - bot.y;
-
+      } else if (safeToAttack) {
         if (Math.abs(playerDiffX) > Math.abs(playerDiffY)) {
           xChange = playerDiffX > 0 ? 1 : -1;
         } else {
           yChange = playerDiffY > 0 ? 1 : -1;
         }
+      } else if (nearestCoin) {
+        const coinDiffX = nearestCoin.x - bot.x;
+        const coinDiffY = nearestCoin.y - bot.y;
+
+        if (Math.abs(coinDiffX) > Math.abs(coinDiffY)) {
+          xChange = coinDiffX > 0 ? 1 : -1;
+        } else {
+          yChange = coinDiffY > 0 ? 1 : -1;
+        }
       }
       break;
 
     case "hard":
-      const botHasMoreCoins = bot.coins > gameState.player.coins;
       const playerHasManyMoreCoins = gameState.player.coins - bot.coins > 5;
       const coinIsNearby = findNearestCoin(bot, gameState, 5);
 
       if (
-        (botHasMoreCoins && Math.random() < bot.playerChaseChance) ||
+        (safeToAttack && Math.random() < bot.playerChaseChance) ||
         playerHasManyMoreCoins
       ) {
-        const playerDiffX = gameState.player.x - bot.x;
-        const playerDiffY = gameState.player.y - bot.y;
-
         if (Math.abs(playerDiffX) > Math.abs(playerDiffY)) {
           xChange = playerDiffX > 0 ? 1 : -1;
           if (!isValidMove(bot.x + xChange, bot.y)) {
@@ -473,6 +513,20 @@ function moveBotBasedOnDifficulty(bot, gameState) {
           if (!isValidMove(bot.x, bot.y + yChange)) {
             yChange = 0;
             xChange = playerDiffX > 0 ? 1 : -1;
+          }
+        }
+      } else if (!safeToAttack && distanceToPlayer <= 4) {
+        if (Math.abs(playerDiffX) > Math.abs(playerDiffY)) {
+          xChange = playerDiffX > 0 ? -1 : 1;
+          if (!isValidMove(bot.x + xChange, bot.y)) {
+            xChange = 0;
+            yChange = playerDiffY > 0 ? -1 : 1;
+          }
+        } else {
+          yChange = playerDiffY > 0 ? -1 : 1;
+          if (!isValidMove(bot.x, bot.y + yChange)) {
+            yChange = 0;
+            xChange = playerDiffX > 0 ? -1 : 1;
           }
         }
       } else if (coinIsNearby) {
@@ -518,12 +572,12 @@ function moveBotBasedOnDifficulty(bot, gameState) {
               }
             });
 
-            if (botHasMoreCoins) {
+            if (!safeToAttack) {
               const playerDist =
                 Math.abs(bot.x + dir.x - gameState.player.x) +
                 Math.abs(bot.y + dir.y - gameState.player.y);
               if (playerDist < 3) {
-                score -= 2;
+                score -= 3;
               }
             }
 
