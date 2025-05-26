@@ -2492,3 +2492,49 @@ body.single-player-active .message {
   -webkit-appearance: none;
   margin: 0;
 }
+
+.bot-power-field {
+  margin-top: 10px;
+}
+
+.bot-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.bot-checkbox-wrapper:hover {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.bot-power-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  cursor: pointer;
+  accent-color: #ffd700;
+}
+
+.bot-power-checkbox:checked + .power-label {
+  color: #ffd700;
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.3);
+}
+
+.power-label {
+  color: #ddd;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.power-label:hover {
+  color: #ffd700;
+}

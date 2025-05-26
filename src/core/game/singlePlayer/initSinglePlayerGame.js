@@ -66,6 +66,9 @@ export function initSinglePlayerGame(player, bots, gameSettings) {
         intelligenceLevel: botProps.intelligenceLevel,
         id: `bot-${index}`,
         coins: startingCoins,
+        shield: false,
+        canUsePower: bot.canUsePower || false,
+        lastPowerUse: 0,
       };
     }),
     coins: {},
@@ -363,6 +366,32 @@ function getBotProperties(difficulty) {
 
 function moveBotBasedOnDifficulty(bot, gameState) {
   if (gameState.gameOver) return;
+
+  // Check if bot can use power and has enough coins
+  if (bot.canUsePower && bot.coins >= 10 && Math.random() < 0.5) {
+    const audio = new Audio("./assets/audio/super-power/shield.mp3");
+    audio.volume = 0.5;
+    audio.play();
+
+    bot.shield = true;
+    bot.element.classList.add("shield");
+
+    // Show message that bot activated strength
+    showGameMessage(`${bot.name} activated Strength!`);
+
+    // Reduce bot coins
+    bot.coins -= 10;
+    const coinsDisplay = bot.element.querySelector(".Character_coins");
+    if (coinsDisplay) {
+      coinsDisplay.textContent = ` ${bot.coins}`;
+    }
+
+    // Remove shield after duration
+    setTimeout(() => {
+      bot.shield = false;
+      bot.element.classList.remove("shield");
+    }, 7000);
+  }
 
   let xChange = 0;
   let yChange = 0;

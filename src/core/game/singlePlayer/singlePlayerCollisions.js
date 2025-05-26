@@ -25,6 +25,29 @@ export function handleSinglePlayerCollisions(player, bot, gameState) {
     return;
   }
 
+  // Check if bot has active shield
+  if (bot.shield) {
+    const safeSpot = getRandomSafeSpot();
+    player.x = safeSpot.x;
+    player.y = safeSpot.y;
+    player.coins = 0;
+    bot.kills++;
+
+    player.element.style.transform = `translate3d(${16 * player.x}px, ${
+      16 * player.y - 4
+    }px, 0)`;
+
+    const playerCoinsDisplay = player.element.querySelector(".Character_coins");
+    if (playerCoinsDisplay) {
+      playerCoinsDisplay.textContent = ` 0`;
+    }
+
+    showGameMessage(
+      `${bot.name}'s strength power protected them from ${player.name}!`
+    );
+    return;
+  }
+
   if (player.coins > bot.coins) {
     const safeSpot = getRandomSafeSpot();
     bot.x = safeSpot.x;

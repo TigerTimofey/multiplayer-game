@@ -441,6 +441,29 @@ import StateLocal from "./stateLocal.js";
       coinsContainer.appendChild(coinsInput);
       botSlot.appendChild(coinsContainer);
 
+      // Add the "Can use power" checkbox
+      const powerContainer = document.createElement("div");
+      powerContainer.className = "bot-custom-field bot-power-field";
+
+      const powerCheckboxWrapper = document.createElement("div");
+      powerCheckboxWrapper.className = "bot-checkbox-wrapper";
+
+      const powerCheckbox = document.createElement("input");
+      powerCheckbox.type = "checkbox";
+      powerCheckbox.id = `bot-power-${i}`;
+      powerCheckbox.className = "bot-power-checkbox";
+      powerCheckbox.checked = false;
+
+      const powerLabel = document.createElement("label");
+      powerLabel.htmlFor = `bot-power-${i}`;
+      powerLabel.textContent = "Can use Strength power";
+      powerLabel.className = "power-label";
+
+      powerCheckboxWrapper.appendChild(powerCheckbox);
+      powerCheckboxWrapper.appendChild(powerLabel);
+      powerContainer.appendChild(powerCheckboxWrapper);
+      botSlot.appendChild(powerContainer);
+
       botCustomizationContainer.appendChild(botSlot);
     }
   }
@@ -458,6 +481,8 @@ import StateLocal from "./stateLocal.js";
         const colorOption = slot.querySelector(".color-option.selected");
         const coinsInput = slot.querySelector(".bot-coins-input");
         const startingCoins = parseInt(coinsInput.value) || 0;
+        const powerCheckbox = slot.querySelector(".bot-power-checkbox");
+        const canUsePower = powerCheckbox ? powerCheckbox.checked : false;
 
         if (!colorOption) return;
 
@@ -467,6 +492,7 @@ import StateLocal from "./stateLocal.js";
           coins: startingCoins,
           kills: 0,
           isBot: true,
+          canUsePower: canUsePower,
         });
       });
 
